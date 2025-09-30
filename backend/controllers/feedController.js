@@ -163,80 +163,117 @@ export const getFeeds = async (req, res) => {
     if (status && status !== "All") filter.Status = { $regex: `^${status}$`, $options: "i" };
 
     // Search filter
-    if (search) filter.ProjectName = { $regex: search, $options: "i" };
+    if (search) {
+    filter.$or = [
+    { "projectId.ProjectName": { $regex: search, $options: "i" } },
+    { FeedName: { $regex: search, $options: "i" } }
+  ];
+}
 
     // QA filter
     if (qaid) filter.QAId = qaid;
 
     // Date range filter
-    if (date_range) {
-      const now = new Date();
-      let startDate, endDate;
+    // if (date_range) {
+    //   const now = new Date();
+    //   let startDate, endDate;
 
-      switch (date_range.toLowerCase()) {
-        case "today":
-          startDate = new Date(now);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "yesterday":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "this_week":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - startDate.getDay());
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "last_week":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setDate(endDate.getDate() - endDate.getDay());
-          endDate.setHours(0, 0, 0, 0);
-          break;
-        case "this_month":
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "last_month":
-          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          endDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate.setHours(0, 0, 0, 0);
-          break;
-        default:
-          startDate = null;
-          endDate = null;
-          break;
-      }
+    //   switch (date_range.toLowerCase()) {
+    //     case "today":
+    //       startDate = new Date(now);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "yesterday":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - 1);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setDate(endDate.getDate() - 1);
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "this_week":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - startDate.getDay());
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date();
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "last_week":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setDate(endDate.getDate() - endDate.getDay());
+    //       endDate.setHours(0, 0, 0, 0);
+    //       break;
+    //     case "this_month":
+    //       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    //       endDate = new Date();
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "last_month":
+    //       startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    //       endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    //       endDate.setHours(0, 0, 0, 0);
+    //       break;
+    //     default:
+    //       startDate = null;
+    //       endDate = null;
+    //       break;
+    //   }
 
-      if (startDate && endDate) {
-        filter.CreatedDate = { $gte: startDate, $lt: endDate };
-      }
-    }
+    //   if (startDate && endDate) {
+    //     filter.CreatedDate = { $gte: startDate, $lt: endDate };
+    //   }
+    // }
 
     // Role-based filtering
     const userId = req.user._id;
     const role = req.user.roleId?.name; // e.g., "superadmin", "PM", "TL", etc.
+    const department = req.user.departmentId?.department;
+    // if (role !== "Superadmin") {
+    //   filter.$or = [
+    //     // { PMId: userId },
+    //     // { TLId: userId },
+    //     { DeveloperIds: userId },
+    //     // { QAId: userId },
+    //     { BAUPersonId: userId },
+    //   ];
+    // }
 
-    if (role !== "Superadmin") {
-      filter.$or = [
-        // { PMId: userId },
-        // { TLId: userId },
-        { DeveloperIds: userId },
-        // { QAId: userId },
-        { BAUPersonId: userId },
-      ];
+        if (role === "Superadmin") {
+      // No filter, get all projects
+    } else if (department === "Sales") {
+      if (role === "Sales Head" || role === "Sales Operations Sales Manager") {
+        // All Sales projects
+        // filter.department = "Sales";
+      // } else if (role === "Sales Manager") {
+      //   // Projects created by him/her
+      //   filter.CreatedBy = userId;
+      // } else if (role === "Business Development Executive") {
+      //   // Projects where BDE is involved
+      //   filter.BDEId = userId; // assuming project has BDEIds array
+      // }
+    }else if (role === "Business Development Executive") {
+     
+        filter.DeveloperIds = userId; 
+      }
+     else {
+    // Other roles: assigned to them in any capacity
+    filter.$or = [
+      { "projectId.PMId._id": userId },
+      { "projectId.PCId": userId },
+      { "projectId.TLId": userId },
+      { "projectId.DeveloperIds": userId },
+      { "projectId.QAId": userId },
+      { "projectId.BAUId": userId },
+      { "projectId.BDEId": userId },
+    ];
+  }
     }
+  console.log("Applied filter:", filter);
 
     // Pagination
     const parsedPage = parseInt(page, 10) || 1;
@@ -244,15 +281,16 @@ export const getFeeds = async (req, res) => {
 
     // Query database
     const total = await Feed.countDocuments(filter);
-    const feeds = await Feed.find()
-      .populate({
+    const feeds = await Feed.find(filter)
+    .populate("projectId", "ProjectName")  
+    .populate({
       path: "projectId",
       populate: [
-        { path: "PMId", select: "name email" }, // ✅ populate PM inside project
+        { path: "PMId", select: "name" }, // ✅ populate PM inside project
       ]
     })
     // .populate("TLId", "name email")    
-    .populate("QAId", "name email")  
+    // .populate("QAId", "name email")  
     .populate("DeveloperIds", "name")  
       // .populate("projectId TLId DeveloperIds QAId BAUPersonId")
       // .populate("projectId.PMId", "name")
@@ -278,7 +316,7 @@ export const getFeeds = async (req, res) => {
 
 export const getFeedById = async (req, res) => {
   try {
-    const feed = await FeedData.findById(req.params.id).populate("projectId")
+    const feed = await FeedData.findById(req.params.id).populate("projectId").populate("QARules.createdBy", "name"); 
     // .populate("TLId", "name");
     if (!feed) return res.status(404).json({ message: "Feed not found" });
     res.status(200).json(feed);
@@ -408,6 +446,12 @@ export const updateFeedById = async (req, res) => {
       QARules
     } = req.body;
 
+
+    const rulesWithUser = (QARules || []).map(rule => ({
+      ...rule,
+      createdBy: rule.createdBy || req.user._id, // <-- use current user if missing
+      createdAt: rule.createdAt || new Date()
+    }));
     const updatedFeed = await Feed.findByIdAndUpdate(
       id,
       {
@@ -430,10 +474,10 @@ export const updateFeedById = async (req, res) => {
         Frequency,
         Schedule,
         DatabaseSettings,
-        QARules
+        QARules: rulesWithUser
       },
       { new: true, runValidators: true }
-    );
+    )
 
     if (!updatedFeed) return res.status(404).json({ message: 'Feed not found' });
 

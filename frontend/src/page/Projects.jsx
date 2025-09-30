@@ -441,28 +441,18 @@ export default function Projects() {
     ],
     Manager: [
       "Project",
-      "Feed Name",
+      "Feeds",
+      "Industry",
+      "Project Manager",
+      "BDE",
+      "Delivery Type",
       "Frequency",
-      "Platform",
       "Status",
-      "BAU",
-      "POC",
-      "PM",
-      "PC",
-      "TL",
-      "Developer",
-      "QA",
-      "BAU Person",
       "Attachments",
-      "Framework type",
-      "QA Report Count",
-      "Manage By",
-      "QA Rules",
-      "DB Status",
-      "DB Type",
+      "Project Type",
+      "Created By",
       "Created Date",
-      "Project Created By",
-      "Actions"
+      "Action",
     ],
     "Team Lead": [
       "Project Name",
@@ -528,15 +518,21 @@ export default function Projects() {
   return (
     <>
       <div className="px-4 pt-2">
+         <div className="flex items-center justify-between mb-6">
+    {/* Heading */}
+    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+      Projects
+    </h2>
+</div>
 
-        <div>
+        
           {/* <div className="m-2">
           <h1 className="text-2xl font-semibold text-gray-800">
           Projects
         </h1>
         </div> */}
           {/* Tabs */}
-          <div className=" px-2 py-2 rounded-md mb-4 flex flex-wrap gap-1 select-none">
+          {/* <div className=" px-2 py-2 rounded-md mb-4 flex flex-wrap gap-1 select-none"> */}
             {/* {user.department !== "Sales" &&
             tabs.map((tab) => (
               <button
@@ -581,7 +577,7 @@ export default function Projects() {
               + Create Feed
             </button>
           )} */}
-          </div>
+          {/* </div> */}
 
           {feedModalOpen && (
             <FeedModel
@@ -813,6 +809,7 @@ export default function Projects() {
           {/* ==========SALES Department Table start========== */}
           {user?.department === "Sales" && (
             <>
+           
               {/* Table */}
               <div className="flex flex-col">
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -973,8 +970,201 @@ export default function Projects() {
           {/* ==========SALES Department Table End========== */}
 
 
-          {(user?.roleName === "Manager" || user?.roleName === "Team Lead" || user?.roleName === "Project Coordinator" || user?.roleName === "Developer") && (
+          {(user?.roleName === "Manager" || user?.roleName === "Team Lead" || user?.roleName === "Project Coordinator" ) && (
             <div className="flex flex-col">
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                  <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
+                    <thead className="bg-gray-100 text-gray-700 sticky top-0">
+                      <tr>
+                        {columns.map((col) => (
+                          <th
+                            key={col}
+                            className="px-3 py-2 text-left font-semibold whitespace-nowrap"
+                          >
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={columns.length} className="text-center p-4 text-gray-500">
+                            <div className="flex justify-center items-center">
+                              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredData.length > 0 ? (
+                        filteredData.map((project, idx) => (
+                          <tr key={project._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
+                            <td
+                              className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
+                              onClick={() => navigate(`/project/${project._id}/details`)}
+                            >
+                              {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
+                            <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td>
+                            {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
+                            <td className="px-3 py-2">
+                              {project.DeliveryType ? (
+                                <div className="flex justify-center">
+                                  <span
+                                    className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
+                                      ? "bg-green-700 text-white"
+                                      : project.DeliveryType === "POC"
+                                        ? "bg-orange-400 text-white"
+                                        : project.DeliveryType === "R&D"
+                                          ? "bg-pink-300 text-white"
+                                          : project.DeliveryType === "Adhoc"
+                                            ? "bg-yellow-400 text-white"
+                                            : project.DeliveryType === "Once-off"
+                                              ? "bg-pink-100 text-pink-800"
+                                              : "bg-gray-100 text-gray-600"
+                                      }`}
+                                  >
+                                    {project.DeliveryType}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+
+
+                            <td className="px-3 py-2">{project.Frequency ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {project.Status ? (
+                                <span
+                                  className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New" ? "bg-blue-100 text-blue-800" :
+                                    project.Status === "Under Development" ? "bg-yellow-100 text-yellow-800" :
+                                      project.Status === "On-Hold" ? "bg-gray-200 text-gray-800" :
+                                        project.Status === "Production" ? "bg-green-100 text-green-800" :
+                                          project.Status === "BAU-Started" ? "bg-indigo-100 text-indigo-800" :
+                                            project.Status === "Closed" ? "bg-red-100 text-red-800" :
+                                              "bg-gray-100 text-gray-800"
+                                    }`}
+                                >
+                                  {project.Status}
+                                </span>
+                              ) : (
+                                "-"
+                              )}
+                            </td>
+
+                            <td className="px-3 py-2">
+                              <button
+                                onClick={() => navigate(`/project/${project._id}/files`)}
+                                className="text-blue-600 hover:underline cursor-pointer"
+                              >
+                                View Files
+                              </button>
+                            </td>
+                            <td className="px-3 py-2">{project.ProjectType ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
+                            <td className="px-3 py-2">
+                              {new Date(project.CreatedDate).toLocaleDateString() ?? "-"}
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                                {canAssignProject && (
+                                  <button
+                                    className={`px-3 py-1 rounded text-sm text-white ${
+                                      // Disable button if all assignments relevant to the role are already done
+                                      ((user.roleName === "Manager" &&
+                                        selectedProject?.TLId &&
+                                        selectedProject?.PCId &&
+                                        selectedProject?.QAId) ||
+                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                          project.feed?.DeveloperIds &&
+                                          project.feed?.DeveloperIds.length > 0))
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                      }`}
+                                    disabled={
+                                      (user.roleName === "Manager" &&
+                                        selectedProject?.TLId &&
+                                        selectedProject?.PCId &&
+                                        selectedProject?.QAId) ||
+                                      ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                        feed.DeveloperIds &&
+                                        feed.DeveloperIds.length > 0)
+                                    }
+                                    onClick={() => {
+                                      // Open modal only if assignment not done
+                                      const canAssign =
+                                        (user.roleName === "Manager" &&
+                                          (!selectedProject.TLId || !selectedProject.PCId || !selectedProject.QAId)) ||
+                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                          (!feed.DeveloperIds || feed.DeveloperIds.length === 0));
+
+                                      if (canAssign) {
+                                        setSelectedProject(project);
+                                        setSelectedFeed(feed);
+                                        setIsAssignOpen(true);
+                                      }
+                                    }}
+                                  >
+                                    {user.roleName === "Manager"
+                                      ? selectedProject?.TLId && selectedProject?.PCId && selectedProject?.QAId
+                                        ? "Assigned"
+                                        : "Assign"
+                                      : feed.DeveloperIds && feed.DeveloperIds.length > 0
+                                        ? "Assigned"
+                                        : "Assign"}
+                                  </button>
+                                )}
+                              </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={columns.length} className="text-center p-8 text-gray-500">
+                            <div className="flex flex-col items-center justify-center gap-3">
+                              <img src={Img} alt="No data" className="w-32 h-32 object-contain opacity-80" />
+                              <p className="font-semibold text-lg text-gray-600">No Data Found</p>
+                              <p className="text-sm text-gray-400">Try adding new projects to see them here.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+
+                  <UpdateProjectModal
+                    isOpen={isUpdateModalOpen}
+                    onClose={() => setIsUpdateModalOpen(false)}
+                    project={selectedProject}
+                    onUpdate={handleUpdateProject}
+                  />
+                </div>
+
+                <div className="flex justify-between m-4">
+                  <div className="flex items-center space-x-2 mt-4">
+                    <label htmlFor="entries" className="text-gray-700">Show</label>
+                    <select
+                      id="entries"
+                      value={entries}
+                      onChange={(e) => {
+                        setEntries(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="border rounded px-2 py-1"
+                    >
+                      {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                    <span className="text-gray-700">entries</span>
+                  </div>
+                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                </div>
+              </div>
+          )}
+
+          {user?.roleName === "Developer"  && (
+             <div className="flex flex-col">
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 ">
                   <thead className="bg-gray-100 text-gray-700 sticky top-0">
@@ -1413,7 +1603,7 @@ export default function Projects() {
                             </td>{" "}
                             {/* QA Report Count */}
                             <td className="px-3 py-2">
-                              {feed.ManageBy ?? "-"}
+                              {project.feed?.ManageBy ?? "-"}
                             </td>{" "}
                             {/* Manage By */}
                             <td className="px-3 py-2">
@@ -1490,6 +1680,7 @@ export default function Projects() {
                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
               </div>
             </div>
+
           )}
 
 
@@ -1817,7 +2008,7 @@ export default function Projects() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         /> */}
-        </div>
+        
 
         <Modal
           isOpen={isAssignOpen}

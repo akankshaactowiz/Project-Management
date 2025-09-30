@@ -40,7 +40,7 @@ const feedSchema = new mongoose.Schema(
     Frequency: { 
       type: String, 
       enum: ["Daily", "Weekly", "Monthly", "Once-off", "Custom"], 
-      required: true 
+      // required: true 
     },
     Schedule: {
       time: { type: String },           // e.g., "14:30" for Daily, Weekly, Monthly
@@ -55,7 +55,7 @@ const feedSchema = new mongoose.Schema(
       ]
     },
 
-     DatabaseSettings: {
+    DatabaseSettings: {
     databaseType: String,
     host: String,
     port: String,
@@ -67,13 +67,23 @@ const feedSchema = new mongoose.Schema(
     dateFormat: String,
     datePosition: String
   },
-  QARules: [{
-    field: String,
-    type: String,
-    threshold: Number,
-    createdBy: String,
-    createdAt: { type: Date, default: Date.now }
-  }],
+  // QARules: [{
+  //   field: String,
+  //   type: String,
+  //   threshold: String,
+  //   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  //   createdAt: { type: Date, default: Date.now }
+  // }],
+
+  QARules: [
+      {
+        field: { type: String, required: true },
+        type: { type: String, required: true },
+        threshold: { type: String, required: true },
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
 
     DeliveryStatus: { type: String, enum: ["Scheduled", "Delivered"]},
     StartTime: { type: Date },
@@ -83,5 +93,12 @@ const feedSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+// ✅ Clear old model cache
+// const modelName = "Feed";
+// delete mongoose.connection.models[modelName];
+
+delete mongoose.connection.models['Feed'];
+
+
 
 export default mongoose.model("Feed", feedSchema, "Feed-data");

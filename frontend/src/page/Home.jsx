@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.js";
 import { useNavigate } from "react-router-dom";
+import { FaTasks, FaClock, FaRocket, FaCheckCircle, FaCube, FaPlus, FaTools, FaPause,  FaPlay, FaCheck,FaBusinessTime, FaFlask, FaLightbulb,FaProjectDiagram, FaRss } from "react-icons/fa";
+
+
 import OverdueSummary from "../components/OverdueSummary.jsx";
 import { Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 import {
@@ -17,9 +16,11 @@ import {
   UserCog,
   Settings,
   FileText,
-  User
+  User,
 } from "lucide-react";
-import SalesSummaryDashboard from "../components/SalesSummaryView.jsx";
+// import SalesSummaryDashboard from "../components/SalesSummaryView.jsx";
+
+import Pagination from "../components/Pagination.jsx";
 
 function Home() {
   const navigate = useNavigate();
@@ -30,9 +31,17 @@ function Home() {
   // const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tasks");
 
-
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [feeds, setFeeds] = useState([]);
+  const [entries, setEntries] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  // const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(10); // default 10
+  const [search, setSearch] = useState("");
+
 
   const [projectCounts, setProjectCounts] = useState({});
 
@@ -67,10 +76,18 @@ function Home() {
   const totalTasks = tasks.length;
   const assignedByMe = tasks.filter((t) => t.assignedBy === user?.name).length;
   const createdByMe = tasks.filter((t) => t.createdBy === user?.name).length;
-  const completed = tasks.filter((t) => t.status?.toLowerCase() === "completed").length;
-  const inProgress = tasks.filter((t) => t.status?.toLowerCase() === "in-progress").length;
-  const terminated = tasks.filter((t) => t.status?.toLowerCase() === "terminated").length;
-  const totalPending = tasks.filter((t) => t.status?.toLowerCase() === "pending").length;
+  const completed = tasks.filter(
+    (t) => t.status?.toLowerCase() === "completed"
+  ).length;
+  const inProgress = tasks.filter(
+    (t) => t.status?.toLowerCase() === "in-progress"
+  ).length;
+  const terminated = tasks.filter(
+    (t) => t.status?.toLowerCase() === "terminated"
+  ).length;
+  const totalPending = tasks.filter(
+    (t) => t.status?.toLowerCase() === "pending"
+  ).length;
   const pastPending = tasks.filter((t) => {
     if (!t.dueDate) return false;
     const due = new Date(t.dueDate);
@@ -103,17 +120,21 @@ function Home() {
     "Delivered",
   ];
 
-
   const overdueTasks = tasks.filter((t) => {
     if (!t.dueDate) return false;
-    return new Date(t.dueDate) < new Date() && t.status?.toLowerCase() !== "completed";
+    return (
+      new Date(t.dueDate) < new Date() &&
+      t.status?.toLowerCase() !== "completed"
+    );
   });
 
   const overdueProjects = projects.filter((p) => {
     if (!p.dueDate) return false;
-    return new Date(p.dueDate) < new Date() && p.status?.toLowerCase() !== "completed";
+    return (
+      new Date(p.dueDate) < new Date() &&
+      p.status?.toLowerCase() !== "completed"
+    );
   });
-
 
   const data = {
     labels: ["On Time Delivery", "Delayed"],
@@ -126,6 +147,15 @@ function Home() {
       },
     ],
   };
+  const columns = [
+    "No.",
+    "Project",
+    "Feed ID",
+    "Feed Name",
+    "Platform",
+    "Frequency",
+    "Status",
+  ];
 
   const options = {
     responsive: true,
@@ -172,35 +202,61 @@ function Home() {
     fetchCounts();
   }, []);
 
-
   useEffect(() => {
     fetchCounts();
   }, []);
 
+  useEffect(() => {
+    const fetchFeeds = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+  `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed?page=${currentPage}&pageSize=10&search=${encodeURIComponent(search)}`,
+  { credentials: "include" }
+);
+
+
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+        const data = await res.json();
+        setFeeds(data.data || []);
+        setTotalPages(Math.ceil(data.total / entries)); 
+      } catch (err) {
+        console.error("Error fetching feed data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeeds();
+  }, [currentPage, entries, search]);
+
+const statusCards = [
+    { label: "New", value: projectCounts.newStatus, icon: FaPlus, color: "bg-purple-500", bg: "bg-purple-50" },
+    { label: "Under Development", value: projectCounts.underDevelopment, icon: FaTools, color: "bg-blue-500", bg: "bg-blue-50" },
+    { label: "On-Hold", value: projectCounts.onHold, icon: FaPause, color: "bg-yellow-500", bg: "bg-yellow-50" },
+    { label: "Production", value: projectCounts.devCompleted, icon: FaRocket, color: "bg-green-500", bg: "bg-green-50" },
+    { label: "BAU-Started", value: projectCounts.bauStarted, icon: FaPlay, color: "bg-indigo-500", bg: "bg-indigo-50" },
+    { label: "Closed", value: projectCounts.closed, icon: FaCheck, color: "bg-red-500", bg: "bg-red-50" },
+  ];
+
+const typeCards = [
+    { label: "BAU Projects", value: projectCounts.bau, icon: FaBusinessTime, color: "bg-purple-500", bg: "bg-purple-50" },
+    { label: "Adhoc Projects", value: projectCounts.adhoc, icon: FaTasks, color: "bg-blue-500", bg: "bg-blue-50" },
+    { label: "Once-Off Projects", value: projectCounts.onceOff, icon: FaClock, color: "bg-yellow-500", bg: "bg-yellow-50" },
+    { label: "POC Projects", value: projectCounts.poc, icon: FaFlask, color: "bg-green-500", bg: "bg-green-50" },
+    { label: "R&D Projects", value: projectCounts.rnd, icon: FaLightbulb, color: "bg-indigo-500", bg: "bg-indigo-50" },
+  ];
+
+const overviewCards = [
+    { label: "Total Projects", value: projectCounts.total, icon: FaProjectDiagram, color: "bg-blue-500", },
+    { label: "Total Feeds", value: projectCounts.totalFeeds, icon: FaRss, color: "bg-orange-500", },
+  ];
+
 
   return (
     <div className="flex flex-col md:flex-row gap-4 bg-gray-50">
-      {/* Left Profile Section */}
-      {/* <aside className="bg-white p-6 rounded-md shadow-md flex flex-col items-center md:w-1/4">
-        <img
-          src={Img}
-          alt="Profile"
-          className="w-32 h-32 rounded-full mb-4 object-cover"
-        />
-        <h2 className="text-xl font-semibold mb-2">{user?.name || "No Name"}</h2>
-        <p className="text-gray-600 mb-4"> {user?.email || "No Email"}</p>
-        <p className="text-sm text-center text-gray-700 px-2">Role: {user?.roleName}</p>
-
-        <p className="text-center text-gray-700 mb-6 px-2">Department: {user?.department}</p>
-
-        <div className="bg-gray-100 px-5 py-3 rounded-lg shadow-sm w-full text-center">
-          <p className="text-sm uppercase tracking-wide font-semibold mb-1">
-            Total Projects
-          </p>
-          <p className="text-3xl font-bold">24</p>
-        </div>
-      </aside> */}
-
+      
       {/* Superadmin Home Page */}
       {user?.roleName === "Superadmin" && (
         <main className="flex-1 bg-white overflow-auto p-6">
@@ -231,10 +287,11 @@ function Home() {
 
           {/* Ticket Overview + Today's Delivery Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-
             {/* Today's Delivery Overview */}
             <div className="bg-white p-4 rounded-md shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Today's Delivery Overview</h2>
+              <h2 className="text-lg font-semibold mb-4">
+                Today's Delivery Overview
+              </h2>
               <div className="grid grid-cols-1 gap-3">
                 <div className="flex justify-between bg-green-100 p-3 rounded-md">
                   <span className="text-gray-700 font-medium">Total</span>
@@ -258,16 +315,28 @@ function Home() {
                 <table className="w-full">
                   <tbody>
                     <tr className="border-t border-gray-200 hover:bg-gray-50 transition">
-                      <td className="px-4 py-2 text-gray-700 font-semibold">Total</td>
-                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">7</td>
+                      <td className="px-4 py-2 text-gray-700 font-semibold">
+                        Total
+                      </td>
+                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">
+                        7
+                      </td>
                     </tr>
                     <tr className="border-t border-gray-200 hover:bg-gray-50 transition">
-                      <td className="px-4 py-2 text-gray-700 font-semibold">Resolved</td>
-                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">5</td>
+                      <td className="px-4 py-2 text-gray-700 font-semibold">
+                        Resolved
+                      </td>
+                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">
+                        5
+                      </td>
                     </tr>
                     <tr className="border-t border-gray-200 hover:bg-gray-50 transition">
-                      <td className="px-4 py-2 text-gray-700 font-semibold">Unresolved</td>
-                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">2</td>
+                      <td className="px-4 py-2 text-gray-700 font-semibold">
+                        Unresolved
+                      </td>
+                      <td className="px-4 py-2 text-center text-gray-900 font-semibold">
+                        2
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -287,7 +356,9 @@ function Home() {
                     key={idx}
                     className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
                   >
-                    <span className="text-gray-700 font-medium">{item.label}</span>
+                    <span className="text-gray-700 font-medium">
+                      {item.label}
+                    </span>
                     <span className={`font-bold text-${item.color}-600`}>
                       {item.count}
                     </span>
@@ -295,7 +366,6 @@ function Home() {
                 ))}
               </div>
             </div>
-
           </div>
 
           {/* Quick Actions */}
@@ -311,672 +381,518 @@ function Home() {
             </button>
           </div>
         </main>
-      )
-      }
+      )}
 
       {user?.department === "Sales" && (
         <main className="flex-1 bg-white overflow-auto p-6">
-          <div className="space-y-6 mb-8">
-            {/* Row 1: Total Projects & Total Feeds */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Total Projects Card */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-blue-600 mb-4" />
-                <p className="text-gray-600 text-base font-medium">Total Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.total || 0}
-                </h3>
-              </div>
-
-              {/* Total Feeds Card */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-blue-600 mb-4" />
-                <p className="text-gray-600 text-base font-medium">Total Feeds</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.totalFeeds || 0}
-                </h3>
-              </div>
-            </div>
-
-            {/* Row 2: Other Project Types */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              {/* BAU Projects */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-green-600 mb-4" />
-                <p className="text-gray-600 text-base font-medium">BAU Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.bau || 0}
-                </h3>
-              </div>
-
-              {/* Adhoc Projects */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-yellow-500 mb-4" />
-                <p className="text-gray-600 text-base font-medium">Adhoc Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.adhoc || 0}
-                </h3>
-              </div>
-
-              {/* Once-Off Projects */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-sky-500 mb-4" />
-                <p className="text-gray-600 text-base font-medium">Once-Off Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.onceOff || 0}
-                </h3>
-              </div>
-
-              {/* POC Projects */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-purple-600 mb-4" />
-                <p className="text-gray-600 text-base font-medium">POC Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.poc || 0}
-                </h3>
-              </div>
-
-              {/* R&D Projects */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
-                onClick={() => navigate("/project")}>
-                <Activity className="w-8 h-8 text-pink-600 mb-4" />
-                <p className="text-gray-600 text-base font-medium">R&D Projects</p>
-                <h3 className="text-3xl font-bold text-gray-900 mt-1">
-                  {loading ? "..." : projectCounts.rnd || 0}
-                </h3>
-              </div>
-            </div>
+          <div className=" mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">
+              Welcome back, {user.name}!!
+            </h2>
+            {/* <p>Track your project, feeds and task activities here</p> */}
           </div>
+          <div className="space-y-10 mb-8">
+            {/* Row 1: Projects & Feeds Overview */}
+           <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3 mb-6">
+        Projects & Feeds Overview
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {overviewCards.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={index}
+              className="flex flex-col items-center p-6 border  border-gray-200 cursor-pointer "
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${item.color} text-white mb-2`}>
+                <Icon size={24} />
+              </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{item.label}</p>
+              <h3 className="text-3xl font-bold text-gray-900 mt-1">
+                {loading ? "..." : item.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
+            {/* Row 2: Project Types */}
+            <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mb-6">
+        Project Types
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {typeCards.map((type, index) => {
+          const Icon = type.icon;
+          return (
+            <div
+              key={index}
+              className={`flex flex-col items-center p-4 cursor-pointer  ${type.bg}`}
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${type.color} text-white mb-2`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{type.label}</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {loading ? "..." : type.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
-            {/* Project's Status Overview */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-800">Project's Status Overview</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {/* New */}
-                <div className="flex items-center p-4 bg-green-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-green-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">New</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.newStatus || 0}
-                    </h3>
-                  </div>
-                </div>
+            {/* Row 3: Project's Status Overview */}
+             <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-orange-500 pl-3 mb-6">
+        Project's Status Overview
+      </h2>
+      <div className="grid grid-cols-3 rounded-lg  sm:grid-cols-2 md:grid-cols-6 gap-6">
+        {statusCards.map((status, index) => {
+          const Icon = status.icon;
+          return (
+            <div
+              key={index}
+              className={`flex flex-col items-center p-4 cursor-pointer  ${status.bg}`}
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${status.color} text-white mb-2`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{status.label}</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {loading ? "..." : status.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
-                {/* Under Development */}
-                <div className="flex items-center p-4 bg-blue-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">Under Development</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.underDevelopment || 0}
-                    </h3>
-                  </div>
-                </div>
+            <div>
+              {/* Feeds Table */}
+              <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
+               <div className="flex items-center justify-between mb-6">
+  {/* Heading */}
+  <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+    Total Feeds
+  </h2>
 
-                {/* On-Hold */}
-                <div className="flex items-center p-4 bg-purple-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-purple-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">On-Hold</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.onHold || 0}
-                    </h3>
-                  </div>
-                </div>
+  {/* Search Box */}
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+      className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
+    </svg>
+  </div>
+</div>
 
-                {/* Development Completed */}
-                <div className="flex items-center p-4 bg-yellow-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-yellow-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">Production</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.devCompleted || 0}
-                    </h3>
-                  </div>
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto"></div>
+                <table className="min-w-full border border-gray-200 text-gray-700 text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(feeds || []).map((feed, idx) => (
+                      <tr
+                        key={feed._id || idx}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {(currentPage - 1) * pageSize + idx + 1}
+
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.projectId?.ProjectName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.FeedId || "-"}
+                        </td>
+                        <td
+                          className="px-4 py-2 border-b border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
+                          onClick={() => navigate(`/project/feed/${feed._id}`)}
+                        >
+                          {feed.FeedName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Platform || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Frequency || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              feed.Status === "New"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {feed.Status || "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                 </div>
-                <div className="flex items-center p-4 bg-orange-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-yellow-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">BAU-Started</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.bauStarted || 0}
-                    </h3>
-                  </div>
+              
+              <div className="flex justify-between m-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <label htmlFor="entries" className="text-gray-700">
+                    Show
+                  </label>
+                  <select
+                    id="entries"
+                    value={entries}
+                    onChange={(e) => {
+                      setEntries(Number(e.target.value));
+                      // setCurrentPage(1);
+                    }}
+                    className="border rounded px-2 py-1"
+                  >
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-700">entries</span>
                 </div>
-                {/* Closed */}
-                <div className="flex items-center p-4 bg-pink-50 rounded-xl"
-                  onClick={() => navigate("/project")}>
-                  <div className="w-12 h-12 flex items-center justify-center bg-pink-100 rounded-full mr-4">
-                    <Activity className="w-6 h-6 text-pink-600" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700 font-medium">Closed</p>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? "..." : projectCounts.closed || 0}
-                    </h3>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             </div>
           </div>
         </main>
 
-        // demo view
-        // <main className="flex-1 bg-white overflow-auto p-6">
-        // <SalesSummaryDashboard />
-        // </main>
-
       )}
-
-
 
       {/* Manager view */}
 
       {user?.roleName === "Manager" && (
-        <>
-          {user?.department === "QA" && (
-            // <main className="flex-1 bg-white overflow-auto p-6">
-
-            //   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            //     <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-            //       <Users className="w-10 h-10 text-blue-600 mr-4" />
-            //       <div>
-            //         <h3 className="text-2xl font-bold text-gray-800">10</h3>
-            //         <p className="text-gray-600">Total Projects</p>
-            //       </div>
-            //     </div>
-            //     <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-            //       <User className="w-10 h-10 text-blue-600 mr-4" />
-            //       <div>
-            //         <h3 className="text-2xl font-bold text-gray-800">22</h3>
-            //         <p className="text-gray-600">Total Tasks</p>
-            //       </div>
-            //     </div>
-            //     <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-            //       <Activity className="w-10 h-10 text-green-600 mr-4" />
-            //       <div>
-            //         <h3 className="text-2xl font-bold text-gray-800">6</h3>
-            //         <p className="text-gray-600">Active Projects</p>
-            //       </div>
-            //     </div>
-            //   </div>
-
-            //      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-            //     {/* QA Overview */}
-            //     <div className="bg-white p-4 rounded-md shadow-sm">
-            //       <h2 className="text-lg font-semibold mb-4">QA Overview</h2>
-            //       <div className="grid grid-cols-1 gap-3">
-            //         <div className="flex justify-between bg-green-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">Assigned to QA</span>
-            //           <span className="font-bold text-green-600">12</span>
-            //         </div>
-            //         <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">QA Running</span>
-            //           <span className="font-bold text-yellow-600">5</span>
-            //         </div>
-            //         <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">QA Passed</span>
-            //           <span className="font-bold text-yellow-600">5</span>
-            //         </div>
-            //         <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">QA Open</span>
-            //           <span className="font-bold text-yellow-600">5</span>
-            //         </div>
-            //         <div className="flex justify-between bg-blue-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">QA Failed</span>
-            //           <span className="font-bold text-blue-600">3</span>
-            //         </div>
-            //         <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-            //           <span className="text-gray-700 font-medium">QA Rejected</span>
-            //           <span className="font-bold text-yellow-600">5</span>
-            //         </div>
-            //       </div>
-            //     </div>
-
-            //     {/* Overview */}
-            //     <div>
-            //       <StatCardList
-            //         title="Task Overview"
-
-            //         items={[
-            //           // { label: "Team Members", count: 8 },
-            //           { label: "Active Tasks", count: 22 },
-            //           { label: "Completed Tasks", count: 15 },
-            //           { label: "Pending Tasks", count: 7 },
-            //         ]}
-            //       />
-            //     </div>
-
-            //     <OverdueSummary tasks={tasks} projects={projects} />
-            //   </div>
-            // </main>
-            <main className="flex-1 bg-gray-50 overflow-auto p-6">
-              {/* Top Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Users className="w-10 h-10 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">10</h3>
-                    <p className="text-gray-500">Total Projects</p>
-                  </div>
-                </div>
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <User className="w-10 h-10 text-indigo-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">22</h3>
-                    <p className="text-gray-500">Total Tasks</p>
-                  </div>
-                </div>
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Activity className="w-10 h-10 text-green-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">6</h3>
-                    <p className="text-gray-500">Active Projects</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* QA + Delivery + Escalations */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                {/* QA Overview */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">QA Overview</h2>
-                  <div className="grid gap-3">
-                    {[
-                      { label: "Assigned to QA", count: 8, color: "green" },
-                      { label: "QA Running", count: 5, color: "yellow" },
-                      { label: "QA Passed", count: 3, color: "green" },
-                      // { label: "QA Open", count: 5, color: "yellow" },
-                      { label: "QA Failed", count: 2, color: "red" },
-                      { label: "QA Rejected", count: 0, color: "gray" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
-                      >
-                        <span className="text-gray-700 font-medium">{item.label}</span>
-                        <span className={`font-bold text-${item.color}-600`}>
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Delivery Status Overview */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">Today's Delivery Status</h2>
-                  <div className="grid gap-3">
-                    {[
-                      { label: "Total", count: 3, color: "green" },
-                      { label: "Done", count: 2, color: "red" },
-                      { label: "Pending", count: 1, color: "yellow" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
-                      >
-                        <span className="text-gray-700 font-medium">{item.label}</span>
-                        <span className={`font-bold text-${item.color}-600`}>
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Task Overview */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">Task Overview</h2>
-                  <div className="grid gap-3">
-                    <div className="flex justify-between p-3 rounded-md bg-blue-50">
-                      <span className="text-gray-700 font-medium">Active Tasks</span>
-                      <span className="font-bold text-blue-600">20</span>
-                    </div>
-                    <div className="flex justify-between p-3 rounded-md bg-green-50">
-                      <span className="text-gray-700 font-medium">Completed Tasks</span>
-                      <span className="font-bold text-green-600">15</span>
-                    </div>
-                    <div className="flex justify-between p-3 rounded-md bg-yellow-50">
-                      <span className="text-gray-700 font-medium">Pending Tasks</span>
-                      <span className="font-bold text-yellow-600">5</span>
-                    </div>
-                  </div>
-                </div>
-
-
-
-                {/* Escalations */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">Escalations</h2>
-                  <div className="grid gap-3">
-                    {[
-                      { label: "High Priority", count: 2, color: "red" },
-                      { label: "Medium Priority", count: 5, color: "yellow" },
-                      { label: "Low Priority", count: 3, color: "green" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
-                      >
-                        <span className="text-gray-700 font-medium">{item.label}</span>
-                        <span className={`font-bold text-${item.color}-600`}>
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Overdue / Summaries Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <OverdueSummary tasks={tasks} projects={projects} />
-                {/* Additional Summary Cards if needed */}
-              </div>
-
-            </main>
-
-          )}
-
-          {user?.department === "R&D" && (
-            <main className="flex-1 bg-white overflow-auto p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Users className="w-10 h-10 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">15</h3>
-                    <p className="text-gray-600">Team Leads</p>
-                  </div>
-                </div>
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <User className="w-10 h-10 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">25</h3>
-                    <p className="text-gray-600">Developers</p>
-                  </div>
-                </div>
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Activity className="w-10 h-10 text-green-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">15</h3>
-                    <p className="text-gray-600">Active Projects</p>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-                {/* Today's Delivery Overview */}
-                <div className="bg-white p-4 rounded-md shadow-sm">
-                  <h2 className="text-lg font-semibold mb-4">Today's Delivery Overview</h2>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between bg-green-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Total</span>
-                      <span className="font-bold text-green-600">12</span>
-                    </div>
-                    <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Completed</span>
-                      <span className="font-bold text-yellow-600">5</span>
-                    </div>
-                    <div className="flex justify-between bg-blue-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Pending</span>
-                      <span className="font-bold text-blue-600">3</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Overview */}
-                <div>
-                  <StatCardList
-                    title="Task Overview"
-                    items={[
-                      // { label: "Team Members", count: 8 },
-                      { label: "Active Tasks", count: 25 },
-                      { label: "Completed Tasks", count: 15 },
-                      { label: "Pending Tasks", count: 7 },
-                      { label: "Blocked Tasks", count: 3 },
-                      { label: "Tasks Overdue", count: 2 },
-                      { label: "Support Tickets", count: 5 },
-                    ]}
-                  />
-                </div>
-
-                <OverdueSummary tasks={tasks} projects={projects} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                {/* QA Overview */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">QA Overview</h2>
-                  <div className="grid gap-3">
-                    {[
-                      { label: "Assigned to QA", count: 8, color: "green" },
-                      { label: "QA Running", count: 5, color: "yellow" },
-                      { label: "QA Passed", count: 3, color: "green" },
-                      // { label: "QA Open", count: 5, color: "yellow" },
-                      { label: "QA Failed", count: 2, color: "red" },
-                      { label: "QA Rejected", count: 0, color: "gray" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
-                      >
-                        <span className="text-gray-700 font-medium">{item.label}</span>
-                        <span className={`font-bold text-${item.color}-600`}>
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-
-
-
-
-
-                {/* Escalations */}
-                <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition">
-                  <h2 className="text-lg font-semibold mb-4">Escalations</h2>
-                  <div className="grid gap-3">
-                    {[
-                      { label: "High Priority", count: 2, color: "red" },
-                      { label: "Medium Priority", count: 5, color: "yellow" },
-                      { label: "Low Priority", count: 3, color: "green" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex justify-between p-3 rounded-md bg-${item.color}-100`}
-                      >
-                        <span className="text-gray-700 font-medium">{item.label}</span>
-                        <span className={`font-bold text-${item.color}-600`}>
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </main>
-          )}
-
-          {user?.department === "Operation" && (
-            <main className="flex-1 bg-white overflow-auto p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Users className="w-10 h-10 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">15</h3>
-                    <p className="text-gray-600">Team Leads</p>
-                  </div>
-                </div>
-                <div className="fl                                                                                                                        ex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <User className="w-10 h-10 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">25</h3>
-                    <p className="text-gray-600">Developers</p>
-                  </div>
-                </div>
-                <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-                  <Activity className="w-10 h-10 text-green-600 mr-4" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">15</h3>
-                    <p className="text-gray-600">Active Projects</p>
-                  </div>
-                </div>
-
-                {/* <div className="flex items-center bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-          <Clock className="w-10 h-10 text-yellow-600 mr-4" />
-          <div>
-            <h3 className="text-2xl font-bold text-gray-800">12</h3>
-            <p className="text-gray-600">Pending Tickets</p>
+         <main className="flex-1 bg-white overflow-auto p-6">
+          <div className=" mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">
+              Welcome back, {user.name}!!
+            </h2>
+            {/* <p>Track your project, feeds and task activities here</p> */}
           </div>
-        </div> */}
+          <div className="space-y-10 mb-8">
+            {/* Row 1: Projects & Feeds Overview */}
+           <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3 mb-6">
+        Projects & Feeds Overview
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {overviewCards.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={index}
+              className="flex flex-col items-center p-6 border  border-gray-200 cursor-pointer "
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${item.color} text-white mb-2`}>
+                <Icon size={24} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Project Summary */}
-                {/* Today's Delivery Overview */}
-                <div className="bg-white p-4 rounded-md shadow-sm">
-                  <h2 className="text-lg font-semibold mb-4">Today's Delivery Overview</h2>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between bg-green-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Total</span>
-                      <span className="font-bold text-green-600">12</span>
-                    </div>
-                    <div className="flex justify-between bg-yellow-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Completed</span>
-                      <span className="font-bold text-yellow-600">5</span>
-                    </div>
-                    <div className="flex justify-between bg-blue-100 p-3 rounded-md">
-                      <span className="text-gray-700 font-medium">Pending</span>
-                      <span className="font-bold text-blue-600">3</span>
-                    </div>
-                  </div>
-                </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{item.label}</p>
+              <h3 className="text-3xl font-bold text-gray-900 mt-1">
+                {loading ? "..." : item.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
-                {/* Overview */}
-                <div>
-                  <StatCardList
-                    title="Task Overview"
-                    items={[
-                      // { label: "Team Members", count: 8 },
-                      { label: "Active Tasks", count: 25 },
-                      { label: "Completed Tasks", count: 15 },
-                      { label: "Pending Tasks", count: 7 },
-                      { label: "Blocked Tasks", count: 3 },
-                      { label: "Tasks Overdue", count: 2 },
-                      { label: "Support Tickets", count: 5 },
-                    ]}
-                  />
-                </div>
+            {/* Row 2: Project Types */}
+            <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mb-6">
+        Project Types
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {typeCards.map((type, index) => {
+          const Icon = type.icon;
+          return (
+            <div
+              key={index}
+              className={`flex flex-col items-center p-4 cursor-pointer  ${type.bg}`}
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${type.color} text-white mb-2`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{type.label}</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {loading ? "..." : type.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
-                <div className="bg-white p-4 rounded-md shadow-sm flex-1">
-                  <h2 className="text-lg font-semibold mb-4">Overdue</h2>
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      // onClick={() => setActiveTab("tasks")}
-                      className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "tasks"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700"
-                        }`}
-                    >
-                      Tasks
-                    </button>
-                    <button
-                      // onClick={() => setActiveTab("projects")}
-                      className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "projects"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700"
-                        }`}
-                    >
-                      Projects
-                    </button>
-                  </div>
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-gray-600">Name</th>
-                        <th className="px-4 py-2 text-left text-gray-600">Due Date</th>
-                        <th className="px-4 py-2 text-right text-gray-600">Overdue By</th>
+            {/* Row 3: Project's Status Overview */}
+             <div className="bg-white shadow-md rounded-lg p-5 w-full">
+      <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-orange-500 pl-3 mb-6">
+        Project's Status Overview
+      </h2>
+      <div className="grid grid-cols-3 rounded-lg  sm:grid-cols-2 md:grid-cols-6 gap-6">
+        {statusCards.map((status, index) => {
+          const Icon = status.icon;
+          return (
+            <div
+              key={index}
+              className={`flex flex-col items-center p-4 cursor-pointer  ${status.bg}`}
+              onClick={() => navigate("/project")}
+            >
+              <div className={`p-3 rounded-full ${status.color} text-white mb-2`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-gray-600 text-sm font-medium text-center">{status.label}</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {loading ? "..." : status.value || 0}
+              </h3>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+            
+
+            {/* ROW 4 */}
+            <div className="flex flex-col lg:flex-row gap-6">
+     <div className="bg-white shadow-md rounded-lg p-5 w-full max-w-4xl">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+          Today's Feed Delivery
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          {/* Total Tasks */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <FaTasks size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Delivery</p>
+            </div>
+          </div>
+
+          {/* Pending */}
+          {/* <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <FaClock size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Pending</p>
+            </div>
+          </div> */}
+
+          {/* In Progress */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-blue-400 text-white p-3 rounded-full">
+              <FaRocket size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Start</p>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+            <div className="bg-yellow-400 text-white p-3 rounded-full">
+              <FaCheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Delivered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Escalation Card */}
+      <div className="bg-white shadow-md rounded-lg p-5 w-64 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-red-500 pl-3">
+          Escalation
+        </h2>
+        <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+          <div className="bg-red-500 text-white p-3 rounded-full">
+            <FaCube size={20} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">1</p>
+            <p className="text-gray-500 text-sm">Escalation</p>
+          </div>
+        </div>
+      </div>
+</div>
+            <div>
+              {/* Feeds Table */}
+              <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
+               <div className="flex items-center justify-between mb-6">
+  {/* Heading */}
+  <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+    Total Feeds
+  </h2>
+
+  {/* Search Box */}
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+      className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
+    </svg>
+  </div>
+</div>
+
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto"></div>
+                <table className="min-w-full border border-gray-200 text-gray-700 text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(feeds || []).map((feed, idx) => (
+                      <tr
+                        key={feed._id || idx}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {(currentPage - 1) * pageSize + idx + 1}
+
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.projectId?.ProjectName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.FeedId || "-"}
+                        </td>
+                        <td
+                          className="px-4 py-2 border-b border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
+                          onClick={() => navigate(`/project/feed/${feed._id}`)}
+                        >
+                          {feed.FeedName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Platform || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Frequency || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              feed.Status === "New"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {feed.Status || "-"}
+                          </span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {(activeTab === "tasks" ? overdueTasks : overdueProjects).map(
-                        (item, idx) => {
-                          const due = new Date(item.dueDate);
-                          const diffDays = Math.ceil(
-                            (new Date() - due) / (1000 * 60 * 60 * 24)
-                          );
-                          return (
-                            <tr
-                              key={idx}
-                              className="border-t border-gray-200 hover:bg-gray-50"
-                            >
-                              <td className="px-4 py-2 text-blue-600 font-semibold">
-                                {item.name || item.title}
-                              </td>
-                              <td className="px-4 py-2 text-gray-600">
-                                {due.toDateString()}
-                              </td>
-                              <td className="px-4 py-2 text-right text-red-600 font-semibold">
-                                {diffDays} {diffDays > 1 ? "Days" : "Day"}
-                              </td>
-                            </tr>
-                          );
-                        }
-                      )}
-                      {(activeTab === "tasks" ? overdueTasks : overdueProjects).length ===
-                        0 && (
-                          <tr>
-                            <td colSpan="3" className="px-4 py-6 text-center text-gray-500">
-                              No overdue {activeTab}.
-                            </td>
-                          </tr>
-                        )}
-                    </tbody>
-                  </table>
+                    ))}
+                  </tbody>
+                </table>
                 </div>
+              
+              <div className="flex justify-between m-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <label htmlFor="entries" className="text-gray-700">
+                    Show
+                  </label>
+                  <select
+                    id="entries"
+                    value={entries}
+                    onChange={(e) => {
+                      setEntries(Number(e.target.value));
+                      // setCurrentPage(1);
+                    }}
+                    className="border rounded px-2 py-1"
+                  >
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-700">entries</span>
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
+            </div>
+          </div>
+        </main>
 
 
-            </main>
-          )}
-
-
-
-
-
-        </>
       )}
 
       {user?.roleName === "Team Lead" && (
         <main className="flex-1 bg-white overflow-auto p-6">
-
           {/* <div className="bg-white p-4 rounded-md shadow-sm mb-8">
             <h2 className="text-lg font-semibold mb-4">Today's Delivery Overview</h2>
             <div className="grid grid-cols-1 gap-3">
@@ -1017,7 +933,6 @@ function Home() {
                 <p className="text-gray-600">Active Projects</p>
               </div>
             </div>
-
           </div>
 
           <div className="bg-white p-5 rounded-xl shadow hover:shadow-md transition mb-4">
@@ -1028,7 +943,9 @@ function Home() {
                 <span className="font-bold text-blue-600">20</span>
               </div>
               <div className="flex justify-between p-3 rounded-md bg-green-50">
-                <span className="text-gray-700 font-medium">Completed Tasks</span>
+                <span className="text-gray-700 font-medium">
+                  Completed Tasks
+                </span>
                 <span className="font-bold text-green-600">15</span>
               </div>
               <div className="flex justify-between p-3 rounded-md bg-yellow-50">
@@ -1085,63 +1002,426 @@ function Home() {
             </div>
           </div>
         </main>
-
       )}
-
 
       {/* Developer Home Page */}
       {user?.roleName === "Developer" && (
-        <>
-          {/* Feed Section */}
-          <section className="bg-white p-4 rounded-md shadow-sm overflow-y-auto md:w-2/4">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Feed Details</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full rounded-md">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-gray-600">Feed Status</th>
-                    <th className="px-4 py-2 text-left text-gray-600">Total</th>
-                    <th className="px-4 py-2 text-left text-gray-600">Today</th>
-                    <th className="px-4 py-2 text-left text-gray-600">Tomorrow</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {feedRows.map((feedName, index) => {
-                    let textColorClass = "text-gray-900";
-                    if (feedName === "QA Failed") textColorClass = "text-red-600 bg-red-100 font-semibold";
-                    else if (feedName === "QA Rejected") textColorClass = "text-yellow-800 bg-yellow-100 font-semibold";
-                    else if (feedName === "QA Passed") textColorClass = "text-green-600 bg-green-100 font-semibold";
-                    else if (feedName === "Delayed") textColorClass = "text-amber-600 font-semibold";
-                    else if (feedName === "Delivered") textColorClass = "text-teal-600 font-semibold";
-
-                    return (
-                      <tr key={index} className="hover:bg-gray-50 border-t border-gray-200">
-                        <td className={`px-4 py-2 ${textColorClass}`}>{feedName}</td>
-                        <td className={`px-4 py-2 ${textColorClass}`}>0</td>
-                        <td className={`px-4 py-2 ${textColorClass}`}>0</td>
-                        <td className={`px-4 py-2 ${textColorClass}`}>0</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        <main className="flex-1 bg-white overflow-auto p-6">
+          <div className=" mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">
+              Welcome back, {user.name}!!
+            </h2>
+            {/* <p>Track your project, feeds and task activities here</p> */}
+          </div>
+          <div className="space-y-10 mb-8">
+            {/* Row 1: Projects & Feeds Overview */}
+        <div className="flex flex-col lg:flex-row gap-6">
+     <div className="bg-white shadow-md rounded-lg p-5 w-full max-w-4xl">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+          Today's Feed Delivery
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          {/* Total Tasks */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <FaTasks size={20} />
             </div>
-          </section>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Delivery</p>
+            </div>
+          </div>
 
-          {/* Task + Support Section */}
-          <section className="flex flex-col gap-4 md:w-1/4">
-            <StatCardList title="Task Overview" items={taskCounts} />
-            {/* <StatCardList title="Support Tickets" items={[
-              { label: "Total", count: totalTickets },
-              { label: "Unresolved", count: unresolvedTickets }
-            ]} /> */}
-          </section>
-        </>
+          {/* Pending */}
+          {/* <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <FaClock size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Pending</p>
+            </div>
+          </div> */}
+
+          {/* In Progress */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-blue-400 text-white p-3 rounded-full">
+              <FaRocket size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Start</p>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+            <div className="bg-yellow-400 text-white p-3 rounded-full">
+              <FaCheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Delivered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Escalation Card */}
+      <div className="bg-white shadow-md rounded-lg p-5 w-64 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-red-500 pl-3">
+          Escalation
+        </h2>
+        <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+          <div className="bg-red-500 text-white p-3 rounded-full">
+            <FaCube size={20} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">1</p>
+            <p className="text-gray-500 text-sm">Escalation</p>
+          </div>
+        </div>
+      </div>
+</div>
+
+            {/* Row 2: Project Types */}
+                                 <div className="flex flex-col lg:flex-row gap-6">
+     <div className="bg-white shadow-md rounded-lg p-5 w-full">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+          Crawl Summary
+        </h2>
+        <div className="grid grid-cols-4 gap-4">
+          {/* Total Tasks */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <FaTasks size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Scheduled</p>
+            </div>
+          </div>
+
+          {/* Pending */}
+          <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <FaClock size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Running</p>
+            </div>
+          </div>
+
+          {/* In Progress */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-blue-400 text-white p-3 rounded-full">
+              
+              <FaCheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Finished</p>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+            <div className="bg-yellow-400 text-white p-3 rounded-full">
+              <FaRocket size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">20</p>
+              <p className="text-gray-500 text-sm">Crawl Yet To Start</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Escalation Card */}
+      <div className="bg-white shadow-md rounded-lg p-5 w-64 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-red-500 pl-3">
+          Escalation
+        </h2>
+        <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+          <div className="bg-red-500 text-white p-3 rounded-full">
+            <FaCube size={20} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">1</p>
+            <p className="text-gray-500 text-sm">Escalation</p>
+          </div>
+        </div>
+      </div>
+</div>
+
+            {/* Row 3: Crawl Status Overview */}
+                      <div className="flex flex-col lg:flex-row gap-6">
+     <div className="bg-white shadow-md rounded-lg p-5 w-full">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+          Crawl Summary
+        </h2>
+        <div className="grid grid-cols-4 gap-4">
+          {/* Total Tasks */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <FaTasks size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Scheduled</p>
+            </div>
+          </div>
+
+          {/* Pending */}
+          <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <FaClock size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Running</p>
+            </div>
+          </div>
+
+          {/* In Progress */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-blue-400 text-white p-3 rounded-full">
+              
+              <FaCheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Crawl Finished</p>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+            <div className="bg-yellow-400 text-white p-3 rounded-full">
+              <FaRocket size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">20</p>
+              <p className="text-gray-500 text-sm">Crawl Yet To Start</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Escalation Card */}
+      <div className="bg-white shadow-md rounded-lg p-5 w-64 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-red-500 pl-3">
+          Escalation
+        </h2>
+        <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+          <div className="bg-red-500 text-white p-3 rounded-full">
+            <FaCube size={20} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">1</p>
+            <p className="text-gray-500 text-sm">Escalation</p>
+          </div>
+        </div>
+      </div>
+</div>
+
+            
+
+            {/* ROW 4 */}
+            <div className="flex flex-col lg:flex-row gap-6">
+     <div className="bg-white shadow-md rounded-lg p-5 w-full max-w-4xl">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+          Tasks Summary
+        </h2>
+        <div className="grid grid-cols-4 gap-4">
+          {/* Total Tasks */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <FaTasks size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">20</p>
+              <p className="text-gray-500 text-sm">Total Tasks</p>
+            </div>
+          </div>
+
+          {/* Pending */}
+          <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <FaClock size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">Pending</p>
+            </div>
+          </div>
+
+          {/* In Progress */}
+          <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+            <div className="bg-blue-400 text-white p-3 rounded-full">
+              <FaRocket size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">0</p>
+              <p className="text-gray-500 text-sm">In Progress</p>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+            <div className="bg-yellow-400 text-white p-3 rounded-full">
+              <FaCheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">20</p>
+              <p className="text-gray-500 text-sm">Completed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Escalation Card */}
+      <div className="bg-white shadow-md rounded-lg p-5 w-64 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-red-500 pl-3">
+          Escalation
+        </h2>
+        <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+          <div className="bg-red-500 text-white p-3 rounded-full">
+            <FaCube size={20} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">1</p>
+            <p className="text-gray-500 text-sm">Escalation</p>
+          </div>
+        </div>
+      </div>
+</div>
+            <div>
+              {/* Feeds Table */}
+              <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
+               <div className="flex items-center justify-between mb-6">
+  {/* Heading */}
+  <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+    Total Feeds
+  </h2>
+
+  {/* Search Box */}
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+      className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
+    </svg>
+  </div>
+</div>
+
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto"></div>
+                <table className="min-w-full border border-gray-200 text-gray-700 text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {(feeds || []).map((feed, idx) => (
+                      <tr
+                        key={feed._id || idx}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {(currentPage - 1) * pageSize + idx + 1}
+
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.projectId?.ProjectName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.FeedId || "-"}
+                        </td>
+                        <td
+                          className="px-4 py-2 border-b border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
+                          onClick={() => navigate(`/project/feed/${feed._id}`)}
+                        >
+                          {feed.FeedName || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Platform || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          {feed.Frequency || "-"}
+                        </td>
+                        <td className="px-4 py-2 border-b border-gray-200">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              feed.Status === "New"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {feed.Status || "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
+              
+              <div className="flex justify-between m-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <label htmlFor="entries" className="text-gray-700">
+                    Show
+                  </label>
+                  <select
+                    id="entries"
+                    value={entries}
+                    onChange={(e) => {
+                      setEntries(Number(e.target.value));
+                      // setCurrentPage(1);
+                    }}
+                    className="border rounded px-2 py-1"
+                  >
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-700">entries</span>
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            </div>
+          </div>
+        </main>
       )}
-
-
-
-
     </div>
   );
 }
@@ -1154,15 +1434,24 @@ function StatCardList({ title, items }) {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-4 py-2 text-left text-gray-600 font-medium">Type</th>
-              <th className="px-4 py-2 text-center text-gray-600 font-medium">Count</th>
+              <th className="px-4 py-2 text-left text-gray-600 font-medium">
+                Type
+              </th>
+              <th className="px-4 py-2 text-center text-gray-600 font-medium">
+                Count
+              </th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, idx) => (
-              <tr key={idx} className="border-t border-gray-200 hover:bg-gray-50 transition">
+              <tr
+                key={idx}
+                className="border-t border-gray-200 hover:bg-gray-50 transition"
+              >
                 <td className="px-4 py-2 text-gray-700">{item.label}</td>
-                <td className="px-4 py-2 text-center text-gray-900 font-semibold">{item.count}</td>
+                <td className="px-4 py-2 text-center text-gray-900 font-semibold">
+                  {item.count}
+                </td>
               </tr>
             ))}
           </tbody>

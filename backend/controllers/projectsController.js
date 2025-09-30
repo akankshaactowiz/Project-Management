@@ -8,439 +8,6 @@ import { generateFeedId } from "../utils/generateFeedId.js";
 import mongoose from "mongoose";
 
 
-// export const createProject = async (req, res) => {
-//   try {
-//     const {
-//       ProjectCode,
-//       ProjectName,
-//       SOWFile,
-//       SampleFiles,
-//       PMId,
-//       BDEId,
-//       DepartmentId: Department,
-//       Frequency,
-//       Priority,
-//       ProjectType,
-//       Timeline,      // new
-//       Description,   // new
-//     } = req.body;
-
-//     // you can get userId from auth middleware
-//     const createdBy = req.user?._id || null;
-
-//     const project = new Project({
-//       ProjectCode,
-//       ProjectName,
-//       SOWFile,
-//       SampleFiles,
-//       PMId,
-//       BDEId,
-//       Department,
-//       Frequency,
-//       ProjectType,
-//       Priority,
-//       Timeline: Timeline || "",   // store as array
-//       Description: Description || "", // default empty string
-//       CreatedBy: createdBy,
-//     });
-
-//     await project.save();
-//     res.status(201).json({ success: true, data: project });
-//   } catch (error) {
-//     console.error("Error creating project:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-
-// export const createProject = async (req, res) => {
-//   try {
-//     let {
-//       ProjectCode,
-//       ProjectName,
-//       PMId,
-//       BDEId,
-//       DepartmentId: Department,
-//       Frequency,
-//       Priority,
-//       ProjectType,
-//       Timeline,
-//       Description,
-//     } = req.body;
-
-//     const createdBy = req.user?._id || null;
-
-//     ProjectCode = `ACT-${ProjectCode}`;
-
-//     // Extract file paths from multer
-//     const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
-
-//     const SOWFile = req.files?.SOWFile
-//       ? req.files.SOWFile.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
-//       : [];
-
-//     const SampleFiles = req.files?.SampleFiles
-//       ? req.files?.SampleFiles.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
-//       : [];
-
-//     const project = new Project({
-//       ProjectCode,
-//       ProjectName,
-//       SOWFile,
-//       SampleFiles,
-//       PMId,
-//       BDEId,
-//       Department,
-//       Frequency,
-//       ProjectType,
-//       Priority,
-//       Timeline: Timeline || "",
-//       Description: Description || "",
-//       CreatedBy: createdBy,
-//     });
-
-//     await project.save();
-
-//     res.status(201).json({
-//       success: true,
-//       data: project,
-//       message: "Project created with uploaded files",
-//     });
-//   } catch (error) {
-//     console.error("Error creating project:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-// export const updateProject = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Extract fields from body
-//     const {
-//       ProjectName,
-//       ProjectCode,
-//       Frequency,
-//       PMId,
-//       BDEId,
-//       Department,
-//       Priority,
-//       ProjectType,
-//       Timeline,
-//       Description,
-//     } = req.body;
-
-//     // Fetch existing project
-//     const project = await Project.findById(id);
-//     if (!project) {
-//       return res.status(404).json({ success: false, message: "Project not found" });
-//     }
-
-//     // Get newly uploaded files (if any)
-//     const newSOW = req.files?.SOWFile ? req.files.SOWFile.map(f => f.filename) : [];
-//     const newSamples = req.files?.SampleFiles ? req.files.SampleFiles.map(f => f.filename) : [];
-
-//     // Merge existing with new uploads
-//     const updatedSOW = [...project.SOWFile, ...newSOW];
-//     const updatedSamples = [...project.SampleFiles, ...newSamples];
-
-//     // Update fields
-//     project.ProjectName = ProjectName || project.ProjectName;
-//     project.ProjectCode = ProjectCode || project.ProjectCode;
-//     project.PMId = req.body.PMId || project.PMId;
-//     project.BDEId = req.body.BDEId || project.BDEId;
-//     project.Department = req.body.Department || project.Department;
-
-//     project.Frequency = Frequency || project.Frequency;
-//     project.Priority = Priority || project.Priority;
-//     project.ProjectType = ProjectType || project.ProjectType;
-//     project.Timeline = Timeline || project.Timeline;
-//     project.Description = Description || project.Description;
-//     project.SOWFile = updatedSOW;
-//     project.SampleFiles = updatedSamples;
-
-//     await project.save();
-
-//     res.json({ success: true, project });
-//   } catch (error) {
-//     console.error("Update Project Error:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-// export const getProjects = async (req, res) => {
-//   try {
-//     const {
-//       page = 1,  
-//       pageSize = 10,
-//       status,
-//       search,
-//       date_range,
-//       qaid,
-//     } = req.query;
-
-//     // const userId = req.user._id;
-//     const userId = req.user._id.toString();
-//     const role = req.user.roleId?.name; // "Superadmin", "Team Lead", "Developer", "QA", etc.
-//     const department = req.user.departmentId?.department;
-
-//     const filter = {};
-
-//     // Status filter
-//     if (status && status !== "All") {
-//       filter.Status = { $regex: `^${status}$`, $options: "i" };
-//     }
-
-//     // Search filter
-//     if (search) {
-//       filter.ProjectName = { $regex: search, $options: "i" };
-//     }
-
-//     // QA filter
-//     if (qaid) filter.QAId = qaid;
-
-//     // Date range filter
-//     // if (date_range) {
-//     //   const now = new Date();
-//     //   let startDate, endDate;
-
-//     //   switch (date_range.toLowerCase()) {
-//     //     case "today":
-//     //       startDate = new Date(now.setHours(0, 0, 0, 0));
-//     //       endDate = new Date(now.setHours(23, 59, 59, 999));
-//     //       break;
-//     //     case "yesterday":
-//     //       startDate = new Date(now.setDate(now.getDate() - 1));
-//     //       startDate.setHours(0, 0, 0, 0);
-//     //       endDate = new Date(now.setDate(now.getDate() - 1));
-//     //       endDate.setHours(23, 59, 59, 999);
-//     //       break;
-//     //     case "this_week":
-//     //       startDate = new Date(now);
-//     //       startDate.setDate(startDate.getDate() - startDate.getDay());
-//     //       startDate.setHours(0, 0, 0, 0);
-//     //       endDate = new Date();
-//     //       endDate.setHours(23, 59, 59, 999);
-//     //       break;
-//     //     case "last_week":
-//     //       startDate = new Date(now);
-//     //       startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
-//     //       startDate.setHours(0, 0, 0, 0);
-//     //       endDate = new Date(now);
-//     //       endDate.setDate(endDate.getDate() - endDate.getDay());
-//     //       endDate.setHours(0, 0, 0, 0);
-//     //       break;
-//     //     case "this_month":
-//     //       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-//     //       endDate = new Date();
-//     //       endDate.setHours(23, 59, 59, 999);
-//     //       break;
-//     //     case "last_month":
-//     //       startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-//     //       endDate = new Date(now.getFullYear(), now.getMonth(), 1);
-//     //       endDate.setHours(0, 0, 0, 0);
-//     //       break;
-//     //     default:
-//     //       startDate = null;
-//     //       endDate = null;
-//     //   }
-
-//     //   if (startDate && endDate) {
-//     //     filter.CreatedDate = { $gte: startDate, $lt: endDate };
-//     //   }
-//     // }
-//     if (date_range) {
-//   const now = new Date();
-//   const today = new Date(now.setHours(0, 0, 0, 0));
-//   const tomorrow = new Date(today);
-//   tomorrow.setDate(tomorrow.getDate() + 1);
-
-//   const targetDay = now.toLocaleString("en-US", { weekday: "long" }); // e.g., "Monday"
-//   const targetDate = now.getDate(); // 1-31
-
-//   const feeds = await FeedData.find({ /* your other filters */ });
-
-//   let filteredFeeds = feeds.filter(feed => {
-//     const freq = feed.Frequency;
-
-//     if (date_range.toLowerCase() === "today") {
-//       if (freq === "Daily") return true;
-//       if (freq === "Weekly") return feed.TimelineDay === targetDay;
-//       if (freq === "Monthly") return feed.TimelineDate === targetDate;
-//     }
-
-//     if (date_range.toLowerCase() === "tomorrow") {
-//       const tomorrowDay = tomorrow.toLocaleString("en-US", { weekday: "long" });
-//       const tomorrowDate = tomorrow.getDate();
-
-//       if (freq === "Daily") return true;
-//       if (freq === "Weekly") return feed.TimelineDay === tomorrowDay;
-//       if (freq === "Monthly") return feed.TimelineDate === tomorrowDate;
-//     }
-
-//     // Optional: fallback to createdDate filter if frequency doesn't match
-//     return false;
-//   });
-
-//   // now `filteredFeeds` contains only feeds due for "today" or "tomorrow" based on frequency
-// }
-
-
-//     // Role-based project filtering (project-level)
-//     if (role !== "Superadmin") {
-//       if (department === "Sales") {
-//         if (role === "Sales Manager") filter.CreatedBy = userId;
-//         if (role === "Business Development Executive") filter.BDEId = userId;
-//       } else {
-//         if (role === "Manager") filter.PMId = userId;
-//         // other roles like TL, Developer, QA will be filtered at feed-level
-//       }
-//     }
-
-//     // Pagination
-//     const parsedPage = parseInt(page, 10) || 1;
-//     const parsedPageSize = parseInt(pageSize, 10) || 20;
-
-//     // Fetch projects
-//     const total = await Project.countDocuments(filter);
-
-//     const projects = await Project.find(filter)
-//       .populate("PMId QAId BAUPersonId BDEId")
-//       .populate("CreatedBy", "name")
-//       .populate({
-//         path: "Feeds",
-//         populate: [
-//           { path: "TLId", select: "name roleId" },
-//           { path: "DeveloperIds", select: "name roleId" },
-//           { path: "QAId", select: "name roleId" },
-//           { path: "BAUPersonId", select: "name roleId" },
-//           { path: "createdBy", select: "name email" },
-//         ],
-//       })
-//       .sort({ CreatedDate: -1 })
-//       .skip((parsedPage - 1) * parsedPageSize)
-//       .limit(parsedPageSize)
-//       .lean();
-
-//     // Feed-level filtering for TL, Developer, QA
-//     const filteredProjects = projects.map(project => {
-//       if (["Team Lead", "Developer", "QA"].includes(role)) {
-//         const feeds = project.Feeds.filter(feed => {
-//           if (role === "Team Lead") return feed.TLId?._id?.toString() === userId;
-//           if (role === "Developer")
-//             return feed.DeveloperIds.some(dev => dev._id?.toString() === userId);
-//           if (role === "QA") return feed.QAId?._id?.toString() === userId;
-//           return true;
-//         });
-//         return { ...project, Feeds: feeds };
-//       }
-//       return project;
-//     });
-
-//     res.status(200).json({
-//       data: filteredProjects,
-//       total,
-//       page: parsedPage,
-//       pageSize: parsedPageSize,
-//     });
-//   } catch (error) {
-//     console.error("Error in getProjects:", error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-
-// export const createProject = async (req, res) => {
-//   try {
-//     let {
-//       ProjectCode,
-//       ProjectName,
-//       PMId,
-//       BDEId,
-//       DepartmentId: Department,
-//       Frequency,
-//       Priority,
-//       ProjectType,
-//       Timeline,
-//       Description,
-//       // ✅ Initial feed fields
-//       DomainName,
-//       ApplicationType,
-//       CountryName,
-//     } = req.body;
-
-//     const createdBy = req.user?._id || null; // logged-in user
-
-//     // Prepend ACT prefix
-//     ProjectCode = `[ACT-${ProjectCode}]`;
-
-//     const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
-
-//     // Convert SOW files to objects with metadata
-//     const SOWFile = req.files?.SOWFile
-//       ? req.files.SOWFile.map(f => ({
-//           fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
-//           uploadedBy: createdBy,
-//           uploadedAt: new Date(),
-//         }))
-//       : [];
-
-//     // Convert SampleFiles to objects with metadata
-//     const SampleFiles = req.files?.SampleFiles
-//       ? req.files.SampleFiles.map(f => ({
-//           fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
-//           uploadedBy: createdBy,
-//           uploadedAt: new Date(),
-//         }))
-//       : [];
-
-//     // 1️⃣ Create Project
-//     const project = new Project({
-//       ProjectCode,
-//       ProjectName,
-//       SOWFile,
-//       SampleFiles,
-//       PMId,
-//       BDEId,
-//       DepartmentId: Department,
-//       Frequency,
-//       ProjectType,
-//       Priority,
-//       Timeline: Timeline || "",
-//       Description: Description || "",
-//       CreatedBy: createdBy,
-//     });
-
-//     await project.save();
-
-//     // 2️⃣ Create initial Feed (only 3 fields + projectId + FeedId)
-//     const FeedId = generateFeedId(); // numeric ID
-
-//     const initialFeed = new Feed({
-//       projectId: project._id,
-//       FeedId,
-//       DomainName,
-//       ApplicationType,
-//       CountryName,
-//       createdBy,
-//     });
-
-//     await initialFeed.save();
-
-//     // 3️⃣ Push feed reference to Project.Feeds
-//     await Project.findByIdAndUpdate(project._id, { $push: { Feeds: initialFeed._id } });
-//     await project.save();
-
-//     res.status(201).json({
-//       success: true,
-//       data: { project, feed: initialFeed },
-//       message: "Project created with uploaded files and initial feed",
-//     });
-//   } catch (error) {
-//     console.error("Error creating project:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
 
 export const createProject = async (req, res) => {
   try {
@@ -684,60 +251,60 @@ export const getProjects = async (req, res) => {
 
 
     // Date range filter
-    if (date_range) {
-      const now = new Date();
-      let startDate, endDate;
+    // if (date_range) {
+    //   const now = new Date();
+    //   let startDate, endDate;
 
-      switch (date_range.toLowerCase()) {
-        case "today":
-          startDate = new Date(now);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "yesterday":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "this_week":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - startDate.getDay());
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "last_week":
-          startDate = new Date(now);
-          startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setDate(endDate.getDate() - endDate.getDay());
-          endDate.setHours(0, 0, 0, 0);
-          break;
-        case "this_month":
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "last_month":
-          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          endDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate.setHours(0, 0, 0, 0);
-          break;
-        default:
-          startDate = null;
-          endDate = null;
-          break;
-      }
+    //   switch (date_range.toLowerCase()) {
+    //     case "today":
+    //       startDate = new Date(now);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "yesterday":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - 1);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setDate(endDate.getDate() - 1);
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "this_week":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - startDate.getDay());
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date();
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "last_week":
+    //       startDate = new Date(now);
+    //       startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
+    //       startDate.setHours(0, 0, 0, 0);
+    //       endDate = new Date(now);
+    //       endDate.setDate(endDate.getDate() - endDate.getDay());
+    //       endDate.setHours(0, 0, 0, 0);
+    //       break;
+    //     case "this_month":
+    //       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    //       endDate = new Date();
+    //       endDate.setHours(23, 59, 59, 999);
+    //       break;
+    //     case "last_month":
+    //       startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    //       endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    //       endDate.setHours(0, 0, 0, 0);
+    //       break;
+    //     default:
+    //       startDate = null;
+    //       endDate = null;
+    //       break;
+    //   }
 
-      if (startDate && endDate) {
-        filter.CreatedDate = { $gte: startDate, $lt: endDate };
-      }
-    }
+    //   if (startDate && endDate) {
+    //     filter.CreatedDate = { $gte: startDate, $lt: endDate };
+    //   }
+    // }
     // Role-based filtering
     const userId = req.user._id;
     const role = req.user.roleId?.name; // e.g., "Superadmin", "Sales Head", "Sales Manager", "BDE"
@@ -875,8 +442,45 @@ export const getProjects = async (req, res) => {
 
 export const getProjectCounts = async (req, res) => {
   try {
-    // No filter applied
+     const { userId, role, department } = req.user; // assuming req.user has these
+
+    // Build filter based on role/department
+    const filter = {};
+
+    if (role === "Superadmin") {
+      // No filter, get all projects
+    } else if (department === "Sales") {
+      if (role === "Sales Head") {
+        // All Sales projects
+        // filter.department = "Sales"; // optional if you want to filter Sales only
+      } else if (role === "Sales Manager") {
+        filter.CreatedBy = userId;
+      } else if (role === "Business Development Executive") {
+        filter.BDEId = userId; // assuming single BDEId
+        // if it's an array, use: filter.BDEIds = userId;
+      }
+    } else {
+      // Other departments
+      if (role === "Manager") {
+        filter.PMId = userId;
+      } else if (role === "Team Lead") {
+        filter.TLId = userId;
+      } else {
+        filter.$or = [
+          { PMId: userId },
+          { PCId: userId },
+          { TLId: userId },
+          { DeveloperIds: userId },
+          { QAId: userId },
+          { BAUId: userId },
+          { BDEId: userId },
+        ];
+      }
+    }
+
+   
     const counts = await Project.aggregate([
+      { $match: filter },
       {
         $group: {
           _id: null,

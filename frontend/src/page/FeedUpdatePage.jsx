@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
-
+import {useAuth} from "../hooks/useAuth"
 
 import Breadcrumb from "../components/Breadcrumb";
 
 function FeedUpdate() {
   const { id } = useParams();
+  const {user} = useAuth();
   const navigate = useNavigate();
   const [feed, setFeed] = useState({});
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,15 @@ function FeedUpdate() {
     datePosition: "",
   });
 
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   // --- Custom Schedule Entries ---
   const handleCustomChange = (index, field, value) => {
@@ -44,7 +53,10 @@ function FeedUpdate() {
   };
 
   const addCustomEntry = () => {
-    setSchedule({ ...schedule, custom: [...(schedule.custom || []), { day: "", time: "" }] });
+    setSchedule({
+      ...schedule,
+      custom: [...(schedule.custom || []), { day: "", time: "" }],
+    });
   };
 
   const removeCustomEntry = (index) => {
@@ -58,9 +70,20 @@ function FeedUpdate() {
     const fetchData = async () => {
       try {
         const [feedRes, usersRes, projRes] = await Promise.all([
-          fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`, { credentials: "include" }),
-          fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/tl-dev`, { credentials: "include" }),
-          fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects`, { credentials: "include" }),
+          fetch(
+            `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
+            { credentials: "include" }
+          ),
+          fetch(
+            `http://${
+              import.meta.env.VITE_BACKEND_NETWORK_ID
+            }/api/users/tl-dev`,
+            { credentials: "include" }
+          ),
+          fetch(
+            `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects`,
+            { credentials: "include" }
+          ),
         ]);
 
         const [feedData, usersData, projData] = await Promise.all([
@@ -77,8 +100,8 @@ function FeedUpdate() {
         setFeed({
           projectId: feedData.projectId?._id || "",
           DeveloperIds: feedData.DeveloperIds || [],
-            QAId: feedData.QAId || null,      // <- use null instead of ""
-          BAUId: feedData.BAUId || null, 
+          QAId: feedData.QAId || null, // <- use null instead of ""
+          BAUId: feedData.BAUId || null,
           POC: feedData.POC || "",
           Platform: feedData.Platform || "",
           FeedName: feedData.FeedName || "",
@@ -92,7 +115,13 @@ function FeedUpdate() {
         setFrequency(feedData.Frequency || "Daily");
         setSchedule(feedData.Schedule || {});
         setDatabaseSettings(feedData.DatabaseSettings || {});
-        setRules(feedData.QARules || []);
+        // setRules(feedData.QARules || []);
+        setRules(
+          Array.isArray(feedData.QARules)
+            ? feedData.QARules
+            : JSON.parse(feedData.QARules || "[]")
+        );
+        
         setStartDate(feedData.StartDate || "");
 
         setLoading(false);
@@ -112,7 +141,10 @@ function FeedUpdate() {
   };
 
   const handleMultiSelect = (name, selectedOptions) => {
-    setFeed((prev) => ({ ...prev, [name]: selectedOptions.map((opt) => opt.value) }));
+    setFeed((prev) => ({
+      ...prev,
+      [name]: selectedOptions.map((opt) => opt.value),
+    }));
   };
 
   // --- Database settings change ---
@@ -121,7 +153,8 @@ function FeedUpdate() {
   };
 
   // --- QA Rules CRUD ---
-  const addRule = () => setRules([...rules, { field: "", type: "", threshold: 0, createdBy: "currentUser" }]);
+  const addRule = () =>
+    setRules([...rules, { field: "", type: "", threshold: "", createdBy: user?._id }]);
   const updateRule = (index, key, value) => {
     const newRules = [...rules];
     newRules[index][key] = value;
@@ -142,15 +175,21 @@ function FeedUpdate() {
         DatabaseSettings: databaseSettings,
         Frequency: frequency,
         Schedule: schedule,
-        QARules: rules,
+        // QARules: rules,
+        QARules: Array.isArray(rules)
+    ? rules
+    : JSON.parse(rules || "[]")
       };
 
-      const res = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {
@@ -164,15 +203,14 @@ function FeedUpdate() {
     }
   };
 
-
   const tabs = [
     "Feed Details",
     "Frequency",
     "Database",
     // "Systems",
     // "Database Tables",
-    "Auto QA Rules"
-  ]
+    "Auto QA Rules",
+  ];
 
   // Loading state
   // if (loading) return <p className="p-4">Loading...</p>;
@@ -183,14 +221,12 @@ function FeedUpdate() {
         {tabs.map((tabs) => (
           <button
             key={tabs}
-            onClick={() =>
-              setActiveTab(tabs)
-
-            }
-            className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${activeTab === tabs
-              ? "border-b-2 border-purple-800 text-purple-800"
-              : "text-gray-500"
-              }`}
+            onClick={() => setActiveTab(tabs)}
+            className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${
+              activeTab === tabs
+                ? "border-b-2 border-purple-800 text-purple-800"
+                : "text-gray-500"
+            }`}
           >
             {tabs}
           </button>
@@ -204,12 +240,16 @@ function FeedUpdate() {
           >
             {/* Project Dropdown */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Project</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Project
+              </label>
               <select
                 name="projectId"
                 value={feed.projectId || ""}
                 onChange={(e) => {
-                  const selectedProject = projects.find((p) => p._id === e.target.value);
+                  const selectedProject = projects.find(
+                    (p) => p._id === e.target.value
+                  );
                   setFeed((prev) => ({
                     ...prev,
                     projectId: e.target.value,
@@ -228,7 +268,9 @@ function FeedUpdate() {
 
             {/* Feed Title */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Feed Title</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Feed Title
+              </label>
               <input
                 type="text"
                 name="FeedName"
@@ -241,7 +283,9 @@ function FeedUpdate() {
 
             {/* Feed Status */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Feed Status</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Feed Status
+              </label>
               <select
                 name="Status"
                 value={feed.Status || ""}
@@ -273,11 +317,12 @@ function FeedUpdate() {
 
             {/* Feed BAU */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Feed BAU</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Feed BAU
+              </label>
               <select
                 name="BAUStatus"
                 value={feed.BAUStatus || ""}
-                
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
               >
@@ -294,7 +339,9 @@ function FeedUpdate() {
 
             {/* Approx Number of Input Listing */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Approx Number of Input Listings</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Approx Number of Input Listings
+              </label>
               <input
                 type="number"
                 name="ApproxInputListing"
@@ -307,7 +354,9 @@ function FeedUpdate() {
 
             {/* Approx Number of Output Listing */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Approx Number of Output Listings</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Approx Number of Output Listings
+              </label>
               <input
                 type="number"
                 name="ApproxOutputListing"
@@ -320,7 +369,9 @@ function FeedUpdate() {
 
             {/* Number of Threads */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Number of Threads</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Number of Threads
+              </label>
               <input
                 type="number"
                 name="Threads"
@@ -333,7 +384,9 @@ function FeedUpdate() {
 
             {/* Platform */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Platform</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Platform
+              </label>
               <input
                 type="text"
                 name="Platform"
@@ -346,7 +399,9 @@ function FeedUpdate() {
 
             {/* Framework Type */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Framework Type</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Framework Type
+              </label>
               <select
                 name="FrameworkType"
                 value={feed.FrameworkType || ""}
@@ -354,7 +409,17 @@ function FeedUpdate() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="">Select Framework</option>
-                {["Selenium", "Multithread", "Multipart Request", "Scrapy", ".Net", "Django", "Playwright", "Fastapi", "Other"].map((f) => (
+                {[
+                  "Selenium",
+                  "Multithread",
+                  "Multipart Request",
+                  "Scrapy",
+                  ".Net",
+                  "Django",
+                  "Playwright",
+                  "Fastapi",
+                  "Other",
+                ].map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>
@@ -364,7 +429,9 @@ function FeedUpdate() {
 
             {/* QA Process */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">QA Process</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                QA Process
+              </label>
               <select
                 name="QAProcess"
                 value={feed.QAProcess || ""}
@@ -372,7 +439,13 @@ function FeedUpdate() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="">Select QA Process</option>
-                {["Auto QA", "Random QA", "Post QA", "No QA Required", "Manual QA"].map((q) => (
+                {[
+                  "Auto QA",
+                  "Random QA",
+                  "Post QA",
+                  "No QA Required",
+                  "Manual QA",
+                ].map((q) => (
                   <option key={q} value={q}>
                     {q}
                   </option>
@@ -382,14 +455,18 @@ function FeedUpdate() {
 
             {/* Manage By */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Manage By</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Manage By
+              </label>
               <select
                 name="ManageBy"
                 value={feed.ManageBy || ""}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2  focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <option value="" disabled>Managed By</option>
+                <option value="" disabled>
+                  Managed By
+                </option>
                 <option value="Developer">Developer</option>
                 <option value="BAU">BAU</option>
               </select>
@@ -397,7 +474,9 @@ function FeedUpdate() {
 
             {/* Feed POC */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Feed POC</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Feed POC
+              </label>
               <select
                 name="POC"
                 value={feed.POC || ""}
@@ -413,13 +492,26 @@ function FeedUpdate() {
 
             {/* Developers Multi-select */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Developers</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Developers
+              </label>
               <Select
                 isMulti
                 name="DeveloperIds"
-                options={developers?.map((dev) => ({ value: dev._id, label: dev.name })) || []}
-                value={developers?.filter((dev) => feed.DeveloperIds?.includes(dev._id)).map((dev) => ({ value: dev._id, label: dev.name })) || []}
-                onChange={(selectedOptions) => handleMultiSelect("DeveloperIds", selectedOptions)}
+                options={
+                  developers?.map((dev) => ({
+                    value: dev._id,
+                    label: dev.name,
+                  })) || []
+                }
+                value={
+                  developers
+                    ?.filter((dev) => feed.DeveloperIds?.includes(dev._id))
+                    .map((dev) => ({ value: dev._id, label: dev.name })) || []
+                }
+                onChange={(selectedOptions) =>
+                  handleMultiSelect("DeveloperIds", selectedOptions)
+                }
                 className="w-full text-sm"
                 classNamePrefix="select"
               />
@@ -427,7 +519,9 @@ function FeedUpdate() {
 
             {/* QA Select */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">QA</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                QA
+              </label>
               <select
                 name="QAId"
                 value={feed.QAId || ""}
@@ -436,14 +530,18 @@ function FeedUpdate() {
               >
                 <option value="">Select QA</option>
                 {qaUsers?.map((qa) => (
-                  <option key={qa._id} value={qa._id}>{qa.name}</option>
+                  <option key={qa._id} value={qa._id}>
+                    {qa.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             {/* BAU Select */}
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">BAU</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                BAU
+              </label>
               <select
                 name="BAUId"
                 value={feed.BAUId || ""}
@@ -452,14 +550,18 @@ function FeedUpdate() {
               >
                 <option value="">Select BAU</option>
                 {bauUsers?.map((bau) => (
-                  <option key={bau._id} value={bau._id}>{bau.name}</option>
+                  <option key={bau._id} value={bau._id}>
+                    {bau.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             {/* Remark */}
             <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-600 mb-2">Remark</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-2">
+                Remark
+              </label>
               <textarea
                 name="Remark"
                 value={feed.Remark || ""}
@@ -489,7 +591,9 @@ function FeedUpdate() {
             <div className="grid grid-cols-3 gap-4">
               {/* Start Date */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
                 <input
                   type="date"
                   value={startDate || ""}
@@ -500,7 +604,9 @@ function FeedUpdate() {
 
               {/* Frequency */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Frequency
+                </label>
                 <select
                   value={frequency || ""}
                   onChange={(e) => setFrequency(e.target.value)}
@@ -516,19 +622,28 @@ function FeedUpdate() {
               </div>
 
               {/* Conditional Inputs */}
-              {(frequency === "Daily" || frequency === "Weekly" || frequency === "Monthly" || frequency === "Custom") && (
+              {(frequency === "Daily" ||
+                frequency === "Weekly" ||
+                frequency === "Monthly" ||
+                frequency === "Custom") && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {(frequency === "Weekly" || frequency === "Custom") && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Day</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Day
+                      </label>
                       <select
                         value={schedule.day || ""}
-                        onChange={(e) => setSchedule({ ...schedule, day: e.target.value })}
+                        onChange={(e) =>
+                          setSchedule({ ...schedule, day: e.target.value })
+                        }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                       >
                         <option value="">Select Day</option>
                         {daysOfWeek.map((d) => (
-                          <option key={d} value={d}>{d}</option>
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -536,27 +651,42 @@ function FeedUpdate() {
 
                   {frequency === "Monthly" && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date (1-31)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date (1-31)
+                      </label>
                       <select
                         value={schedule.date || ""}
-                        onChange={(e) => setSchedule({ ...schedule, date: Number(e.target.value) })}
+                        onChange={(e) =>
+                          setSchedule({
+                            ...schedule,
+                            date: Number(e.target.value),
+                          })
+                        }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                       >
                         <option value="">Select Date</option>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                          (d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          )
+                        )}
                       </select>
                     </div>
                   )}
 
                   {/* Time */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Time
+                    </label>
                     <input
                       type="time"
                       value={schedule.time || ""}
-                      onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
+                      onChange={(e) =>
+                        setSchedule({ ...schedule, time: e.target.value })
+                      }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                     />
                   </div>
@@ -565,11 +695,22 @@ function FeedUpdate() {
 
               {frequency === "Once-off" && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date & Time
+                  </label>
                   <input
                     type="datetime-local"
-                    value={schedule.datetime ? new Date(schedule.datetime).toISOString().slice(0, 16) : ""}
-                    onChange={(e) => setSchedule({ ...schedule, datetime: new Date(e.target.value) })}
+                    value={
+                      schedule.datetime
+                        ? new Date(schedule.datetime).toISOString().slice(0, 16)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setSchedule({
+                        ...schedule,
+                        datetime: new Date(e.target.value),
+                      })
+                    }
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
@@ -595,10 +736,14 @@ function FeedUpdate() {
             <div className="grid grid-cols-2 gap-6">
               {/* Connection Settings */}
               <div className="border border-gray-100 rounded-lg p-4">
-                <h2 className="text-xl font-semibold mb-4">Connection Settings</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Connection Settings
+                </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Database Type</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Database Type
+                    </label>
                     <select
                       name="databaseType"
                       value={feed.databaseSettings?.databaseType || ""}
@@ -613,21 +758,28 @@ function FeedUpdate() {
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                     >
-                      <option value="" disabled>Select DB Type</option>
+                      <option value="" disabled>
+                        Select DB Type
+                      </option>
                       <option value="mysql">MySQL</option>
                       <option value="mongodb">MongoDB</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Host</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Host
+                    </label>
                     <input
                       type="text"
                       value={feed.databaseSettings?.host || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          databaseSettings: { ...feed.databaseSettings, host: e.target.value },
+                          databaseSettings: {
+                            ...feed.databaseSettings,
+                            host: e.target.value,
+                          },
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
@@ -635,14 +787,19 @@ function FeedUpdate() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Port
+                    </label>
                     <input
                       type="text"
                       value={feed.databaseSettings?.port || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          databaseSettings: { ...feed.databaseSettings, port: e.target.value },
+                          databaseSettings: {
+                            ...feed.databaseSettings,
+                            port: e.target.value,
+                          },
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
@@ -650,14 +807,19 @@ function FeedUpdate() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Username
+                    </label>
                     <input
                       type="text"
                       value={feed.databaseSettings?.username || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          databaseSettings: { ...feed.databaseSettings, username: e.target.value },
+                          databaseSettings: {
+                            ...feed.databaseSettings,
+                            username: e.target.value,
+                          },
                         })
                       }
                       placeholder="Database Username"
@@ -666,14 +828,19 @@ function FeedUpdate() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
+                    </label>
                     <input
                       type="password"
                       value={feed.databaseSettings?.password || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          databaseSettings: { ...feed.databaseSettings, password: e.target.value },
+                          databaseSettings: {
+                            ...feed.databaseSettings,
+                            password: e.target.value,
+                          },
                         })
                       }
                       placeholder="Database Password"
@@ -682,14 +849,19 @@ function FeedUpdate() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Database Name
+                    </label>
                     <input
                       type="text"
                       value={feed.databaseSettings?.dbName || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          databaseSettings: { ...feed.databaseSettings, dbName: e.target.value },
+                          databaseSettings: {
+                            ...feed.databaseSettings,
+                            dbName: e.target.value,
+                          },
                         })
                       }
                       placeholder="Database Name"
@@ -704,14 +876,19 @@ function FeedUpdate() {
                 <h2 className="text-xl font-semibold mb-4">Table Settings</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Table Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Table Name
+                    </label>
                     <input
                       type="text"
                       value={feed.tableSettings?.tableName || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          tableSettings: { ...feed.tableSettings, tableName: e.target.value },
+                          tableSettings: {
+                            ...feed.tableSettings,
+                            tableName: e.target.value,
+                          },
                         })
                       }
                       placeholder="Table Name"
@@ -719,13 +896,18 @@ function FeedUpdate() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Has Data Table</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Has Data Table
+                    </label>
                     <select
                       value={feed.tableSettings?.hasDataTable || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          tableSettings: { ...feed.tableSettings, hasDataTable: e.target.value },
+                          tableSettings: {
+                            ...feed.tableSettings,
+                            hasDataTable: e.target.value,
+                          },
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
@@ -735,18 +917,25 @@ function FeedUpdate() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Format</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date Format
+                    </label>
                     <select
                       value={feed.tableSettings?.dateFormat || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          tableSettings: { ...feed.tableSettings, dateFormat: e.target.value },
+                          tableSettings: {
+                            ...feed.tableSettings,
+                            dateFormat: e.target.value,
+                          },
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                     >
-                      <option value="" disabled>Select Date Format</option>
+                      <option value="" disabled>
+                        Select Date Format
+                      </option>
                       <option value="Y_m_d">Y_m_d</option>
                       <option value="Y-m-d">Y-m-d</option>
                       <option value="d-m-Y">d-m-Y</option>
@@ -758,18 +947,25 @@ function FeedUpdate() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Position</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date Position
+                    </label>
                     <select
                       value={feed.tableSettings?.datePosition || ""}
                       onChange={(e) =>
                         setFeed({
                           ...feed,
-                          tableSettings: { ...feed.tableSettings, datePosition: e.target.value },
+                          tableSettings: {
+                            ...feed.tableSettings,
+                            datePosition: e.target.value,
+                          },
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                     >
-                      <option value="" disabled>Select Date Position</option>
+                      <option value="" disabled>
+                        Select Date Position
+                      </option>
                       <option value="after">After</option>
                       <option value="before">Before</option>
                       <option value="center">Center</option>
@@ -790,19 +986,32 @@ function FeedUpdate() {
           </div>
         )}
 
-
         {/* Auto QA Rules Tab */}
         {activeTab === "Auto QA Rules" && (
           <div className="p-4 bg-white rounded-lg space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Advanced Rules Configuration</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Advanced Rules Configuration
+              </h3>
               <div className="flex gap-2">
-                <button className="px-4 py-2 border rounded text-purple-600 hover:bg-purple-50">Draft</button>
-                <button className="px-4 py-2 border rounded text-blue-600 hover:bg-blue-50">File</button>
-                <button className="px-4 py-2 border rounded text-green-600 hover:bg-green-50" onClick={addRule}>+ Add Rule</button>
-                <button className="px-4 py-2 border rounded hover:bg-gray-50" 
-                // onClick={}
-                >Clone Rules</button>
+                <button className="px-4 py-2 border rounded text-purple-600 hover:bg-purple-50">
+                  Draft
+                </button>
+                <button className="px-4 py-2 border rounded text-blue-600 hover:bg-blue-50">
+                  File
+                </button>
+                <button
+                  className="px-4 py-2 border rounded text-green-600 hover:bg-green-50"
+                  onClick={addRule}
+                >
+                  + Add Rule
+                </button>
+                <button
+                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                  // onClick={}
+                >
+                  Clone Rules
+                </button>
               </div>
             </div>
 
@@ -833,7 +1042,9 @@ function FeedUpdate() {
                         <input
                           type="text"
                           value={rule.field}
-                          onChange={(e) => updateRule(index, "field", e.target.value)}
+                          onChange={(e) =>
+                            updateRule(index, "field", e.target.value)
+                          }
                           className="w-full border px-2 py-1 rounded"
                         />
                       </td>
@@ -841,29 +1052,37 @@ function FeedUpdate() {
                         <input
                           type="text"
                           value={rule.type}
-                          onChange={(e) => updateRule(index, "type", e.target.value)}
+                          onChange={(e) =>
+                            updateRule(index, "type", e.target.value)
+                          }
                           className="w-full border px-2 py-1 rounded"
                         />
                       </td>
                       <td className="border px-3 py-2">
                         <input
-                          type="number"
+                          type="text"
                           value={rule.threshold}
-                          onChange={(e) => updateRule(index, "threshold", e.target.value)}
+                          onChange={(e) =>
+                            updateRule(index, "threshold", e.target.value)
+                          }
                           className="w-full border px-2 py-1 rounded"
                         />
                       </td>
                       <td className="border px-3 py-2">{rule.createdBy}</td>
-                      <td className="border px-3 py-2">{rule.createdAt || "-"}</td>
                       <td className="border px-3 py-2">
-                        <button onClick={() => removeRule(index)} className="text-red-600 hover:underline">
+                        {rule.createdAt || "-"}
+                      </td>
+                      <td className="border px-3 py-2">
+                        <button
+                          onClick={() => removeRule(index)}
+                          className="text-red-600 hover:underline"
+                        >
                           Delete
                         </button>
                       </td>
                     </tr>
                   ))
                 )}
-
               </tbody>
             </table>
 
@@ -877,7 +1096,6 @@ function FeedUpdate() {
             </div>
           </div>
         )}
-
       </div>
     </>
   );

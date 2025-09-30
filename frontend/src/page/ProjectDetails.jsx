@@ -17,6 +17,7 @@ export default function ProjectDetails() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     TLId: "",
     DeveloperIds: [],
@@ -292,7 +293,50 @@ export default function ProjectDetails() {
 
             {/* FEEDS TAB */}
             {activeTab === "Feeds" && (
-              <div className="flex flex-col">
+              // <div className="flex flex-col">
+                <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
+              <div className="flex items-center justify-between mb-6">
+    {/* Heading */}
+    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+      Feeds
+    </h2>
+
+    <div className="flex items-center space-x-3">
+      {/* Search Box */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
+        </svg>
+      </div>
+
+      {/* Add Feed Button */}
+      <button
+        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+        onClick={() => {
+          // Add your logic here
+          // console.log("Add Feed clicked");
+        }}
+      >
+        Add Feed
+      </button>
+    </div>
+  </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full border border-gray-200 overflow-hidden">
                     <thead className="bg-gray-100 text-gray-700 sticky top-0">
