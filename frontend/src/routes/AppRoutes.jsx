@@ -39,7 +39,7 @@ function AppRoutes() {
           {/* <Route path="/project/:id" element={<ProtectedRoute requiredModule="Project" requiredAction="view"><ProjectInfo /></ProtectedRoute>} ></Route> */}
           <Route path="/project/:id/details" element={<ProtectedRoute requiredModule="Project" requiredAction="update"><ProjectInfo /></ProtectedRoute>} key="project-update"></Route>
           {/* <Route path="/project/feed" element={
-            <FeedPage />} /> */}
+            <FeedDetails />} /> */}
           <Route path="/project/:id/files" element={<ProjectFilesPage />} />
 
           <Route path="/project/feed/:id" element={<FeedDetails />} key="feed"></Route>

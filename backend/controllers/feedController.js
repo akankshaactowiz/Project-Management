@@ -37,12 +37,12 @@ export const createFeed = async (req, res) => {
   try {
     const {
       projectId,
-      // FeedName,
+      FeedName,
       // FeedId,
       DomainName,
       ApplicationType,
       CountryName,
-      Platform,
+      // Platform,
       BAU,
       POC,
       PCId,
@@ -60,11 +60,11 @@ export const createFeed = async (req, res) => {
     //   });
     // }
  
-
+   const Platform = `${DomainName}|${ApplicationType}|${CountryName}`;
     // Create new feed
     const newFeed = new Feed({
       projectId,
-      // FeedName,
+      FeedName,
       FeedId: generateFeedId(),
       DomainName,
       ApplicationType,
@@ -230,10 +230,10 @@ export const getFeeds = async (req, res) => {
 
     if (role !== "Superadmin") {
       filter.$or = [
-        { PMId: userId },
-        { TLId: userId },
+        // { PMId: userId },
+        // { TLId: userId },
         { DeveloperIds: userId },
-        { QAId: userId },
+        // { QAId: userId },
         { BAUPersonId: userId },
       ];
     }
@@ -251,7 +251,7 @@ export const getFeeds = async (req, res) => {
         { path: "PMId", select: "name email" }, // ✅ populate PM inside project
       ]
     })
-    .populate("TLId", "name email")    
+    // .populate("TLId", "name email")    
     .populate("QAId", "name email")  
     .populate("DeveloperIds", "name")  
       // .populate("projectId TLId DeveloperIds QAId BAUPersonId")
@@ -278,7 +278,8 @@ export const getFeeds = async (req, res) => {
 
 export const getFeedById = async (req, res) => {
   try {
-    const feed = await FeedData.findById(req.params.id).populate("projectId").populate("TLId", "name");
+    const feed = await FeedData.findById(req.params.id).populate("projectId")
+    // .populate("TLId", "name");
     if (!feed) return res.status(404).json({ message: "Feed not found" });
     res.status(200).json(feed);
   } catch (err) {
@@ -316,67 +317,158 @@ export const getFeedById = async (req, res) => {
 //   }
 // };
 
+// export const updateFeedById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid feed ID" });
+//     }
+
+//     const {
+//       Frequency,
+//       TimelineTime,
+//       TimelineDay,
+//       TimelineDate,
+//       ...otherFields
+//     } = req.body;
+
+//     // Validate frequency-related fields
+//     const updateData = { ...otherFields };
+//     if (Frequency) {
+//       updateData.Frequency = Frequency;
+
+//       if (Frequency === "Daily") {
+//         updateData.TimelineTime = TimelineTime || null;
+//         updateData.TimelineDay = null;
+//         updateData.TimelineDate = null;
+//       } else if (Frequency === "Weekly") {
+//         if (!TimelineDay) {
+//           return res.status(400).json({ message: "TimelineDay is required for Weekly frequency" });
+//         }
+//         updateData.TimelineDay = TimelineDay;
+//         updateData.TimelineTime = TimelineTime || null;
+//         updateData.TimelineDate = null;
+//       } else if (Frequency === "Monthly") {
+//         if (!TimelineDate) {
+//           return res.status(400).json({ message: "TimelineDate is required for Monthly frequency" });
+//         }
+//         updateData.TimelineDate = TimelineDate;
+//         updateData.TimelineTime = TimelineTime || null;
+//         updateData.TimelineDay = null;
+//       }
+//     }
+
+//     console.log("Update ID:", id);
+//     console.log("Update data:", updateData);
+
+//     const updatedFeed = await FeedData.findOneAndUpdate(
+//       { _id: id },
+//       { $set: updateData },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedFeed) {
+//       return res.status(404).json({ message: "Feed not found" });
+//     }
+
+//     res.status(200).json(updatedFeed);
+//   } catch (err) {
+//     console.error("Error updating feed:", err);
+//     res.status(500).json({ error: "Failed to update feed" });
+//   }
+// };
+
 export const updateFeedById = async (req, res) => {
   try {
     const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid feed ID" });
-    }
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ message: 'Invalid Feed ID' });
 
     const {
+      projectId,
+      FeedName,
+      Status,
+      BAUStatus,
+      ApproxInputListing,
+      ApproxOutputListing,
+      Threads,
+      Platform,
+      FrameworkType,
+      QAProcess,
+      ManageBy,
+      POC,
+      DeveloperIds,
+      QAId,
+      BAUId,
+      Remark,
       Frequency,
-      TimelineTime,
-      TimelineDay,
-      TimelineDate,
-      ...otherFields
+      Schedule,
+      DatabaseSettings,
+      QARules
     } = req.body;
 
-    // Validate frequency-related fields
-    const updateData = { ...otherFields };
-    if (Frequency) {
-      updateData.Frequency = Frequency;
-
-      if (Frequency === "Daily") {
-        updateData.TimelineTime = TimelineTime || null;
-        updateData.TimelineDay = null;
-        updateData.TimelineDate = null;
-      } else if (Frequency === "Weekly") {
-        if (!TimelineDay) {
-          return res.status(400).json({ message: "TimelineDay is required for Weekly frequency" });
-        }
-        updateData.TimelineDay = TimelineDay;
-        updateData.TimelineTime = TimelineTime || null;
-        updateData.TimelineDate = null;
-      } else if (Frequency === "Monthly") {
-        if (!TimelineDate) {
-          return res.status(400).json({ message: "TimelineDate is required for Monthly frequency" });
-        }
-        updateData.TimelineDate = TimelineDate;
-        updateData.TimelineTime = TimelineTime || null;
-        updateData.TimelineDay = null;
-      }
-    }
-
-    console.log("Update ID:", id);
-    console.log("Update data:", updateData);
-
-    const updatedFeed = await FeedData.findOneAndUpdate(
-      { _id: id },
-      { $set: updateData },
+    const updatedFeed = await Feed.findByIdAndUpdate(
+      id,
+      {
+        projectId,
+        FeedName,
+        Status,
+        BAUStatus,
+        ApproxInputListing,
+        ApproxOutputListing,
+        Threads,
+        Platform,
+        FrameworkType,
+        QAProcess,
+        ManageBy,
+        POC,
+        DeveloperIds,
+        QAId,
+        BAUId,
+        Remark,
+        Frequency,
+        Schedule,
+        DatabaseSettings,
+        QARules
+      },
       { new: true, runValidators: true }
     );
 
-    if (!updatedFeed) {
-      return res.status(404).json({ message: "Feed not found" });
+    if (!updatedFeed) return res.status(404).json({ message: 'Feed not found' });
+
+    res.status(200).json({ message: 'Feed updated successfully', data: updatedFeed });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error', error });
+  }
+}
+export const updateFeedTeam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { DeveloperIds } = req.body;
+    const userRole = req.user.roleId?.name;
+
+    if (!(userRole === "Team Lead" || userRole === "Project Coordinator")) {
+      return res.status(403).json({ message: "Not authorized to update developers" });
     }
 
-    res.status(200).json(updatedFeed);
+    const feed = await Feed.findById(id);
+    if (!feed) return res.status(404).json({ message: "Feed not found" });
+
+    feed.DeveloperIds = DeveloperIds || [];
+    await feed.save();
+
+    const updatedFeed = await Feed.findById(feed._id).populate("DeveloperIds", "name");
+
+    res.json({ message: "Feed developers updated", feed: updatedFeed });
   } catch (err) {
-    console.error("Error updating feed:", err);
-    res.status(500).json({ error: "Failed to update feed" });
+    console.error("Error updating feed team:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 
 

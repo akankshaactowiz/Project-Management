@@ -449,6 +449,7 @@ export const createProject = async (req, res) => {
       ProjectName,
       FeedName,
       PMId,
+
       BDEId,
       DepartmentId: Department,
       Frequency,
@@ -499,7 +500,10 @@ export const createProject = async (req, res) => {
       Priority,
       Timeline: Timeline || "",
       Description: Description || "",
-      CreatedBy: createdBy, 
+      CreatedBy: createdBy,
+      TLId: null,
+      PCId: null,
+      QAId: null,
     });
 
     // 2️⃣ Create initial Feed linked to project
@@ -780,10 +784,11 @@ export const getProjects = async (req, res) => {
         // Other roles: get projects assigned to them
         filter.$or = [
           { PMId: userId },
+          {PCId: userId},
           { TLId: userId },
           { DeveloperIds: userId },
           { QAId: userId },
-          { BAUPersonId: userId },
+          { BAUId: userId },
           { BDEId: userId },
         ];
       }
@@ -809,7 +814,7 @@ export const getProjects = async (req, res) => {
     // Query database
     const total = await Project.countDocuments(filter);
     const projects = await Project.find(filter)
-      .populate("PMId TLId QAId BAUPersonId BDEId", "name")
+      .populate("PMId PCId TLId QAId BAUPersonId BDEId", "name")
       .populate("DepartmentId", "department")
       .populate("CreatedBy", "name")
       .populate({
@@ -827,10 +832,11 @@ export const getProjects = async (req, res) => {
         path: "Feeds",
 
         populate: [
-          { path: "TLId", select: "name email roleId" },
+          // { path: "TLId", select: "name email roleId" },
           { path: "DeveloperIds", select: "name email roleId" },
-          { path: "QAId", select: "name email roleId" },
-          { path: "BAUPersonId", select: "name email roleId" },
+          
+          // { path: "QAId", select: "name email roleId" },
+          { path: "BAUId", select: "name email roleId" },
           { path: "createdBy", select: "name email" },
 
         ],
@@ -886,7 +892,7 @@ export const getProjectCounts = async (req, res) => {
           devCompleted: { $sum: { $cond: [{ $eq: ["$Status", "Production"] }, 1, 0] } },
           bauStarted: { $sum: { $cond: [{ $eq: ["$Status", "BAU-Started"] }, 1, 0] } },
           closed: { $sum: { $cond: [{ $eq: ["$Status", "Closed"] }, 1, 0] } },
-          totalFeeds: { $sum: { $size: "$Feeds" } }, 
+          totalFeeds: { $sum: { $size: "$Feeds" } },
         },
       },
     ]);
@@ -1035,18 +1041,18 @@ export const getProjectById = async (req, res) => {
 
   try {
     const project = await Project.findById(id)
-      .populate("PMId TLId QAId BAUPersonId CreatedBy BDEId", "name")
+      .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name")
 
       .populate("SOWFile.uploadedBy", "name")
       .populate("SampleFiles.uploadedBy", "name")
-       .populate({
+      .populate({
         path: "Feeds",
 
         populate: [
-          { path: "TLId", select: "name email roleId" },
+          // { path: "TLId", select: "name email roleId" },
           { path: "DeveloperIds", select: "name email roleId" },
-          { path: "QAId", select: "name email roleId" },
-          { path: "BAUPersonId", select: "name email roleId" },
+          // { path: "QAId", select: "name email roleId" },
+          // { path: "BAUPersonId", select: "name email roleId" },
           { path: "createdBy", select: "name email" },
 
         ],
@@ -1063,25 +1069,69 @@ export const getProjectById = async (req, res) => {
 };
 
 
+// export const updateProjectTeam = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { TLId, DeveloperIds } = req.body;
+
+//     const project = await Project.findById(id);
+//     if (!project) return res.status(404).json({ message: "Project not found" });
+
+//     // update TL + Developers
+//     if (TLId) project.TLId = TLId;
+//     if (DeveloperIds) project.DeveloperIds = DeveloperIds;
+
+//     await project.save();
+//     res.json({ message: "Project team updated", project });
+//   } catch (err) {
+//     console.error("Error updating project team:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 export const updateProjectTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { TLId, DeveloperIds } = req.body;
+    const { TLId, PCId, QAId, DeveloperIds } = req.body;
+    const userRole = req.user.role;
 
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
 
-    // update TL + Developers
-    if (TLId) project.TLId = TLId;
-    if (DeveloperIds) project.DeveloperIds = DeveloperIds;
+    // Initialize missing fields
+    if (!("TLId" in project)) project.TLId = null;
+    if (!("PCId" in project)) project.PCId = null;
+    if (!("QAId" in project)) project.QAId = null;
+
+    // Only Manager can assign TL, PC, QA
+    if (userRole === "Manager") {
+      if (TLId) project.TLId = TLId;
+      if (PCId) project.PCId = PCId;
+      if (QAId) project.QAId = QAId;
+    }
+
+    // TL or PC can update Developers
+    if ((userRole === "Team Lead" || userRole === "Project Coordinator") && DeveloperIds) {
+      project.DeveloperIds = DeveloperIds;
+    }
 
     await project.save();
-    res.json({ message: "Project team updated", project });
+
+    // Populate for frontend display
+    const updatedProject = await Project.findById(project._id)
+      .populate("TLId", "name")
+      .populate("PCId", "name")
+      .populate("QAId", "name")
+      .populate("DeveloperIds", "name");
+
+    res.json({ message: "Project team updated", project: updatedProject });
   } catch (err) {
     console.error("Error updating project team:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 export const getAssignedToQAProjects = async (req, res) => {
   try {

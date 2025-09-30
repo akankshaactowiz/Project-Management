@@ -66,7 +66,7 @@ const projectSchema = new mongoose.Schema({
   POC: { type: String, default: "None" },
   PCId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   TLId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  // DeveloperIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  DeveloperIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   QAId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   BAUPersonId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   StartDate: { type: Date },

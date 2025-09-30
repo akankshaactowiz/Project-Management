@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import Modal from "react-modal";
+import { toast } from "react-hot-toast";
+import Select from "react-select";
 
 Modal.setAppElement("#root");
 import { Dialog, Transition } from "@headlessui/react";
@@ -61,6 +63,8 @@ export default function Projects() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
+  const [selectedFeed, setSelectedFeed] = useState(null);
+
   const [refresh, setRefresh] = useState(false);
 
 
@@ -74,10 +78,13 @@ export default function Projects() {
   const [selectedTL, setSelectedTL] = useState("");
   const [selectedPC, setSelectedPC] = useState("");
   const [selectedQA, setSelectedQA] = useState("");
+  const [selectedDevelopers, setSelectedDevelopers] = useState([]);
 
-  const [tlUsers, setTlUsers] = useState([]);
-  const [pcUsers, setPcUsers] = useState([]);
-  const [qaUsers, setQaUsers] = useState([]);
+  const [tlOptions, setTlOptions] = useState([]);
+  const [pcOptions, setPcOptions] = useState([]);
+  const [qaOptions, setQaOptions] = useState([]);
+  const [developerOptions, setDeveloperOptions] = useState([]);
+  const devOptionsRS = developerOptions.map((dev) => ({ value: dev._id, label: dev.name }));
   const tabs = [
     "All Deliveries",
     "Today",
@@ -209,7 +216,7 @@ export default function Projects() {
 
         setTlOptions(data.tlUsers || []);
         setPcOptions(data.pcUsers || []);
-        // setDevOptions(data.devUsers || []);
+        setDeveloperOptions(data.devUsers || []);
         setQaOptions(data.qaLead || []);
       } catch (err) {
         console.error("Failed to load TL/Dev list:", err);
@@ -221,11 +228,131 @@ export default function Projects() {
     })();
   }, [isAssignOpen]);
 
-  const handleAssign = () => {
-    if (!selectedTL || !selectedPC) return alert("Select TL and PC");
-    onAssign(project._id, selectedTL, selectedPC);
-    setIsAssignOpen(false);
+  // const handleAssign = () => {
+  //   if (!selectedTL || !selectedPC) return alert("Select TL and PC");
+  //   onAssign(project._id, selectedTL, selectedPC);
+  //   setIsAssignOpen(false);
+  // };
+  // const handleAssign = async () => {
+  //   if (!selectedProject) return;
+
+  //   try {
+  //     if(user.roleName === "Manager") {
+
+  //       const res = await fetch(
+  //         `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${selectedProject._id}/update-team`,
+  //         {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           credentials: "include",
+  //           body: JSON.stringify({
+  //             TLId: selectedTL,
+  //             PCId: selectedPC,
+  //             QAId: selectedQA,
+  //             // DeveloperIds: only TL/PC can update
+  //           }),
+  //         }
+  //       );
+  //     }
+
+
+  //     const data = await res.json();
+
+  //     console.log("Updated Project Data:", data);
+
+  //     if (!res.ok || !data.project) {
+  //       console.error("Failed to update project:", data);
+  //       toast.error(data.message || "Failed to update project");
+  //       return;
+  //     }
+
+  //     // update modal selected project
+  //     setSelectedProject(data.project);
+
+  //     // update main projects table
+  //     setData((prev = []) =>
+  //       prev.map((p) => (p._id === data.project._id ? data.project : p))
+  //     );
+
+  //     toast.success("Project team updated successfully");
+  //     setIsAssignOpen(false);
+  //   } catch (err) {
+  //     console.error("Error updating project:", err);
+  //     toast.error("Failed to update project");
+  //   }
+  // };
+
+  const handleAssign = async () => {
+    if (!selectedProject) return;
+
+    try {
+      let res;
+
+      // Manager: update TL, PC, QA
+      if (user.roleName === "Manager") {
+        res = await fetch(
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${selectedProject._id}/update-team`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              TLId: selectedTL,
+              PCId: selectedPC,
+              QAId: selectedQA,
+            }),
+          }
+        );
+      }
+
+      // TL / PC: update developers for feed
+      if ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && selectedFeed) {
+        res = await fetch(
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed._id}/update-team`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              DeveloperIds: selectedDevelopers.map((d) => d.value),
+            }),
+          }
+        );
+      }
+
+
+      const data = await res.json();
+      console.log("Updated Data:", data);
+
+      if (!res.ok || !data.project && !data.feed) {
+        console.error("Failed to update:", data);
+        toast.error(data.message || "Failed to update assignment");
+        return;
+      }
+
+      // Update modal and main table for project
+      if (data.project) {
+        setSelectedProject(data.project);
+        setData((prev = []) =>
+          prev.map((p) => (p._id === data.project._id ? data.project : p))
+        );
+        toast.success("Project team updated successfully");
+      }
+
+      // Optionally update feed state if you have a feed table/list
+      if (data.feed) {
+        toast.success("Developers assigned successfully");
+        // updateFeedState(data.feed); // implement if needed
+      }
+
+      setIsAssignOpen(false);
+
+    } catch (err) {
+      console.error("Error updating assignment:", err);
+      toast.error("Failed to update assignment");
+    }
   };
+
 
   // useEffect(() => {
   //   if (data.length && tableRef.current) {
@@ -237,12 +364,12 @@ export default function Projects() {
 
 
 
-  const handleAssignProject = async () => {
-    // Call API to assign TL and PC to selectedProject
-    await assignProjectAPI(selectedProject._id, selectedTL, selectedPC);
-    setIsAssignModalOpen(false);
-    // Optionally refresh table or show success message
-  };
+  // const handleAssignProject = async () => {
+  //   // Call API to assign TL and PC to selectedProject
+  //   await assignProjectAPI(selectedProject._id, selectedTL, selectedPC);
+  //   setIsAssignModalOpen(false);
+  //   // Optionally refresh table or show success message
+  // };
 
   const role = user?.roleName;
   const baseColumns = ["No"];
@@ -340,7 +467,7 @@ export default function Projects() {
     "Team Lead": [
       "Project Name",
       "Feed Name",
-      "Feed ID",
+      // "Feed ID",
       "Frequency",
       "Platform",
       "Status",
@@ -360,6 +487,7 @@ export default function Projects() {
       "DB Status",
       "DB Type",
       "Created Date",
+      "Action"
     ],
     QA: ["QA Report Count", "QA Rules"],
     Developer: ["Framework type", "DB Status", "DB Type"],
@@ -384,10 +512,15 @@ export default function Projects() {
         return true;
       case "Manager":
         return true
+
+      case "Team Lead":
+        return true
       default:
         return false;
     }
   });
+
+
 
 
   let rowCounter = (currentPage - 1) * pageSize + 1;
@@ -840,7 +973,7 @@ export default function Projects() {
           {/* ==========SALES Department Table End========== */}
 
 
-          {user?.roleName === "Manager" && (
+          {(user?.roleName === "Manager" || user?.roleName === "Team Lead" || user?.roleName === "Project Coordinator" || user?.roleName === "Developer") && (
             <div className="flex flex-col">
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 ">
@@ -868,8 +1001,8 @@ export default function Projects() {
                           </div>
                         </td>
                       </tr>
-                    ) : data.length > 0 ? (
-                      data.map((project, idx) =>
+                    ) : filteredData.length > 0 ? (
+                      filteredData.map((project, idx) =>
                         project.Feeds && project.Feeds.length > 0 ? (
                           project.Feeds.map((feed, feedIdx) => (
                             <tr
@@ -925,10 +1058,10 @@ export default function Projects() {
                               </td>
 
                               {/* Status */}
-                              <td className="px-3 py-2">{feed.Status ?? "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td>
 
                               {/* BAU */}
-                              <td className="px-3 py-2">{feed.BAU ?? "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
 
                               {/* POC */}
                               <td className="px-3 py-2 whitespace-nowrap">{feed.POC ?? "-"}</td>
@@ -939,11 +1072,11 @@ export default function Projects() {
                               </td>
 
                               {/* PC */}
-                              <td className="px-3 py-2 whitespace-nowrap">{feed.PC ?? "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{project.PCId?.name ?? "-"}</td>
 
                               {/* TL */}
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {feed.TLId?.name ?? "-"}
+                                {project.TLId?.name ?? "-"}
                               </td>
 
                               {/* Developer */}
@@ -1003,13 +1136,13 @@ export default function Projects() {
 
 
                               {/* QA */}
-                              <td className="px-3 py-2">
-                                {feed.QAId?.name ?? "-"}
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {project.QAId?.name ?? "-"}
                               </td>
 
                               {/* BAU Person */}
-                              <td className="px-3 py-2">
-                                {feed.BAUPersonId ?? "-"}
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {feed.BAUId?.name ?? "-"}
                               </td>
                               {/* Attachments */}
                               <td className="px-3 py-2">
@@ -1033,7 +1166,7 @@ export default function Projects() {
 
                               {/* Manage By */}
                               <td className="px-3 py-2">
-                                {project.ManageBy ?? "-"}
+                                {feed.ManageBy ?? "-"}
                               </td>
 
                               {/* QA Rules */}
@@ -1059,11 +1192,15 @@ export default function Projects() {
                               </td>
 
                               {/* Project Created By */}
-                              <td className="px-3 py-2">
-                                {project.CreatedBy?.name ?? "-"}
-                              </td>
 
-                              <td className="px-4 py-2 text-right">
+                              {user.roleName === "Manager" && (
+
+                                <td className="px-3 py-2">
+                                  {project.CreatedBy?.name ?? "-"}
+                                </td>
+                              )}
+
+                              {/* <td className="px-4 py-2 text-right">
 
                                 {canAssignProject && (
                                   <button
@@ -1072,6 +1209,7 @@ export default function Projects() {
 
                                     onClick={() => {
                                       setSelectedProject(project); // set current project
+                                      setSelectedFeed(feed);
                                       setIsAssignOpen(true); // open modal
                                     }}
 
@@ -1079,145 +1217,59 @@ export default function Projects() {
                                     Assign
                                   </button>
                                 )}
+                              </td> */}
+                              <td className="px-4 py-2 text-right">
+                                {canAssignProject && (
+                                  <button
+                                    className={`px-3 py-1 rounded text-sm text-white ${
+                                      // Disable button if all assignments relevant to the role are already done
+                                      ((user.roleName === "Manager" &&
+                                        selectedProject?.TLId &&
+                                        selectedProject?.PCId &&
+                                        selectedProject?.QAId) ||
+                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                          feed.DeveloperIds &&
+                                          feed.DeveloperIds.length > 0))
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                      }`}
+                                    disabled={
+                                      (user.roleName === "Manager" &&
+                                        selectedProject?.TLId &&
+                                        selectedProject?.PCId &&
+                                        selectedProject?.QAId) ||
+                                      ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                        feed.DeveloperIds &&
+                                        feed.DeveloperIds.length > 0)
+                                    }
+                                    onClick={() => {
+                                      // Open modal only if assignment not done
+                                      const canAssign =
+                                        (user.roleName === "Manager" &&
+                                          (!selectedProject.TLId || !selectedProject.PCId || !selectedProject.QAId)) ||
+                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+                                          (!feed.DeveloperIds || feed.DeveloperIds.length === 0));
+
+                                      if (canAssign) {
+                                        setSelectedProject(project);
+                                        setSelectedFeed(feed);
+                                        setIsAssignOpen(true);
+                                      }
+                                    }}
+                                  >
+                                    {user.roleName === "Manager"
+                                      ? selectedProject?.TLId && selectedProject?.PCId && selectedProject?.QAId
+                                        ? "Assigned"
+                                        : "Assign"
+                                      : feed.DeveloperIds && feed.DeveloperIds.length > 0
+                                        ? "Assigned"
+                                        : "Assign"}
+                                  </button>
+                                )}
                               </td>
 
-                              <Modal
-                                isOpen={isAssignOpen}
-                                onRequestClose={() => setIsAssignOpen(false)}
-                                className="w-full max-w-3xl bg-white rounded-2xl mx-auto my-20 p-8 outline-none shadow-2xl relative animate-fadeIn"
-                                overlayClassName="fixed inset-0 bg-black/20 flex items-start justify-center z-50 overflow-auto"
-                              >
-                                {/* ✨ Header */}
-                                <div className="flex justify-between items-center pb-3 mb-6">
-                                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    Assign Project
-                                    {/* <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm">Assign Project</span> */}
-                                  </h2>
-                                  <button
-                                    className="text-gray-400 hover:text-gray-600 transition"
-                                    onClick={() => setIsAssignOpen(false)}
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
 
-                                {/* 📄 Project Information */}
-                                {selectedProject && (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                      <p className="text-sm text-gray-500">Project Code</p>
-                                      <p className="text-lg font-semibold text-gray-800">
-                                        {selectedProject.ProjectCode || "-"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                      <p className="text-sm text-gray-500">Project Name</p>
-                                      <p className="text-lg font-semibold text-gray-800">
-                                        {selectedProject.ProjectName || "-"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                      <p className="text-sm text-gray-500">Priority</p>
-                                      <p
-                                        className={`inline-block px-2 py-1 rounded text-sm font-medium ${selectedProject.Priority === "High"
-                                          ? "bg-red-100 text-red-700"
-                                          : selectedProject.Priority === "Medium"
-                                            ? "bg-yellow-100 text-yellow-700"
-                                            : "bg-green-100 text-green-700"
-                                          }`}
-                                      >
-                                        {selectedProject.Priority || "-"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                      <p className="text-sm text-gray-500">Project Type</p>
-                                      <p className="text-lg font-semibold text-gray-800">
-                                        {selectedProject.ProjectType || "-"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
 
-                                {/* 👥 Assignment Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                  {/* TL Select */}
-                                  <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                      Team Lead
-                                    </label>
-                                    <select
-                                      value={selectedTL}
-                                      onChange={(e) => setSelectedTL(e.target.value)}
-                                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
-                                    >
-                                      <option value="">Select Team Lead</option>
-                                      {tlUsers.map((tl) => (
-                                        <option key={tl._id} value={tl._id}>
-                                          {tl.name}
-                                        </option>
-                                      ))}
-
-                                    </select>
-                                  </div>
-
-                                  {/* PC Select */}
-                                  <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                      Project Coordinator
-                                    </label>
-                                    <select
-                                      value={selectedPC}
-                                      onChange={(e) => setSelectedPC(e.target.value)}
-                                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
-                                    >
-                                      <option value="">Select Project Coordinator</option>
-                                      {pcUsers.map((pc) => (
-                                        <option key={pc._id} value={pc._id}>
-                                          {pc.name}
-                                        </option>
-                                      ))}
-                                      
-                                    </select>
-                                  </div>
-
-                                  {/* QA Select */}
-                                  <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                      QA Lead
-                                    </label>
-                                    <select
-                                      value={selectedQA}
-                                      onChange={(e) => setSelectedQA(e.target.value)}
-                                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
-                                    >
-                                      <option value="">Select QA Lead</option>
-                                      {qaUsers.map((tl) => (
-                                        <option key={qa._id} value={qa._id}>
-                                          {qa.name}
-                                        </option>
-                                      ))}
-                                      {/* <option value="tl1">John TL</option>
-                                      <option value="tl2">Jane TL</option> */}
-                                    </select>
-                                  </div>
-                                </div>
-
-                                {/* 🧭 Action Buttons */}
-                                <div className="flex justify-end gap-3 mt-4">
-                                  <button
-                                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
-                                    onClick={() => setIsAssignOpen(false)}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
-                                    onClick={handleAssign}
-                                  >
-                                    Assign
-                                  </button>
-                                </div>
-                              </Modal>
 
 
                               {/* Actions */}
@@ -1361,7 +1413,7 @@ export default function Projects() {
                             </td>{" "}
                             {/* QA Report Count */}
                             <td className="px-3 py-2">
-                              {project.ManageBy ?? "-"}
+                              {feed.ManageBy ?? "-"}
                             </td>{" "}
                             {/* Manage By */}
                             <td className="px-3 py-2">
@@ -1440,216 +1492,13 @@ export default function Projects() {
             </div>
           )}
 
-          {user?.roleName === "Team Lead" && (
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200 ">
-                <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                  <tr>
-                    {columns.map((col) => (
-                      <th
-                        key={col}
-                        className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="text-center p-8 text-gray-500"
-                      >
-                        <div className="flex justify-center items-center">
-                          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : data.length > 0 ? (
-                    data.map((project, idx) =>
-                      project.Feeds && project.Feeds.length > 0 ? (
-                        project.Feeds.map((feed, feedIdx) => (
-                          <tr
-                            key={`${project._id}-${feed._id}`}
-                            className={
-                              feedIdx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }
-                          >
-                            {/* No */}
-                            <td className="px-3 py-2">{feedCounter++}</td>
 
-                            {/* Project Name */}
-                            <td className="px-3 py-2">
-                              {project.ProjectCode && project.ProjectName
-                                ? `[${project.ProjectCode}] ${project.ProjectName}`
-                                : "-"}
-                            </td>
-
-                            {/* Feed Name */}
-                            <td
-                              className="px-3 py-2 text-blue-600 cursor-pointer hover:underline"
-                              onClick={() =>
-                                (window.location.href = `/feed/${feed._id}`)
-                              }
-                            >
-                              {feed.FeedName ?? "-"}
-                            </td>
-
-                            {/* Feed ID */}
-                            <td className="px-3 py-2">{feed.FeedId ?? "-"}</td>
-
-                            {/* Frequency */}
-                            <td className="px-3 py-2">
-                              {project.Frequency ?? "-"}
-                            </td>
-
-                            {/* Platform / Domain | Application | Country */}
-                            <td className="px-3 py-2">
-                              {feed.DomainName &&
-                                feed.ApplicationType &&
-                                feed.CountryName
-                                ? `${feed.DomainName}|${feed.ApplicationType}|${feed.CountryName}`
-                                : "-"}
-                            </td>
-
-                            {/* Status */}
-                            <td className="px-3 py-2">{feed.Status ?? "-"}</td>
-
-                            {/* BAU */}
-                            <td className="px-3 py-2">{feed.BAU ?? "-"}</td>
-
-                            {/* POC */}
-                            <td className="px-3 py-2">{feed.POC ?? "-"}</td>
-
-                            {/* PM */}
-                            <td className="px-3 py-2">
-                              {project.PMId?.name ?? "-"}
-                            </td>
-
-                            {/* PC */}
-                            <td className="px-3 py-2">{feed.PC ?? "-"}</td>
-
-                            {/* TL */}
-                            <td className="px-3 py-2">
-                              {feed.TLId?.name ?? "-"}
-                            </td>
-
-                            {/* Developer */}
-                            <td className="px-3 py-2">
-                              {feed.DeveloperIds?.length
-                                ? feed.DeveloperIds.map(
-                                  (dev) => dev?.name ?? dev._id ?? dev
-                                ).join(", ")
-                                : "-"}
-                            </td>
-
-                            {/* QA */}
-                            <td className="px-3 py-2">
-                              {feed.QAId?.name ?? "-"}
-                            </td>
-
-                            {/* BAU Person */}
-                            <td className="px-3 py-2">
-                              {feed.BAUPersonId?.name ?? "-"}
-                            </td>
-
-                            {/* Framework Type */}
-                            <td className="px-3 py-2">
-                              {feed.FrameworkType ?? "-"}
-                            </td>
-
-                            {/* QA Report Count */}
-                            <td className="px-3 py-2">
-                              {project.QAReportCount ?? "-"}
-                            </td>
-
-                            {/* Manage By */}
-                            <td className="px-3 py-2">
-                              {project.ManageBy ?? "-"}
-                            </td>
-
-                            {/* QA Rules */}
-                            <td className="px-3 py-2">
-                              {project.QARules ?? "-"}
-                            </td>
-
-                            {/* DB Status */}
-                            <td className="px-3 py-2">
-                              {project.DBStatus ?? "-"}
-                            </td>
-
-                            {/* DB Type */}
-                            <td className="px-3 py-2">{project.DBType ?? "-"}</td>
-
-                            {/* Created Date */}
-                            <td className="px-3 py-2">
-                              {project.CreatedDate
-                                ? new Date(
-                                  project.CreatedDate
-                                ).toLocaleDateString()
-                                : "-"}
-                            </td>
-
-                            {/* Created By */}
-                            <td className="px-3 py-2">
-                              {project.CreatedBy?.name ?? "-"}
-                            </td>
-
-                            {/* Actions */}
-                            <td className="px-3 py-2">
-                              <button>
-                                <span className="text-blue-600 cursor-pointer hover:underline">
-                                  Assign Feed to QA
-                                </span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        // No feeds
-                        <tr key={project._id}>
-                          <td className="px-3 py-2">{idx + 1}</td>
-                          <td className="px-3 py-2">
-                            {project.ProjectName ?? "-"}
-                          </td>
-                          <td className="px-3 py-2" colSpan={columns.length - 2}>
-                            No feeds
-                          </td>
-                        </tr>
-                      )
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="text-center p-8 text-gray-500"
-                      >
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <img
-                            src={Img}
-                            alt="No data"
-                            className="w-32 h-32 object-contain opacity-80"
-                          />
-                          <p className="font-semibold text-lg text-gray-600">
-                            No Data Found
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Try adding new feeds to see them here.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
 
           {user?.department !== "Sales" &&
             user?.roleName !== "Manager" &&
-            user?.roleName !== "Team Lead" && (
+            user?.roleName !== "Team Lead" &&
+            user?.roleName !== "Project Coordinator" &&
+            user?.roleName !== "Developer" && (
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   {/* <thead className="bg-gray-100 text-gray-700 sticky top-0">
@@ -1969,6 +1818,162 @@ export default function Projects() {
           onPageChange={setCurrentPage}
         /> */}
         </div>
+
+        <Modal
+          isOpen={isAssignOpen}
+          onRequestClose={() => setIsAssignOpen(false)}
+          className="w-full max-w-3xl bg-white rounded-2xl mx-auto my-20 p-8 outline-none shadow-2xl relative animate-fadeIn"
+          overlayClassName="fixed inset-0 bg-black/20 flex items-start justify-center z-50 overflow-auto"
+        >
+          {/* ✨ Header */}
+          <div className="flex justify-between items-center pb-3 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              Assign Project
+              {/* <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm">Assign Project</span> */}
+            </h2>
+            <button
+              className="text-gray-400 hover:text-gray-600 transition"
+              onClick={() => setIsAssignOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* 📄 Project Information */}
+          {selectedProject && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <p className="text-sm text-gray-500">Project Code</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {selectedProject.ProjectCode || "-"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <p className="text-sm text-gray-500">Project Name</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {selectedProject.ProjectName || "-"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <p className="text-sm text-gray-500">Priority</p>
+                <p
+                  className={`inline-block px-2 py-1 rounded text-sm font-medium ${selectedProject.Priority === "High"
+                    ? "bg-red-100 text-red-700"
+                    : selectedProject.Priority === "Medium"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-green-100 text-green-700"
+                    }`}
+                >
+                  {selectedProject.Priority || "-"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <p className="text-sm text-gray-500">Project Type</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {selectedProject.ProjectType || "-"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Assignment Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+            {/* TL / PC / QA — only Manager */}
+            {user?.roleName === "Manager" && (
+              <>
+                {/* TL Select */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Team Lead
+                  </label>
+                  <select
+                    value={selectedTL}
+                    onChange={(e) => setSelectedTL(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
+                  >
+                    <option value="">Select Team Lead</option>
+                    {tlOptions.map((tl) => (
+                      <option key={tl._id} value={tl._id}>{tl.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* PC Select */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Project Coordinator
+                  </label>
+                  <select
+                    value={selectedPC}
+                    onChange={(e) => setSelectedPC(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
+                  >
+                    <option value="">Select Project Coordinator</option>
+                    {pcOptions.map((pc) => (
+                      <option key={pc._id} value={pc._id}>{pc.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* QA Select */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    QA Lead
+                  </label>
+                  <select
+                    value={selectedQA}
+                    onChange={(e) => setSelectedQA(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
+                  >
+                    <option value="">Select QA Lead</option>
+                    {qaOptions.map((qa) => (
+                      <option key={qa._id} value={qa._id}>{qa.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Developers — only TL or PC */}
+            {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && selectedFeed && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Feed: {selectedFeed.FeedName || selectedFeed._id}
+                </p>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Developers</label>
+                <Select
+                  options={devOptionsRS}
+                  value={selectedDevelopers} // must be [{value, label}, ...]
+                  onChange={setSelectedDevelopers}
+                  isMulti
+                  placeholder="Select Developers"
+                />
+
+              </div>
+            )}
+
+
+          </div>
+
+
+          {/* 🧭 Action Buttons */}
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
+              onClick={() => setIsAssignOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
+              onClick={handleAssign}
+
+            >
+              Assign
+            </button>
+          </div>
+        </Modal>
       </div>
     </>
   );

@@ -89,7 +89,7 @@ export default function FeedDetails() {
           StartTime: data.StartTime,
           DeliveryTime: data.DeliveryTime,
           DeliveryCode: data.DeliveryCode,
-          FilePath: data.FilePath ,
+          FilePath: data.FilePath,
           projectCode: project.ProjectCode || "-",
           projectName: project.ProjectName || "-",
           frequency: project.Frequency || "-",
@@ -226,10 +226,10 @@ export default function FeedDetails() {
         </h3>
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* LEFT SIDE (Tabs + Summary/Feeds) */}
-          <div className="lg:col-span-3 min-w-0">
-            {/* Tabs */}
+          {/* <div className="lg:col-span-3 min-w-0">
+           
             <div className="flex gap-2 mb-4 bg-gray-100 p-2 rounded-sm">
               <button
                 className="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 text-white"
@@ -237,16 +237,7 @@ export default function FeedDetails() {
               >
                 Feed Deliveries
               </button>
-              {/* <button
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  activeTab === "Feeds"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-                onClick={() => setActiveTab("Feeds")}
-              >
-                Feeds
-              </button> */}
+
             </div>
 
 
@@ -266,7 +257,7 @@ export default function FeedDetails() {
                 </thead>
 
                 <tbody className="bg-white">
-                  {/* If feed data exists, show it */}
+                  
                   {feed && feed.DeliveryCode ? (
                     <tr className="border-t">
                       <td className="px-4 py-2"></td>
@@ -299,26 +290,27 @@ export default function FeedDetails() {
             </div>
 
 
-          </div>
+          </div> */}
 
           {/* RIGHT SIDE (Always visible Project Details) */}
           <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
 
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 m-0">
                 <span className="w-2 h-6 bg-blue-500 rounded"></span>
                 Feed Details
               </h4>
 
-              {/* <button
-                className="flex items-center gap-2  text-white px-2 py-1 rounded cursor-pointer"
-              // onClick={() => navigate(`/feed/${id}/update`)}
+              <button
+                className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
+              onClick={() => navigate(`/project/feed/${id}/update`)}
               >
-                <FaEdit size={16} className="text-purple-600" />
+                <FaEdit size={16} />
                 <span>Edit</span>
-              </button> */}
-
+              </button>
             </div>
+
+
 
 
             <div className="space-y-3 text-sm">
