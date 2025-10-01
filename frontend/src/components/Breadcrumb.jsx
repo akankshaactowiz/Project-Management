@@ -12,9 +12,13 @@ function Breadcrumb({ feedName }) {
   }
 
   // Filter out dynamic IDs (numbers or long alphanumeric strings)
+  // const filteredPathnames = pathnames.filter(
+  //   (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment)
+  // );
+
   const filteredPathnames = pathnames.filter(
-    (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment)
-  );
+  (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment) // skip IDs
+);
 
   return (
     <nav aria-label="breadcrumb" className="bg-gray-50 px-6 py-2 text-gray-600">

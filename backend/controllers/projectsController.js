@@ -201,6 +201,398 @@ export const updateProject = async (req, res) => {
 };
 
 
+// export const getProjects = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       pageSize = 10,
+//       status,
+//       search,
+//       // department,
+//       date_range,
+//       // qaStatus,
+//       qaid,
+//       CreatedDate
+//     } = req.query;
+
+
+
+//     const filter = {};
+//     // if (qaStatus) filter.QAStatus = qaStatus;
+//     // Status filter
+
+
+//     if (status && status !== "All") filter.Status = { $regex: `^${status}$`, $options: "i" };
+
+//     // Search filter
+//     // if (search) filter.ProjectName = { $regex: search, $options: "i" };
+//     if (search) {
+//       const regex = { $regex: search, $options: "i" };
+//       filter.$or = [
+//         { ProjectName: regex },
+//         { ProjectCode: regex },
+//         { Frequency: regex },
+//         // { "PMId.name": regex } // nested field for populated PM
+//       ];
+//     }
+
+//     // if(CreatedDate) filter.CreatedDate = { $gte: new Date(CreatedDate) };
+//     if (CreatedDate) {
+//       const start = new Date(CreatedDate);        // start of day
+//       const end = new Date(CreatedDate);
+//       end.setHours(23, 59, 59, 999);             // end of day
+
+//       filter.CreatedDate = { $gte: start, $lte: end };
+//     }
+
+//     // QA filter
+//     if (qaid) filter.QAId = qaid;
+//     // Role-based filtering
+//     const userId = req.user._id;
+//     const role = req.user.roleId?.name; // e.g., "Superadmin", "Sales Head", "Sales Manager", "BDE"
+//     const department = req.user.departmentId?.department;
+//     // --- Sales Tab Filter ---
+//     const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
+//     const { tab } = req.query;
+//     if (department === "Sales" && tab && tab !== "All" && salesTabs.includes(tab)) {
+//       filter.DeliveryType = tab;
+//     }
+
+//     const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
+//     const { statusTab } = req.query;
+//     if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
+//       filter.Status = statusTab;
+//     }
+//     // Role-based filtering
+
+
+//     if (role === "Superadmin") {
+//       // No filter, get all projects
+//     } else if (department === "Sales") {
+//       if (role === "Sales Head") {
+//         // All Sales projects
+//         // filter.department = "Sales";
+//       } else if (role === "Sales Manager") {
+//         // Projects created by him/her
+//         filter.CreatedBy = userId;
+//       } else if (role === "Business Development Executive") {
+//         // Projects where BDE is involved
+//         filter.BDEId = userId; // assuming project has BDEIds array
+//       }
+//     } else {
+//       // Other departments
+//       if (role === "Manager") {
+//         // Projects where manager is involved
+//         filter.PMId = userId; // assuming project has ManagerIds array
+//       }
+//       if (role === "Team Lead") {
+//         // Projects where TL is involved
+//         filter.TLId = userId; // assuming project has TLIds array
+//       }
+//       else {
+//         // Other roles: get projects assigned to them
+//         filter.$or = [
+//           { PMId: userId },
+//           {PCId: userId},
+//           { TLId: userId },
+//           { DeveloperIds: userId },
+//           { QAId: userId },
+//           { BAUId: userId },
+//           { BDEId: userId },
+//         ];
+//       }
+//     }
+
+   
+
+
+
+//     // Pagination
+//     const parsedPage = parseInt(page, 10) || 1;
+//     const parsedPageSize = parseInt(pageSize, 10) || 20;
+
+//     // Query database
+//     const total = await Project.countDocuments(filter);
+
+   
+
+//     const projects = await Project.find(filter)
+//       .populate("PMId PCId TLId QAId BAUPersonId BDEId", "name")
+//       .populate("DepartmentId", "department")
+//       .populate("CreatedBy", "name")
+//       .populate({
+//         path: "SOWFile",
+//         model: "File",
+//         match: { fileType: "SOW" },
+//       })
+//       .populate({
+//         path: "SampleFiles",
+//         model: "File",
+//         match: { fileType: "Sample" },
+//       })
+//       .populate("Feeds")
+//       .populate({
+//         path: "Feeds",
+
+//         populate: [
+//           // { path: "TLId", select: "name email roleId" },
+//           { path: "DeveloperIds", select: "name email roleId" },
+          
+//           // { path: "QAId", select: "name email roleId" },
+//           { path: "BAUId", select: "name email roleId" },
+//           { path: "createdBy", select: "name email" },
+
+//         ],
+//       })
+//       .populate({
+//         path: "SOWFile",
+//         populate: [
+//           { path: "uploadedBy", select: "name" },
+//         ]
+//       })
+//       .populate({
+//         path: "SampleFiles",
+//         populate: [
+//           { path: "uploadedBy", select: "name" },
+//         ]
+//       })
+
+//       .sort({ CreatedDate: -1 })
+
+
+
+     
+
+//       .skip((parsedPage - 1) * parsedPageSize)
+//       .limit(parsedPageSize);
+
+//       const projectsFilterByFeed = req.query.filterByFeedUser === 'true'; // You would need a query parameter to enable this
+    
+//     if (projectsFilterByFeed) {
+//         projects = projects.filter(project => {
+//             if (!project.Feeds || project.Feeds.length === 0) return false;
+
+//             return project.Feeds.some(feed => {
+//                 // Check if userId is in DeveloperIds array in the feed
+//                 const isDeveloper = feed.DeveloperIds && feed.DeveloperIds.some(dev => dev && dev._id && dev._id.toString() === userId);
+                
+//                 // Check if userId is the createdBy user of the feed
+//                 const isCreator = feed.createdBy && feed.createdBy._id && feed.createdBy._id.toString() === userId.toString();
+
+//                 return isDeveloper || isCreator;
+//             });
+//         });
+//     }
+     
+
+
+//     // Send response
+//     res.status(200).json({
+//       data: projects,
+//       total,
+//       page: parsedPage,
+//       pageSize: parsedPageSize,
+//     });
+//     // console.log("Role:", role, "Filter:", filter); Debugging
+//   } catch (error) {
+//     console.error("Error in getProjects:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
+
+// export const getProjects = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       pageSize = 10,
+//       status,
+//       search,
+//       date_range,
+//       qaid,
+//       CreatedDate,
+//     } = req.query;
+
+//     const filter = {};
+
+//     // 🔹 Status filter
+//     if (status && status !== "All") {
+//       filter.Status = { $regex: `^${status}$`, $options: "i" };
+//     }
+
+//     // 🔹 Search filter
+//     if (search) {
+//       const regex = { $regex: search, $options: "i" };
+//       filter.$or = [
+//         { ProjectName: regex },
+//         { ProjectCode: regex },
+//         { Frequency: regex },
+//         { IndustryType: regex, },
+        
+       
+    
+//       ];
+//     }
+
+//     // 🔹 Created date filter
+//     if (CreatedDate) {
+//       const start = new Date(CreatedDate);
+//       const end = new Date(CreatedDate);
+//       end.setHours(23, 59, 59, 999);
+//       filter.CreatedDate = { $gte: start, $lte: end };
+//     }
+
+//     // 🔹 QA filter
+//     if (qaid) filter.QAId = qaid;
+
+//     // 🔹 Role-based filtering
+//     const userId = req.user._id.toString();
+//     const role = req.user.roleId?.name;
+//     const department = req.user.departmentId?.department;
+
+//     // Sales Tab filter
+//     const { tab, statusTab } = req.query;
+//     const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
+//     if (department === "Sales" && tab && tab !== "All" && salesTabs.includes(tab)) {
+//       filter.DeliveryType = tab;
+//     }
+
+//     const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
+//     if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
+//       filter.Status = statusTab;
+//     }
+
+//     // 🔹 Apply user-based filters
+//     if (role === "Superadmin") {
+//       // No filter — get all projects
+//     } else if (department === "Sales") {
+//       if (role === "Sales Head") {
+//         // All Sales projects
+//       } else if (role === "Sales Manager") {
+//         filter.CreatedBy = userId;
+//       } else if (role === "Business Development Executive") {
+//         filter.BDEId = userId;
+//       }
+//     } else {
+//       if (role === "Manager") {
+//         filter.PMId = userId;
+//       } else if (role === "Team Lead") {
+//         filter.TLId = userId;
+//       } 
+//       // else {
+//       //   // 🔹 For Developer/QA/BAU etc.
+//       //   filter.$or = [
+//       //     { PMId: userId },
+//       //     { PCId: userId },
+//       //     { TLId: userId },
+//       //     // { DeveloperIds: userId },
+//       //     { QAId: userId },
+//       //     { BAUId: userId },
+//       //     { BDEId: userId },
+//       //   ];
+//       // }
+//     }
+
+//     // 🔹 Pagination setup
+//     const parsedPage = parseInt(page, 10) || 1;
+//     const parsedPageSize = parseInt(pageSize, 10) || 20;
+
+//     // 🔹 Get total before filtering feeds (for reference)
+//     const totalBeforeFeedFilter = await Project.countDocuments(filter);
+
+//     // 🔹 Query projects with all necessary population
+//     let projects = await Project.find(filter)
+//       .populate("PMId PCId TLId QAId BAUPersonId BDEId", "name")
+//       .populate("DepartmentId", "department")
+//       .populate("CreatedBy", "name")
+//       .populate({
+//         path: "SOWFile",
+//         model: "File",
+//         match: { fileType: "SOW" },
+//         populate: { path: "uploadedBy", select: "name" },
+//       })
+//       .populate({
+//         path: "SampleFiles",
+//         model: "File",
+//         match: { fileType: "Sample" },
+//         populate: { path: "uploadedBy", select: "name" },
+//       })
+//       .populate({
+//         path: "Feeds",
+//         populate: [
+//           { path: "DeveloperIds", select: "name email roleId" },
+//           { path: "BAUId", select: "name email roleId" },
+//           { path: "createdBy", select: "name email" },
+//         ],
+//       })
+//       .sort({ CreatedDate: -1 })
+//       .skip((parsedPage - 1) * parsedPageSize)
+//       .limit(parsedPageSize);
+     
+
+//       if (search) {
+//   const lowerSearch = search.toLowerCase();
+//   projects = projects.filter((p) => {
+//     return (
+     
+//       p.PMId?.name?.toLowerCase().includes(lowerSearch) ||
+//       p.TLId?.name?.toLowerCase().includes(lowerSearch) ||
+//       p.QAId?.name?.toLowerCase().includes(lowerSearch) ||
+//       p.BDEId?.name?.toLowerCase().includes(lowerSearch) ||
+//       p.CreatedBy?.name?.toLowerCase().includes(lowerSearch)
+//     );
+//   });
+// }
+
+
+
+//     // 🔹 Feed-based user filtering
+//     const projectsFilterByFeed = req.query.filterByFeedUser === "true";
+//     if (projectsFilterByFeed) {
+//       projects = projects.filter((project) => {
+//         if (!project.Feeds || project.Feeds.length === 0) return false;
+
+//         return project.Feeds.some((feed) => {
+//           const isDeveloper =
+//             feed.DeveloperIds &&
+//             feed.DeveloperIds.some(
+//               (dev) => dev && dev._id && dev._id.toString() === userId
+//             );
+
+//           const isCreator =
+//             feed.createdBy &&
+//             feed.createdBy._id &&
+//             feed.createdBy._id.toString() === userId;
+
+//           const isBAU =
+//             feed.BAUId &&
+//             feed.BAUId._id &&
+//             feed.BAUId._id.toString() === userId;
+
+//           return isDeveloper || isCreator || isBAU;
+//         });
+//       });
+//     }
+
+//     // 🔹 Update total after feed-based filtering
+//     const total = projects.length;
+
+//     // 🔹 Send response
+//     res.status(200).json({
+//       data: projects,
+//       total,
+//       totalBeforeFeedFilter,
+//       page: parsedPage,
+//       pageSize: parsedPageSize,
+//     });
+
+//   } catch (error) {
+//     console.error("Error in getProjects:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const getProjects = async (req, res) => {
   try {
     const {
@@ -208,231 +600,142 @@ export const getProjects = async (req, res) => {
       pageSize = 10,
       status,
       search,
-      // department,
       date_range,
-      // qaStatus,
       qaid,
-      CreatedDate
+      CreatedDate,
+      tab,
+      statusTab,
     } = req.query;
 
-
-
-    const filter = {};
-    // if (qaStatus) filter.QAStatus = qaStatus;
-    // Status filter
-
-
-    if (status && status !== "All") filter.Status = { $regex: `^${status}$`, $options: "i" };
-
-    // Search filter
-    // if (search) filter.ProjectName = { $regex: search, $options: "i" };
-    if (search) {
-      const regex = { $regex: search, $options: "i" };
-      filter.$or = [
-        { ProjectName: regex },
-        { ProjectCode: regex },
-        { Frequency: regex },
-        // { "PMId.name": regex } // nested field for populated PM
-      ];
-    }
-
-    // if(CreatedDate) filter.CreatedDate = { $gte: new Date(CreatedDate) };
-    if (CreatedDate) {
-      const start = new Date(CreatedDate);        // start of day
-      const end = new Date(CreatedDate);
-      end.setHours(23, 59, 59, 999);             // end of day
-
-      filter.CreatedDate = { $gte: start, $lte: end };
-    }
-
-    // QA filter
-    if (qaid) filter.QAId = qaid;
-
-
-
-    // Date range filter
-    // if (date_range) {
-    //   const now = new Date();
-    //   let startDate, endDate;
-
-    //   switch (date_range.toLowerCase()) {
-    //     case "today":
-    //       startDate = new Date(now);
-    //       startDate.setHours(0, 0, 0, 0);
-    //       endDate = new Date(now);
-    //       endDate.setHours(23, 59, 59, 999);
-    //       break;
-    //     case "yesterday":
-    //       startDate = new Date(now);
-    //       startDate.setDate(startDate.getDate() - 1);
-    //       startDate.setHours(0, 0, 0, 0);
-    //       endDate = new Date(now);
-    //       endDate.setDate(endDate.getDate() - 1);
-    //       endDate.setHours(23, 59, 59, 999);
-    //       break;
-    //     case "this_week":
-    //       startDate = new Date(now);
-    //       startDate.setDate(startDate.getDate() - startDate.getDay());
-    //       startDate.setHours(0, 0, 0, 0);
-    //       endDate = new Date();
-    //       endDate.setHours(23, 59, 59, 999);
-    //       break;
-    //     case "last_week":
-    //       startDate = new Date(now);
-    //       startDate.setDate(startDate.getDate() - startDate.getDay() - 7);
-    //       startDate.setHours(0, 0, 0, 0);
-    //       endDate = new Date(now);
-    //       endDate.setDate(endDate.getDate() - endDate.getDay());
-    //       endDate.setHours(0, 0, 0, 0);
-    //       break;
-    //     case "this_month":
-    //       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    //       endDate = new Date();
-    //       endDate.setHours(23, 59, 59, 999);
-    //       break;
-    //     case "last_month":
-    //       startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    //       endDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    //       endDate.setHours(0, 0, 0, 0);
-    //       break;
-    //     default:
-    //       startDate = null;
-    //       endDate = null;
-    //       break;
-    //   }
-
-    //   if (startDate && endDate) {
-    //     filter.CreatedDate = { $gte: startDate, $lt: endDate };
-    //   }
-    // }
-    // Role-based filtering
-    const userId = req.user._id;
-    const role = req.user.roleId?.name; // e.g., "Superadmin", "Sales Head", "Sales Manager", "BDE"
+    const userId = req.user._id.toString();
+    const role = req.user.roleId?.name;
     const department = req.user.departmentId?.department;
-    // --- Sales Tab Filter ---
+
+    const matchStage = {};
+
+    // 🔹 Status filter
+    if (status && status !== "All") {
+      matchStage.Status = { $regex: `^${status}$`, $options: "i" };
+    }
+
+    // 🔹 Created date filter
+    if (CreatedDate) {
+      const start = new Date(CreatedDate);
+      const end = new Date(CreatedDate);
+      end.setHours(23, 59, 59, 999);
+      matchStage.CreatedDate = { $gte: start, $lte: end };
+    }
+
+    // 🔹 QA filter
+    if (qaid) matchStage.QAId = qaid;
+
+    // 🔹 Sales Tab filters
     const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
-    const { tab } = req.query;
     if (department === "Sales" && tab && tab !== "All" && salesTabs.includes(tab)) {
-      filter.DeliveryType = tab;
+      matchStage.DeliveryType = tab;
     }
 
     const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
-    const { statusTab } = req.query;
     if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
-      filter.Status = statusTab;
+      matchStage.Status = statusTab;
     }
-    // Role-based filtering
 
-
-    if (role === "Superadmin") {
-      // No filter, get all projects
-    } else if (department === "Sales") {
-      if (role === "Sales Head") {
-        // All Sales projects
-        // filter.department = "Sales";
-      } else if (role === "Sales Manager") {
-        // Projects created by him/her
-        filter.CreatedBy = userId;
-      } else if (role === "Business Development Executive") {
-        // Projects where BDE is involved
-        filter.BDEId = userId; // assuming project has BDEIds array
-      }
-    } else {
-      // Other departments
-      if (role === "Manager") {
-        // Projects where manager is involved
-        filter.PMId = userId; // assuming project has ManagerIds array
-      }
-      if (role === "Team Lead") {
-        // Projects where TL is involved
-        filter.TLId = userId; // assuming project has TLIds array
-      }
-      else {
-        // Other roles: get projects assigned to them
-        filter.$or = [
-          { PMId: userId },
-          {PCId: userId},
-          { TLId: userId },
-          { DeveloperIds: userId },
-          { QAId: userId },
-          { BAUId: userId },
-          { BDEId: userId },
-        ];
+    // 🔹 Role-based filters
+    if (!(role === "Superadmin")) {
+      if (department === "Sales") {
+        if (role === "Sales Manager") matchStage.CreatedBy = userId;
+        if (role === "Business Development Executive") matchStage.BDEId = userId;
+      } else {
+        if (role === "Manager") matchStage.PMId = userId;
+        if (role === "Team Lead") matchStage.TLId = userId;
       }
     }
 
-    // const userId = req.user._id;
-    // const role = req.user.roleId?.name; // e.g., "superadmin", "PM", "TL", etc.
+    // 🔹 Build aggregation pipeline
+    const pipeline = [
+      { $match: matchStage },
 
-    // if (role !== "Superadmin") {
-    //   filter.$or = [
-    //     { PMId: userId },
-    //     { TLId: userId },
-    //     { DeveloperIds: userId },
-    //     { QAId: userId },
-    //     { BAUPersonId: userId },
-    //   ];
-    // }
+      // 🔹 Lookup for PMId
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "PMId",
+          foreignField: "_id",
+          as: "PMId",
+        },
+      },
+      { $unwind: { path: "$PMId", preserveNullAndEmptyArrays: true } },
 
-    // Pagination
-    const parsedPage = parseInt(page, 10) || 1;
-    const parsedPageSize = parseInt(pageSize, 10) || 20;
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "BDEId",
+          foreignField: "_id",
+          as: "BDEId",
+        },
+      },
+      { $unwind: { path: "$PMId", preserveNullAndEmptyArrays: true } },
 
-    // Query database
-    const total = await Project.countDocuments(filter);
-    const projects = await Project.find(filter)
-      .populate("PMId PCId TLId QAId BAUPersonId BDEId", "name")
-      .populate("DepartmentId", "department")
-      .populate("CreatedBy", "name")
-      .populate({
-        path: "SOWFile",
-        model: "File",
-        match: { fileType: "SOW" },
-      })
-      .populate({
-        path: "SampleFiles",
-        model: "File",
-        match: { fileType: "Sample" },
-      })
-      .populate("Feeds")
-      .populate({
-        path: "Feeds",
+      // 🔹 Lookup for CreatedBy
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "CreatedBy",
+          foreignField: "_id",
+          as: "CreatedBy",
+        },
+      },
+      { $unwind: { path: "$CreatedBy", preserveNullAndEmptyArrays: true } },
 
-        populate: [
-          // { path: "TLId", select: "name email roleId" },
-          { path: "DeveloperIds", select: "name email roleId" },
-          
-          // { path: "QAId", select: "name email roleId" },
-          { path: "BAUId", select: "name email roleId" },
-          { path: "createdBy", select: "name email" },
+      // 🔹 Optional search filter
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { ProjectName: { $regex: search, $options: "i" } },
+                  { ProjectCode: { $regex: search, $options: "i" } },
+                  { Frequency: { $regex: search, $options: "i" } },
+                  { IndustryType: { $regex: search, $options: "i" } },
+                  { "PMId.name": { $regex: search, $options: "i" } },
+                  { "CreatedBy.name": { $regex: search, $options: "i" } },
+                  { "BDEId.name": { $regex: search, $options: "i" } },
+                ],
+              },
+            },
+          ]
+        : []),
 
-        ],
-      })
-      .populate({
-        path: "SOWFile",
-        populate: [
-          { path: "uploadedBy", select: "name" },
-        ]
-      })
-      .populate({
-        path: "SampleFiles",
-        populate: [
-          { path: "uploadedBy", select: "name" },
-        ]
-      })
+      // 🔹 Sort by CreatedDate
+      { $sort: { CreatedDate: -1 } },
 
-      .sort({ CreatedDate: -1 })
-      .skip((parsedPage - 1) * parsedPageSize)
-      .limit(parsedPageSize);
+      // 🔹 Pagination
+      { $skip: (parseInt(page, 10) - 1) * parseInt(pageSize, 10) },
+      { $limit: parseInt(pageSize, 10) },
 
-    // Send response
+      // 🔹 Optional: populate Feeds if needed
+      {
+        $lookup: {
+          from: "Feed-data",
+          localField: "Feeds",
+          foreignField: "_id",
+          as: "Feeds",
+        },
+      },
+    ];
+
+    // 🔹 Execute aggregation
+    const projects = await Project.aggregate(pipeline);
+
+    // 🔹 Get total count (for pagination)
+    const total = await Project.countDocuments(matchStage);
+
     res.status(200).json({
       data: projects,
       total,
-      page: parsedPage,
-      pageSize: parsedPageSize,
+      page: parseInt(page, 10),
+      pageSize: parseInt(pageSize, 10),
     });
-    // console.log("Role:", role, "Filter:", filter); Debugging
   } catch (error) {
     console.error("Error in getProjects:", error);
     res.status(500).json({ message: error.message });
@@ -644,6 +947,36 @@ export const getProjectById = async (req, res) => {
   }
 
   try {
+
+    const {
+      page = 1,
+      pageSize = 10,
+      status,
+      search,
+      // department,
+      date_range,
+      // qaStatus,
+      qaid,
+    } = req.query;
+
+    const filter = {};
+    // if (qaStatus) filter.QAStatus = qaStatus;
+    // Status filter
+    if (status && status !== "All") filter.Status = { $regex: `^${status}$`, $options: "i" };
+
+    // Search filter
+    if (search) {
+  filter.Feeds = {
+    $elemMatch: {
+      $or: [
+        { FeedName: { $regex: search, $options: "i" } },
+        { FeedId: { $regex: search, $options: "i" } },
+        { Frequency: { $regex: search, $options: "i" } },
+      ],
+    },
+  };
+}
+   
     const project = await Project.findById(id)
       .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name")
 
@@ -651,6 +984,15 @@ export const getProjectById = async (req, res) => {
       .populate("SampleFiles.uploadedBy", "name")
       .populate({
         path: "Feeds",
+        match: search
+      ? {
+          $or: [
+            { FeedName: { $regex: search, $options: "i" } },
+            { FeedId: { $regex: search, $options: "i" } },
+            { Frequency: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {},
 
         populate: [
           // { path: "TLId", select: "name email roleId" },

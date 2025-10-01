@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { getData } from "country-list";
 
+import Modal from "react-modal";
+
+Modal.setAppElement("#root");
+
 function CreateFeed({ onClose, onSuccess }) {
   const [projects, setProjects] = useState([]);
   const [projectId, setProjectId] = useState("");

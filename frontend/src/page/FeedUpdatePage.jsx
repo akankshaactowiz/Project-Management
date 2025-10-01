@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
-import {useAuth} from "../hooks/useAuth"
+import { useAuth } from "../hooks/useAuth"
 
 import Breadcrumb from "../components/Breadcrumb";
 
 function FeedUpdate() {
   const { id } = useParams();
-  const {user} = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [feed, setFeed] = useState({});
   const [loading, setLoading] = useState(true);
@@ -75,8 +75,7 @@ function FeedUpdate() {
             { credentials: "include" }
           ),
           fetch(
-            `http://${
-              import.meta.env.VITE_BACKEND_NETWORK_ID
+            `http://${import.meta.env.VITE_BACKEND_NETWORK_ID
             }/api/users/tl-dev`,
             { credentials: "include" }
           ),
@@ -121,7 +120,7 @@ function FeedUpdate() {
             ? feedData.QARules
             : JSON.parse(feedData.QARules || "[]")
         );
-        
+
         setStartDate(feedData.StartDate || "");
 
         setLoading(false);
@@ -177,8 +176,8 @@ function FeedUpdate() {
         Schedule: schedule,
         // QARules: rules,
         QARules: Array.isArray(rules)
-    ? rules
-    : JSON.parse(rules || "[]")
+          ? rules
+          : JSON.parse(rules || "[]")
       };
 
       const res = await fetch(
@@ -217,22 +216,28 @@ function FeedUpdate() {
 
   return (
     <>
-      <div className="border-b border-gray-200 mb-4 overflow-x-auto whitespace-nowrap">
+    
+      <div className="flex items-center justify-between mb-6">
+        {/* Heading */}
+        <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3 mt-4">
+          Feed Update
+        </h2>
+      </div>
+      <div className="border-b border-gray-200 overflow-x-auto whitespace-nowrap">
         {tabs.map((tabs) => (
           <button
             key={tabs}
             onClick={() => setActiveTab(tabs)}
-            className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${
-              activeTab === tabs
-                ? "border-b-2 border-purple-800 text-purple-800"
-                : "text-gray-500"
-            }`}
+            className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${activeTab === tabs
+              ? "border-b-2 border-purple-800 text-purple-800"
+              : "text-gray-500"
+              }`}
           >
             {tabs}
           </button>
         ))}
       </div>
-      <div className="p-6 mx-auto">
+      <div className="p-2 mx-auto">
         {activeTab === "Feed Details" && (
           <form
             onSubmit={handleSubmit}
@@ -241,7 +246,7 @@ function FeedUpdate() {
             {/* Project Dropdown */}
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-2">
-                Project
+                Project <span className="text-red-500">*</span>
               </label>
               <select
                 name="projectId"
@@ -256,6 +261,7 @@ function FeedUpdate() {
                   }));
                 }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                required
               >
                 <option value="">Select Project</option>
                 {projects.map((p) => (
@@ -269,7 +275,7 @@ function FeedUpdate() {
             {/* Feed Title */}
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-2">
-                Feed Title
+                Feed Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -284,7 +290,7 @@ function FeedUpdate() {
             {/* Feed Status */}
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-2">
-                Feed Status
+                Feed Status <span className="text-red-500 ">*</span>
               </label>
               <select
                 name="Status"
@@ -385,7 +391,7 @@ function FeedUpdate() {
             {/* Platform */}
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-2">
-                Platform
+                Platform <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -588,7 +594,7 @@ function FeedUpdate() {
         {/* Frequency Tab */}
         {activeTab === "Frequency" && (
           <>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 p-6">
               {/* Start Date */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -626,72 +632,72 @@ function FeedUpdate() {
                 frequency === "Weekly" ||
                 frequency === "Monthly" ||
                 frequency === "Custom") && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {(frequency === "Weekly" || frequency === "Custom") && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Day
-                      </label>
-                      <select
-                        value={schedule.day || ""}
-                        onChange={(e) =>
-                          setSchedule({ ...schedule, day: e.target.value })
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                      >
-                        <option value="">Select Day</option>
-                        {daysOfWeek.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {frequency === "Monthly" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Date (1-31)
-                      </label>
-                      <select
-                        value={schedule.date || ""}
-                        onChange={(e) =>
-                          setSchedule({
-                            ...schedule,
-                            date: Number(e.target.value),
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                      >
-                        <option value="">Select Date</option>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                          (d) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {(frequency === "Weekly" || frequency === "Custom") && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Day
+                        </label>
+                        <select
+                          value={schedule.day || ""}
+                          onChange={(e) =>
+                            setSchedule({ ...schedule, day: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="">Select Day</option>
+                          {daysOfWeek.map((d) => (
                             <option key={d} value={d}>
                               {d}
                             </option>
-                          )
-                        )}
-                      </select>
-                    </div>
-                  )}
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
-                  {/* Time */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
-                    </label>
-                    <input
-                      type="time"
-                      value={schedule.time || ""}
-                      onChange={(e) =>
-                        setSchedule({ ...schedule, time: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                    />
+                    {frequency === "Monthly" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Date (1-31)
+                        </label>
+                        <select
+                          value={schedule.date || ""}
+                          onChange={(e) =>
+                            setSchedule({
+                              ...schedule,
+                              date: Number(e.target.value),
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="">Select Date</option>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                            (d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Time */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Time
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.time || ""}
+                        onChange={(e) =>
+                          setSchedule({ ...schedule, time: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {frequency === "Once-off" && (
                 <div className="mb-4">
@@ -879,8 +885,7 @@ function FeedUpdate() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Table Name
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={feed.tableSettings?.tableName || ""}
                       onChange={(e) =>
                         setFeed({
@@ -893,8 +898,19 @@ function FeedUpdate() {
                       }
                       placeholder="Table Name"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                    />
+                    >
+                      <option value="" disabled>Select Table</option>
+                      {/* <option value="productdata">productdata</option>
+                      <option value="userdata">userdata</option>
+                      <option value="orders">orders</option>
+                      <option value="salesreport">salesreport</option> */}
+                    </select>
+                    {/* Example / Format */}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Name should be in the format: <span className="text-red-500">*</span> <span className="font-mono text-gray-700">productdata_2025_10_01</span>
+                    </p>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Has Data Table
@@ -1008,7 +1024,7 @@ function FeedUpdate() {
                 </button>
                 <button
                   className="px-4 py-2 border rounded hover:bg-gray-50"
-                  // onClick={}
+                // onClick={}
                 >
                   Clone Rules
                 </button>
@@ -1068,7 +1084,7 @@ function FeedUpdate() {
                           className="w-full border px-2 py-1 rounded"
                         />
                       </td>
-                      <td className="border px-3 py-2">{rule.createdBy}</td>
+                      <td className="border px-3 py-2">{rule.createdBy?.name || "-"}</td>
                       <td className="border px-3 py-2">
                         {rule.createdAt || "-"}
                       </td>

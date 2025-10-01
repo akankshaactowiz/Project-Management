@@ -44,9 +44,12 @@ export default function ProjectDetails() {
     const loadData = async () => {
       try {
         // Fetch project details
+
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
         const res = await fetch(
           `http://${import.meta.env.VITE_BACKEND_NETWORK_ID
-          }/api/projects/${id}`,
+          }/api/projects/${id}?${params.toString()}`,
           { credentials: "include" }
         );
         const data = await res.json();
@@ -72,7 +75,7 @@ export default function ProjectDetails() {
       }
     };
     loadData();
-  }, [id]);
+  }, [id, search]);
 
 
   // Inside your component, after fetching `project` data
@@ -121,9 +124,15 @@ export default function ProjectDetails() {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow p-6 mt-4">
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
+          {/* Heading */}
+          <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+            Project Details
+          </h2>
+        </div>
         {/* Project Title */}
-        <h3 className="mb-4 text-2xl font-bold">
+        <h3 className="mb-4 text-lg font-bold">
           {project?.ProjectCode && project?.ProjectName
             ? `${project.ProjectCode} ${project.ProjectName}`
             : "Project Details"}
@@ -162,7 +171,8 @@ export default function ProjectDetails() {
                 {/* Top Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Feeds List */}
-                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition">
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
+                    onClick={() => setActiveTab("Feeds")}>
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Feeds List
@@ -202,7 +212,8 @@ export default function ProjectDetails() {
                   </div>
 
                   {/* Status Types */}
-                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition">
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
+                    onClick={() => setActiveTab("Feeds")}>
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Status Types
@@ -230,7 +241,8 @@ export default function ProjectDetails() {
                   </div>
 
                   {/* Frequency Options */}
-                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition">
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
+                    onClick={() => setActiveTab("Feeds")}>
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Frequency Options
@@ -280,12 +292,12 @@ export default function ProjectDetails() {
                         {project?.DueDate || "-"}
                       </p>
                     </div>
-                    {/* <div>
+                    <div>
                       <p className="text-gray-500">Efforts</p>
                       <p className="font-semibold text-gray-800">
                         {project?.Efforts || "-"}
                       </p>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -294,39 +306,41 @@ export default function ProjectDetails() {
             {/* FEEDS TAB */}
             {activeTab === "Feeds" && (
               // <div className="flex flex-col">
+              <div>
                 <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
-              <div className="flex items-center justify-between mb-6">
-    {/* Heading */}
-    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
-      Feeds
-    </h2>
 
-    <div className="flex items-center space-x-3">
-      {/* Search Box */}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
-        </svg>
-      </div>
+                  <div className="flex items-center justify-between mb-6">
+                    {/* Heading */}
+                    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+                      Feeds
+                    </h2>
 
-      {/* Add Feed Button */}
-      <button
+                    <div className="flex items-center space-x-3">
+                      {/* Search Box */}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Search by Feed Name..."
+                          value={search}
+                          onChange={(e) => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
+                        </svg>
+                      </div>
+
+                      {/* Add Feed Button */}
+                      {/* <button
         className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
         onClick={() => {
           // Add your logic here
@@ -334,24 +348,24 @@ export default function ProjectDetails() {
         }}
       >
         Add Feed
-      </button>
-    </div>
-  </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 overflow-hidden">
-                    <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                      <tr>
-                        {columns.map((col) => (
-                          <th
-                            key={col}
-                            className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                          >
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    {/* <tbody>
+      </button> */}
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200 overflow-hidden">
+                      <thead className="bg-gray-100 text-gray-700 sticky top-0">
+                        <tr>
+                          {columns.map((col) => (
+                            <th
+                              key={col}
+                              className="px-3 py-2 text-left font-semibold whitespace-nowrap"
+                            >
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      {/* <tbody>
                     {(project?.Feeds || []).map((feed, idx) => (
                       <tr key={idx} className="border-t">
                         <td className="px-4 py-2">{feed.name}</td>
@@ -360,175 +374,284 @@ export default function ProjectDetails() {
                       </tr>
                     ))}
                   </tbody> */}
-                    <tbody>
-                      {(project?.Feeds || []).map((feed, idx) => {
-                        const members =
-                          feed.DeveloperIds?.length > 0
-                            ? feed.DeveloperIds
-                            : []; // only show devs if available
+                      <tbody>
+  {project?.Feeds && project.Feeds.length > 0 ? (
+    project.Feeds.map((feed, idx) => {
+      const members = feed.DeveloperIds?.length > 0 ? feed.DeveloperIds : [];
+      const combinedMembers = [...members, ...projectMembers];
+      const visible = combinedMembers.slice(0, 3);
+      const extraCount = combinedMembers.length - visible.length;
 
-                        const combinedMembers = [...members, ...projectMembers];
-                        const visible = combinedMembers.slice(0, 3);
-                        const extraCount = combinedMembers.length - visible.length;
+      return (
+        <tr key={idx} className="">
+          <td className="px-4 py-2">{idx + 1}</td>
+          <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
+          <td
+            className="px-4 py-2 text-blue-600 cursor-pointer whitespace-nowrap"
+            onClick={() => navigate(`/project/feed/${feed._id}`)}
+          >
+            {feed.FeedName}
+          </td>
+          <td className="px-4 py-2 align-top whitespace-nowrap">
+            <div className="flex flex-col gap-1">
+              <span
+                className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit ${
+                  feed.Frequency === "Daily"
+                    ? "bg-green-100 text-green-700"
+                    : feed.Frequency === "Weekly"
+                    ? "bg-blue-100 text-blue-700"
+                    : feed.Frequency === "Monthly"
+                    ? "bg-purple-100 text-purple-700"
+                    : feed.Frequency === "Once-off"
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {feed.Frequency ?? "-"}
+              </span>
 
-                        return (
-                          <tr key={idx} className="">
-                            <td className="px-4 py-2 ">{idx + 1}</td>
-                            <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
+              <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
+                {/* Schedule logic */}
+                {(() => {
+                  const { Frequency, Schedule } = feed;
+                  if (!Schedule) return "No schedule";
+                  switch (Frequency) {
+                    case "Daily":
+                      return "Daily";
+                    case "Weekly":
+                      return `${Schedule.day || "—"}`;
+                    case "Monthly":
+                      const monthName = new Date().toLocaleString("default", { month: "long" });
+                      const year = new Date().getFullYear();
+                      return `${Schedule.date || "--"} ${monthName} ${year}`;
+                    case "Once-off":
+                      return Schedule.datetime
+                        ? new Date(Schedule.datetime).toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "No date";
+                    case "Custom":
+                      return Schedule.custom && Schedule.custom.length > 0
+                        ? Schedule.custom.map((c) => `${c.day} ${c.time}`).join(", ")
+                        : "No custom schedule";
+                    default:
+                      return "No schedule";
+                  }
+                })()}
+              </span>
+            </div>
+          </td>
 
-                            <td className="px-4 py-2 text-blue-600 cursor-pointer whitespace-nowrap"
-                              onClick={() => navigate(`/project/feed/${feed._id}`)}>{feed.FeedName}</td>
-                            <td className="px-4 py-2">{feed.Frequency ?? "-"}</td>
-                            <td className="px-4 py-2 whitespace-nowrap">
-                              {feed.DomainName}|{feed.ApplicationType}|{feed.CountryName}
-                            </td>
-                            <td className="px-4 py-2">
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "bg-green-100 text-green-600"
-                                  }`}
-                              >
-                                {feed.Status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2">{feed.BAU ?? "-"}</td>
-                            <td className="px-4 py-2">{feed.POC ?? "-"}</td>
+          <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
+          <td className="px-4 py-2 whitespace-nowrap">
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                feed.Status === "New" ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
+              }`}
+            >
+              {feed.Status}
+            </span>
+          </td>
+          <td className="px-4 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
+          <td className="px-4 py-2 whitespace-nowrap">{feed.POC ?? "-"}</td>
 
-
-
-
-
-                            {/* Team Members */}
-                            <td className="px-4 py-2">
-                              {combinedMembers.length === 0 ? (
-                                <span className="text-gray-400">-</span>
-                              ) : (
-                                <div className="flex items-center -space-x-2">
-                                  {visible.map((m, i) => (
-                                    <div
-                                      key={i}
-                                      className="relative group"
-                                      title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""
-                                        }`}
-                                    >
-                                      <img
-                                        src={
-                                          m.avatar ||
-                                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                            m.name || "U"
-                                          )}&background=random`
-                                        }
-                                        alt={m.name}
-                                        className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
-                                      />
-                                    </div>
-                                  ))}
-
-                                  {extraCount > 0 && (
-                                    <button
-                                      onClick={() => handleShowAll(combinedMembers)}
-                                      className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
-                                    >
-                                      +{extraCount}
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-
-                            <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-between">
-                  <div className="flex items-center space-x-2 mt-4">
-                    <label htmlFor="entries" className="text-gray-700">Show</label>
-                    <select
-                      id="entries"
-                      value={entries}
-                      onChange={(e) => {
-                        setEntries(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      className="border rounded px-2 py-1"
-                    >
-                      {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                    <span className="text-gray-700">entries</span>
+          <td className="px-4 py-2">
+            {combinedMembers.length === 0 ? (
+              <span className="text-gray-400">-</span>
+            ) : (
+              <div className="flex items-center -space-x-2">
+                {visible.map((m, i) => (
+                  <div key={i} className="relative group" title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}>
+                    <img
+                      src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+                      alt={m.name}
+                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
+                    />
                   </div>
-                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                ))}
+
+                {extraCount > 0 && (
+                  <button
+                    onClick={() => handleShowAll(combinedMembers)}
+                    className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                  >
+                    +{extraCount}
+                  </button>
+                )}
+              </div>
+            )}
+          </td>
+
+          <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td className="px-4 py-6 text-center text-gray-500" colSpan={columns.length}>
+        No Data Found
+      </td>
+    </tr>
+  )}
+</tbody>
+
+                    </table>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="flex items-center space-x-2 mt-4">
+                      <label htmlFor="entries" className="text-gray-700">Show</label>
+                      <select
+                        id="entries"
+                        value={entries}
+                        onChange={(e) => {
+                          setEntries(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="border rounded px-2 py-1"
+                      >
+                        {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                      <span className="text-gray-700">entries</span>
+                    </div>
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                  </div>
+
+
+                </div>
+                {/* Assigned Info */}
+                <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 mt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500">Assigned By</p>
+                      <p className="font-semibold text-gray-800">
+                        {project?.CreatedBy?.name || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Assigned Date</p>
+                      <p className="font-semibold text-gray-800">
+                        {new Date(project.CreatedDate).toLocaleDateString() ??
+                          "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Due Date</p>
+                      <p className="font-semibold text-gray-800">
+                        {project?.DueDate || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Efforts</p>
+                      <p className="font-semibold text-gray-800">
+                        {project?.Efforts || "-"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           {/* RIGHT SIDE (Always visible Project Details) */}
-          <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
-            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-2 h-6 bg-blue-500 rounded"></span>
-              Project Details
-            </h4>
-
-            <div className="space-y-3 text-sm">
-              <p className="flex justify-between">
-                <span className="text-gray-500">Project ID</span>
-                <span className="font-semibold text-gray-800">
-                  {project?.ProjectCode}
-                </span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-gray-500">Delivery Type</span>
-                <span className="font-semibold text-gray-800">
-                  {project?.DeliveryType}
-                </span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Project Type</span>
-                <span className="font-semibold text-gray-800">
-                  {project?.ProjectType}
-                </span>
-              </p>
+          <div className="lg:col-span-1 min-w-0 flex flex-col gap-6">
+            <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="w-2 h-6 bg-blue-500 rounded"></span>
+                Project Details
+              </h4>
 
 
-              <p className="flex justify-between">
-                <span className="text-gray-500">Project Status</span>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${project?.Status === "New"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-yellow-100 text-yellow-600"
-                    }`}
-                >
-                  {project?.Status}
-                </span>
-              </p>
+              <hr className="border-gray-200 mb-4" />
 
-              <p className="flex justify-between">
-                <span className="text-gray-500">Industry</span>
-                <span className="px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-600">
-                  {project?.IndustryType || "N/A"}
-                </span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-gray-500">BDE</span>
-                <span className="font-semibold text-gray-800">
-                  {project?.BDEId?.name || "N/A"}
-                </span>
-              </p>
+              <div className="space-y-3 text-sm">
+                <p className="flex justify-between ">
+                  <span className="text-gray-500">Project ID</span>
+                  <span className="font-semibold text-gray-800">
+                    {project?.ProjectCode}
+                  </span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Project Name</span>
+                  <span className="font-semibold text-gray-800">
+                    {project?.ProjectName}
+                  </span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Delivery Type</span>
+                  <span className="font-semibold text-gray-800">
+                    {project?.DeliveryType}
+                  </span>
+                </p>
 
-              <p className="flex justify-between">
-                <span className="text-gray-500">Assigned To</span>
-                <span className="font-semibold text-gray-700">
-                  {/* {(project?.AssignedTo || []).join(", ") || "-"} */}
-                  {project?.PMId?.name || "-"}
-                </span>
-              </p>
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Project Type</span>
+                  <span className="font-semibold text-gray-800">
+                    {project?.ProjectType}
+                  </span>
+                </p>
+
+
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Project Status</span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${project?.Status === "New"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-yellow-100 text-yellow-600"
+                      }`}
+                  >
+                    {project?.Status}
+                  </span>
+                </p>
+
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Industry</span>
+                  <span className="px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-600">
+                    {project?.IndustryType || "N/A"}
+                  </span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-gray-500">BDE</span>
+                  <span className="font-semibold text-gray-800">
+                    {project?.BDEId?.name || "N/A"}
+                  </span>
+                </p>
+
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Assigned To</span>
+                  <span className="font-semibold text-gray-700">
+                    {/* {(project?.AssignedTo || []).join(", ") || "-"} */}
+                    {project?.PMId?.name || "-"}
+                  </span>
+                </p>
+
+                <p className="flex justify-between">
+                  <span className="text-gray-500">History</span>
+                  <span className="font-semibold text-gray-700">
+                    {/* {(project?.AssignedTo || []).join(", ") || "-"} */}
+                    {project.history || "-"}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="w-2 h-6 bg-green-500 rounded"></span>
+                Attachments
+              </h4>
+
+              <div className="space-y-2 text-sm">
+                
+                      <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                        <a href="" onClick={() => navigate(`/project/${project._id}/files`)}>View</a>
+                      </button>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </>

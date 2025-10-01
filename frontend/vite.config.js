@@ -14,6 +14,7 @@ export default defineConfig({
       port: 5173,
       // this sets the host to 0.0.0.0
       host: '0.0.0.0',
+      
       strictPort: true,
     cors: true
     },

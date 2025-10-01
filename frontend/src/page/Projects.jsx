@@ -52,7 +52,7 @@ export default function Projects() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   const [feedModalOpen, setFeedModalOpen] = useState(false);
-  const [feeds, setFeeds] = useState([]);
+  const [feed, setFeed] = useState([]);
   const [status, setStatus] = useState("All");
   // const [qaModalOpen, setQaModalOpen] = useState(false);
 
@@ -382,7 +382,7 @@ export default function Projects() {
       "Project Manager",
       "BDE",
       "Delivery Type",
-      "Frequency",
+      // "Frequency",
       "Status",
       "Attachments",
       "Project Type",
@@ -397,7 +397,7 @@ export default function Projects() {
       "Project Manager",
       "BDE",
       "Delivery Type",
-      "Frequency",
+      // "Frequency",
       "Status",
       "Attachments",
       "Project Type",
@@ -412,7 +412,7 @@ export default function Projects() {
       "Project Manager",
       "BDE",
       "Delivery Type",
-      "Frequency",
+      // "Frequency",
       "Status",
       "Attachments",
       "Project Type",
@@ -446,7 +446,7 @@ export default function Projects() {
       "Project Manager",
       "BDE",
       "Delivery Type",
-      "Frequency",
+      // "Frequency",
       "Status",
       "Attachments",
       "Project Type",
@@ -455,7 +455,22 @@ export default function Projects() {
       "Action",
     ],
     "Team Lead": [
-      "Project Name",
+     "Project",
+      "Feeds",
+      "Industry",
+      "Project Manager",
+      "BDE",
+      "Delivery Type",
+      // "Frequency",
+      "Status",
+      "Attachments",
+      "Project Type",
+      "Created By",
+      "Created Date",
+      "Action",
+    ],
+    QA: ["QA Report Count", "QA Rules"],
+    Developer: ["Project Name",
       "Feed Name",
       // "Feed ID",
       "Frequency",
@@ -477,10 +492,7 @@ export default function Projects() {
       "DB Status",
       "DB Type",
       "Created Date",
-      "Action"
-    ],
-    QA: ["QA Report Count", "QA Rules"],
-    Developer: ["Framework type", "DB Status", "DB Type"],
+      ],
   };
 
   const columns = [...baseColumns, ...(roleColumns[role] || [])];
@@ -518,9 +530,9 @@ export default function Projects() {
   return (
     <>
       <div className="px-4 pt-2">
-         <div className="flex items-center justify-between mb-6">
+         <div className="flex items-center justify-between mt-4">
     {/* Heading */}
-    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+    <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
       Projects
     </h2>
 </div>
@@ -631,178 +643,156 @@ export default function Projects() {
 
 
           {/* Controls */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
-            {/* Left side: Search */}
-            <div className="flex-1 md:max-w-xs mt-6">
+<div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
+  {/* Left side: Search + Filters + Clear */}
+  <div className="flex flex-wrap md:flex-nowrap items-center gap-3 flex-1">
+    {/* Search */}
+    <div className="flex-1 md:max-w-xs mt-6">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search by Project Name or Code..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-full border border-gray-200 rounded pl-10 pr-4 py-2 text-sm focus:outline-none"
+        />
+        <svg
+          className="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <line x1="16.5" y1="16.5" x2="21" y2="21" />
+        </svg>
+      </div>
+    </div>
 
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by Project Name or Code..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full border border-gray-400 rounded pl-10 pr-3 py-2 text-sm focus:outline-none"
-                />
-                <svg
-                  className="w-6 h-6 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <line x1="16.5" y1="16.5" x2="21" y2="21" />
-                </svg>
-              </div>
-            </div>
+    {/* Filters */}
+    <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
+      {/* Deliveries / Delivery Type */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-500 mb-1">
+          {user.department !== "Sales" ? "Deliveries" : "Delivery Type"}
+        </label>
+        <select
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
+          value={user.department !== "Sales" ? activeTab : activeSalesTab}
+          onChange={(e) => {
+            if (user.department !== "Sales") setActiveTab(e.target.value);
+            else setActiveSalesTab(e.target.value);
+          }}
+        >
+          {user.department !== "Sales"
+            ? tabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)
+            : salesTabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)}
+        </select>
+      </div>
 
-            {/* Right side: Filters + Buttons */}
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 flex-1 md:justify-end">
-              {/* Tabs Dropdown with Label */}
-              <div className="flex flex-col">
-                <label className="text-md font-semibold text-gray-500 mb-1">
-                  {user.department !== "Sales" ? "Deliveries" : "Delivery Type"}
-                </label>
-                <select
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
-                  value={user.department !== "Sales" ? activeTab : activeSalesTab}
-                  onChange={(e) => {
-                    if (user.department !== "Sales") setActiveTab(e.target.value);
-                    else setActiveSalesTab(e.target.value);
-                  }}
-                >
-                  {user.department !== "Sales"
-                    ? tabs.map((tab) => (
-                      <option key={tab} value={tab}>
-                        {tab}
-                      </option>
-                    ))
-                    : salesTabs.map((tab) => (
-                      <option key={tab} value={tab}>
-                        {tab}
-                      </option>
-                    ))}
-                </select>
-              </div>
+      {/* Status */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-500 mb-1">Status</label>
+        <select
+          value={user.department !== "Sales" ? activeStatus : salesActiveStatusTabs}
+          onChange={(e) => {
+            if (user.department !== "Sales") setActiveStatus(e.target.value);
+            else setSalesActiveStatusTabs(e.target.value);
+          }}
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+        >
+          {(user.department !== "Sales" ? statusTabs : salesStatusTabs).map((opt) => (
+            <option key={opt.key || opt} value={opt.key || opt}>
+              {opt.label || opt}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              {/* Status Dropdown with Label */}
-              <div className="flex flex-col">
-                <label className="text-md font-semibold text-gray-500 mb-1">Status</label>
-                {user?.department !== "Sales" ? (
-                  <select
-                    value={activeStatus}
-                    onChange={(e) => setActiveStatus(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
-                  >
-                    {statusTabs.map((status) => (
-                      <option key={status.key} value={status.key}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <select
-                    value={salesActiveStatusTabs}
-                    onChange={(e) => setSalesActiveStatusTabs(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
-                  >
-                    {salesStatusTabs.map((tab) => (
-                      <option key={tab} value={tab}>
-                        {tab}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+      {/* Date */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-500 mb-1">Date</label>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+            value={filterDate ? dayjs(filterDate, "DD/MM/YYYY") : null}
+            format="DD/MM/YYYY"
+            onChange={(newValue) => {
+              setFilterDate(newValue ? newValue.format("DD/MM/YYYY") : "");
+              setCurrentPage(1);
+            }}
+            slotProps={{
+              textField: { size: "small", sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } } },
+            }}
+          />
+        </LocalizationProvider>
+      </div>
 
-              {/* Date Picker with Label */}
-              <div className="flex flex-col">
-                <label className="text-md font-semibold text-gray-500 mb-1">Date</label>
-                <div className="relative">
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                      className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
-                      // label="Filter by Date"
-                      value={filterDate ? dayjs(filterDate) : null}
-                      onChange={(newValue) => {
-                        setFilterDate(newValue ? newValue.format("YYYY-MM-DD") : "");
-                        setCurrentPage(1);
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: "small",
-                          sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } },
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
-              </div>
+      {/* Clear Button */}
+      <button
+        className="bg-gray-200 hover:bg-gray-300 text-gray-700  px-3 py-2 rounded text-sm transition mt-2 md:mt-6"
+        onClick={() => {
+          setFilterDate("");
+          setActiveStatus("");
+          setActiveTab("");
+          setActiveSalesTab("");
+          setSalesActiveStatusTabs("");
+          setSearch("");
+          setCurrentPage(1);
+        }}
+      >
+        Clear
+      </button>
+    </div>
+  </div>
 
-              {/* Clear Button */}
-              <button
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 mt-6 px-3 py-2 rounded text-sm transition-colors duration-200"
-                onClick={() => {
-                  setFilterDate("");
-                  setActiveStatus("");
-                  setActiveTab("");
-                  setActiveSalesTab("");
-                  setSalesActiveStatusTabs("");
-                  setSearch("");
-                  setCurrentPage(1);
-                }}
-              >
-                Clear
-              </button>
+  {/* Right side: Export + Create Buttons */}
+  <div className="flex flex-wrap md:flex-nowrap items-center mt-6 gap-3">
+    {/* Export */}
+    <div className="flex flex-col">
+      <select
+        className="border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none text-gray-400"
+        onChange={(e) => {
+          const format = e.target.value;
+          if (format) {
+            exportData(format, data, "projects");
+            e.target.value = ""; // reset dropdown
+          }
+        }}
+        defaultValue=""
+      >
+        <option value="" disabled hidden>Export</option>
+        <option value="excel">Excel</option>
+        <option value="csv">CSV</option>
+        <option value="json">JSON</option>
+      </select>
+    </div>
 
-              {/* Export Dropdown with Label */}
-              <div className="flex flex-col mt-6">
-                {/* <label className="text-x text-gray-500 mb-1">Export</label> */}
-                <select
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none"
-                  onChange={(e) => {
-                    const format = e.target.value;
-                    if (format) {
-                      exportData(format, data, "projects");
-                      e.target.value = ""; // reset dropdown
-                    }
-                  }}
-                  defaultValue=""
-                >
-                  <option value="" disabled>
-                    Export As
-                  </option>
-                  <option value="excel">Excel</option>
-                  <option value="csv">CSV</option>
-                  <option value="json">JSON</option>
-                </select>
-              </div>
+    {/* Create Buttons */}
+    {canCreateProject && (
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
+        onClick={() => setIsModalOpen(true)}
+      >
+        + Create Project
+      </button>
+    )}
 
-              {/* Create Buttons */}
-              {canCreateProject && (
-                <button
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold mt-6 px-4 py-2 rounded transition"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  + Create Project
-                </button>
-              )}
+    {canCreateFeed && (
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
+        onClick={() => setFeedModalOpen(true)}
+      >
+        + Create Feed
+      </button>
+    )}
+  </div>
+</div>
 
-              {canCreateFeed && (
-                <button
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold mt-6 px-4 py-2 rounded transition"
-                  onClick={() => setFeedModalOpen(true)}
-                >
-                  + Create Feed
-                </button>
-              )}
-            </div>
 
-          </div>
 
 
 
@@ -848,7 +838,12 @@ export default function Projects() {
                             <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
-                            <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td>
+                            {/* <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td> */}
+                            <td className="px-3 py-2">
+  {project.BDEId && project.BDEId.length > 0
+    ? project.BDEId.map(bde => bde.name).join(", ")
+    : "-"}
+</td>
                             {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                             <td className="px-3 py-2">
                               {project.DeliveryType ? (
@@ -876,7 +871,7 @@ export default function Projects() {
                             </td>
 
 
-                            <td className="px-3 py-2">{project.Frequency ?? "-"}</td>
+                            {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
                             <td className="px-3 py-2 whitespace-nowrap">
                               {project.Status ? (
                                 <span
@@ -1036,7 +1031,7 @@ export default function Projects() {
                             </td>
 
 
-                            <td className="px-3 py-2">{project.Frequency ?? "-"}</td>
+                            {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
                             <td className="px-3 py-2 whitespace-nowrap">
                               {project.Status ? (
                                 <span
@@ -1069,7 +1064,7 @@ export default function Projects() {
                             <td className="px-3 py-2">
                               {new Date(project.CreatedDate).toLocaleDateString() ?? "-"}
                             </td>
-                            <td className="px-4 py-2 text-right">
+                            {/* <td className="px-4 py-2 text-right">
                                 {canAssignProject && (
                                   <button
                                     className={`px-3 py-1 rounded text-sm text-white ${
@@ -1117,7 +1112,57 @@ export default function Projects() {
                                         : "Assign"}
                                   </button>
                                 )}
-                              </td>
+                              </td> */}
+
+                              <td className="px-4 py-2 text-right">
+  {canAssignProject && (
+    <button
+      className={`px-3 py-1 rounded text-sm text-white ${
+        (user.roleName === "Manager" &&
+          project?.TLId &&
+          project?.PCId &&
+          project?.QAId) ||
+        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+          project?.feed?.DeveloperIds?.length > 0)
+          ? "bg-gray-400 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }`}
+      disabled={
+        (user.roleName === "Manager" &&
+          project?.TLId &&
+          project?.PCId &&
+          project?.QAId) ||
+        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+          project?.feed?.DeveloperIds?.length > 0)
+      }
+      onClick={() => {
+        // Open modal only if assignment not done
+        const canAssign =
+          (user.roleName === "Manager" &&
+            (!project?.TLId || !project?.PCId || !project?.QAId)) ||
+          ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+            (!project?.feed?.DeveloperIds || project.feed.DeveloperIds.length === 0));
+
+        if (!canAssign) return;
+
+        setSelectedProject(project);
+        // Only set selectedFeed if it exists
+        if (project?.feed?._id) setSelectedFeed(project.feed);
+
+        setIsAssignOpen(true);
+      }}
+    >
+      {user.roleName === "Manager"
+        ? project?.TLId && project?.PCId && project?.QAId
+          ? "Assigned"
+          : "Assign"
+        : project?.feed?.DeveloperIds?.length > 0
+        ? "Assigned"
+        : "Assign"}
+    </button>
+  )}
+</td>
+
                           </tr>
                         ))
                       ) : (
@@ -1191,8 +1236,8 @@ export default function Projects() {
                           </div>
                         </td>
                       </tr>
-                    ) : filteredData.length > 0 ? (
-                      filteredData.map((project, idx) =>
+                    ) : data.length > 0 ? (
+                      data.map((project, idx) =>
                         project.Feeds && project.Feeds.length > 0 ? (
                           project.Feeds.map((feed, feedIdx) => (
                             <tr
@@ -1234,22 +1279,92 @@ export default function Projects() {
                               {/* <td className="px-3 py-2">{feed.FeedId ?? "-"}</td> */}
 
                               {/* Frequency */}
-                              <td className="px-3 py-2">
+                              {/* <td className="px-3 py-2">
                                 {project.Frequency ?? "-"}
-                              </td>
+                              </td> */}
+                              <td className="px-4 py-2 align-top">
+                              <div className="flex flex-col gap-1">
+                                {/* Frequency Badge */}
+                                <span
+                                  className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit
+        ${feed.Frequency === "Daily"
+                                      ? "bg-green-100 text-green-700"
+                                      : feed.Frequency === "Weekly"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : feed.Frequency === "Monthly"
+                                          ? "bg-purple-100 text-purple-700"
+                                          : feed.Frequency === "Once-off"
+                                            ? "bg-orange-100 text-orange-700"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
+                                >
+                                  {feed.Frequency ?? "-"}
+                                </span>
+
+                                {/* Schedule Badge */}
+                                <span
+                                  className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit"
+                                >
+                                  {(() => {
+                                    const { Frequency, Schedule } = feed;
+                                    if (!Schedule) return "No schedule";
+
+                                    switch (Frequency) {
+                                      case "Daily":
+                                        return `Daily`;
+                                      case "Weekly":
+                                        return `${Schedule.day || "—"} `;
+                                      case "Monthly":
+                                        return `${Schedule.date || "--"} ${new Date().toLocaleString(
+                                          "default",
+                                          { month: "short" }
+                                        )} `;
+                                      case "Once-off":
+                                        return Schedule.datetime
+                                          ? new Date(Schedule.datetime).toLocaleString("en-GB", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })
+                                          : "No date";
+                                      case "Custom":
+                                        return Schedule.custom && Schedule.custom.length > 0
+                                          ? Schedule.custom
+                                            .map((c) => `${c.day} ${c.time}`)
+                                            .join(", ")
+                                          : "No custom schedule";
+                                      default:
+                                        return "No schedule";
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                            </td>
 
                               {/* Platform */}
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {feed.DomainName &&
+                                {/* {feed.DomainName &&
                                   feed.ApplicationType &&
                                   feed.CountryName
                                   ? `${feed.DomainName} | ${feed.ApplicationType} | ${feed.CountryName}`
-                                  : "-"}
+                                  : "-"} */}
+                                  {feed.Platform ?? "-"}
                               </td>
 
                               {/* Status */}
-                              <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td>
-
+                              {/* <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td> */}
+                              <td className="px-4 py-2 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "bg-green-100 text-green-600"
+                                  }`}
+                              >
+                                {feed.Status}
+                              </span>
+                              </td>
                               {/* BAU */}
                               <td className="px-3 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
 
@@ -1383,12 +1498,12 @@ export default function Projects() {
 
                               {/* Project Created By */}
 
-                              {user.roleName === "Manager" && (
+                              {/* {user.roleName === "Manager" && (
 
                                 <td className="px-3 py-2">
                                   {project.CreatedBy?.name ?? "-"}
                                 </td>
-                              )}
+                              )} */}
 
                               {/* <td className="px-4 py-2 text-right">
 
@@ -1408,7 +1523,7 @@ export default function Projects() {
                                   </button>
                                 )}
                               </td> */}
-                              <td className="px-4 py-2 text-right">
+                              {/* <td className="px-4 py-2 text-right">
                                 {canAssignProject && (
                                   <button
                                     className={`px-3 py-1 rounded text-sm text-white ${
@@ -1456,7 +1571,7 @@ export default function Projects() {
                                         : "Assign"}
                                   </button>
                                 )}
-                              </td>
+                              </td> */}
 
 
 

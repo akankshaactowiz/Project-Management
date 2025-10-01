@@ -26,6 +26,8 @@ import DeveloperView from "../page/DeveloperReport.jsx"
 import ProjectInfo from "../page/ProjectDetails.jsx";
 import ProjectFilesPage from "../page/DocumentMaterialPage.jsx";
 function AppRoutes() {
+
+  
   return (
     <Routes>
       {/* Public route */}
@@ -38,11 +40,11 @@ function AppRoutes() {
           <Route path="/project" element={<ProtectedRoute requiredModule="Project" requiredAction="view"><Project /></ProtectedRoute>} />
           {/* <Route path="/project/:id" element={<ProtectedRoute requiredModule="Project" requiredAction="view"><ProjectInfo /></ProtectedRoute>} ></Route> */}
           <Route path="/project/:id/details" element={<ProtectedRoute requiredModule="Project" requiredAction="update"><ProjectInfo /></ProtectedRoute>} key="project-update"></Route>
-          {/* <Route path="/project/feed" element={
-            <FeedDetails />} /> */}
+          {/* <Route path="/project/feed/:id" element={
+           <FeedDetails />} /> */}
+          <Route path="/project/feed/:id" element={<FeedDetails />} key="feed"></Route>
           <Route path="/project/:id/files" element={<ProjectFilesPage />} />
 
-          <Route path="/project/feed/:id" element={<FeedDetails />} key="feed"></Route>
           <Route path="/project/feed/:id/update" element={<ProtectedRoute requiredModule="Feed" requiredAction="update"><FeedUpdate /></ProtectedRoute>} key="feed-update"></Route>
           <Route path="/escalation" element={<ProtectedRoute requiredModule="Escalation" requiredAction="view"><Escalations /></ProtectedRoute>} />
           <Route path="/qa" element={<ProtectedRoute requiredModule="QA" requiredAction="view"><QA /></ProtectedRoute>} />

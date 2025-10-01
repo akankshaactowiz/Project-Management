@@ -78,7 +78,7 @@ export default function FeedDetails() {
           applicationType: data.ApplicationType || "-",
           countryName: data.CountryName || "-",
           status: data.Status || "-",
-          BAU: data.BAU || "-",
+          BAUStatus: data.BAUStatus || "-",
           POC: data.POC || "-",
           PCId: data.PCId || "-",
           TLId: data.TLId || "-",
@@ -95,7 +95,7 @@ export default function FeedDetails() {
           frequency: project.Frequency || "-",
           deliveryType: project.DeliveryType || "-",
           industryType: project.IndustryType || "-",
-          frameworkType: project.FrameworkType || "-",
+          frameworkType: data.FrameworkType || "-",
           manageBy: project.ManageBy || "-",
           qaRules: project.QARules ?? "-",
           rulesStatus: project.RulesStatus || "-",
@@ -142,6 +142,8 @@ export default function FeedDetails() {
 
   ]
   return (
+    <>
+    
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* <div className="flex bg-gray-50 items-center justify-end px-2">
         <Breadcrumb feedName={feed?.feedName} />
@@ -303,116 +305,55 @@ export default function FeedDetails() {
 
               <button
                 className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
-              onClick={() => navigate(`/project/feed/${id}/update`)}
+                onClick={() => navigate(`/project/feed/${id}/update`)}
               >
                 <FaEdit size={16} />
                 <span>Edit</span>
               </button>
             </div>
+            
+<hr className="border-gray-200 mb-4" />
 
-
-
-
-            <div className="space-y-3 text-sm">
-              <p className="flex justify-between">
-                <span className="text-gray-500">Feed ID</span>
-                <span className="font-semibold text-gray-800">{feed?.feedId}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Project</span>
-                <span className="font-semibold text-gray-800">
-                  {feed?.projectCode} | {feed?.projectName}
-                </span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Frequency</span>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {feed?.frequency}
-                </span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Platform</span>
-                <span className="font-semibold text-gray-800">
-                  {feed?.domainName} | {feed?.applicationType} | {feed?.countryName}
-                </span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Status</span>
-                <span className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-600">
-                  {feed?.status}
-                </span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">BAU</span>
-                <span className="font-semibold text-gray-700">{feed?.BAU}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">POC</span>
-                <span className="font-semibold text-gray-700">{feed?.POC}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">DB Status</span>
-                <span className="font-semibold text-gray-700">{feed?.dbStatus}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Framework Type</span>
-                <span className="font-semibold text-gray-700">{feed?.frameworkType}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Manage By</span>
-                <span className="font-semibold text-gray-700">{feed?.manageBy}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">QA Rules</span>
-                <span className="font-semibold text-gray-700">{feed?.qaRules}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Rules Status</span>
-                <span className="font-semibold text-gray-700">{feed?.rulesStatus}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Rules Apply</span>
-                <span className="font-semibold text-gray-700">{feed?.rulesApply}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Delivery Type</span>
-                <span className="font-semibold text-gray-700">{feed?.deliveryType}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Project Status</span>
-                <span className="font-semibold text-gray-700">{feed?.projectStatus}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Industry</span>
-                <span className="font-semibold text-gray-700">{feed?.industryType}</span>
-              </p>
-
-              <p className="flex justify-between">
-                <span className="text-gray-500">Assigned To</span>
-                <span className="font-semibold text-gray-700">
-                  {feed?.developerIds.length > 0 ? feed.developerIds.join(", ") : "-"}
-                </span>
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              {[
+                { label: "Feed ID", value: feed?.feedId },
+                { label: "Project", value: `${feed?.projectCode} ${feed?.projectName}` },
+                { label: "Frequency", value: feed?.frequency, badge: true },
+                { label: "Platform", value: `${feed?.domainName}|${feed?.applicationType}|${feed?.countryName}` },
+                { label: "Status", value: feed?.status, badgeColor: "blue" },
+                { label: "BAU", value: feed?.BAUStatus },
+                { label: "POC", value: feed?.POC },
+                { label: "DB Status", value: feed?.dbStatus },
+                { label: "Framework Type", value: feed?.frameworkType },
+                { label: "Manage By", value: feed?.manageBy },
+                { label: "QA Rules", value: feed?.qaRules },
+                { label: "Rules Status", value: feed?.rulesStatus },
+                { label: "Rules Apply", value: feed?.rulesApply },
+                { label: "Delivery Type", value: feed?.deliveryType },
+                { label: "Project Status", value: feed?.projectStatus },
+                { label: "Industry", value: feed?.industryType },
+                { label: "Assigned To", value: feed?.developerIds?.length ? feed.developerIds.join(", ") : "-" },
+              ].map((item, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <span className="text-gray-500 w-32">{item.label}</span>
+                  {item.badge ? (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {item.value}
+                    </span>
+                  ) : item.badgeColor === "blue" ? (
+                    <span className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-600">
+                      {item.value}
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-gray-800">{item.value}</span>
+                  )}
+                </div>
+              ))}
             </div>
-
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }

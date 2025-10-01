@@ -38,9 +38,16 @@ export default function ProjectFilesPage() {
   if (!project) return <div className="p-6 text-red-500">Project not found</div>;
 
   return (
+    
     <div className="p-8 bg-white min-h-screen">
+      <div className="flex items-center justify-between mb-6 mt-4">
+    {/* Heading */}
+    <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+      Project Attachments
+    </h2>
+</div>
       <h1 className="text-xl font-bold mb-8 text-gray-900">
-         <span className="text-purple-400">{project.ProjectCode}</span> {project.ProjectName}  Attachments
+         <span className="">{project.ProjectCode}</span> {project.ProjectName}  Attachments
       </h1>
 
      {/* SOW & Sample Files Container */}
