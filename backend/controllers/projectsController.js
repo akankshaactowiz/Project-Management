@@ -33,7 +33,7 @@ export const createProject = async (req, res) => {
 
     const createdBy = req.user?._id || null;
 
-    const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
+    const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.111/:5000";
 
     const SOWFile = req.files?.SOWFile?.map(f => ({
       fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,

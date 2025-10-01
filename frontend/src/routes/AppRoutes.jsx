@@ -42,8 +42,10 @@ function AppRoutes() {
           <Route path="/project/:id/details" element={<ProtectedRoute requiredModule="Project" requiredAction="update"><ProjectInfo /></ProtectedRoute>} key="project-update"></Route>
           {/* <Route path="/project/feed/:id" element={
            <FeedDetails />} /> */}
+           <Route path="/project/feed/" element={
+           <ProjectInfo />} />
           <Route path="/project/feed/:id" element={<FeedDetails />} key="feed"></Route>
-          <Route path="/project/:id/files" element={<ProjectFilesPage />} />
+          <Route path="/project/:id/attachments" element={<ProjectFilesPage />} />
 
           <Route path="/project/feed/:id/update" element={<ProtectedRoute requiredModule="Feed" requiredAction="update"><FeedUpdate /></ProtectedRoute>} key="feed-update"></Route>
           <Route path="/escalation" element={<ProtectedRoute requiredModule="Escalation" requiredAction="view"><Escalations /></ProtectedRoute>} />

@@ -254,7 +254,7 @@ const [form, setForm] = useState({
                                 </span>
                             </div>
                             <button className="text-sm text-blue-500 hover:underline mt-2"
-                            onClick={() => navigate(`/project/${project._id}/files`)}
+                            onClick={() => navigate(`/project/${project._id}/attachments`)}
                             _target="blank">
                             
                                 View Previous Version
@@ -299,7 +299,7 @@ const [form, setForm] = useState({
                                 </div>
                             ))}
                             <button className="text-sm text-blue-500 hover:underline mt-2 mr-2"
-                            onClick={() => navigate(`/project/${project._id}/files`)}
+                            onClick={() => navigate(`/project/${project._id}/attachments`)}
                             _target="blank">
                             
                                 View Previous Version

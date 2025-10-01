@@ -680,7 +680,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
 
 
             <div>
-              <label className="block font-medium mb-1">Description / Additional Info</label>
+              <label className="block font-medium mb-1">Description / Additional Info <span className="text-red-500">*</span></label>
               <textarea
                 value={form.Description}
                 onChange={(e) => setForm((prev) => ({ ...prev, Description: e.target.value }))}
@@ -711,7 +711,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Feed Name
+                Feed Name<span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -725,7 +725,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             {/* Project Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Domain Name
+                Domain Name<span className="text-red-500">*</span>
               </label>
               <input
                 type="text"

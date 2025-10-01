@@ -1,24 +1,19 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 function Breadcrumb({ feedName }) {
   const location = useLocation();
+  const { id } = useParams(); // ✅ Get feed id from URL (if present)
 
-  const pathnames = location.pathname
-    .split("/")
-    .filter((x) => x);
+  const pathnames = location.pathname.split("/").filter((x) => x);
 
   if (location.pathname === "/" || location.pathname === "/home") {
     return null;
   }
 
-  // Filter out dynamic IDs (numbers or long alphanumeric strings)
-  // const filteredPathnames = pathnames.filter(
-  //   (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment)
-  // );
-
+  // Remove dynamic IDs from breadcrumb
   const filteredPathnames = pathnames.filter(
-  (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment) // skip IDs
-);
+    (segment) => !/^[0-9a-fA-F]{5,}$/.test(segment)
+  );
 
   return (
     <nav aria-label="breadcrumb" className="bg-gray-50 px-6 py-2 text-gray-600">
@@ -29,8 +24,13 @@ function Breadcrumb({ feedName }) {
           </Link>
         </li>
         {filteredPathnames.map((value, index) => {
-          const to = `/${filteredPathnames.slice(0, index + 1).join("/")}`;
+          let to = `/${filteredPathnames.slice(0, index + 1).join("/")}`;
           const isLast = index === filteredPathnames.length - 1;
+
+          // ✅ Special handling: if breadcrumb is "feed", attach the id
+          if (value.toLowerCase() === "feed" && id) {
+            to = `/project/feed/${id}`;
+          }
 
           // Use feedName if last breadcrumb
           const displayName = isLast && feedName ? feedName : value;

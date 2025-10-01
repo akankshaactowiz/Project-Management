@@ -213,7 +213,7 @@ export default function ProjectDetails() {
 
                   {/* Status Types */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
-                    onClick={() => setActiveTab("Feeds")}>
+                   >
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Status Types
@@ -242,7 +242,7 @@ export default function ProjectDetails() {
 
                   {/* Frequency Options */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
-                    onClick={() => setActiveTab("Feeds")}>
+                    >
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Frequency Options
@@ -588,7 +588,7 @@ export default function ProjectDetails() {
                 </p>
 
                 <p className="flex justify-between">
-                  <span className="text-gray-500">Project Type</span>
+                  
                   <span className="font-semibold text-gray-800">
                     {project?.ProjectType}
                   </span>
@@ -620,13 +620,57 @@ export default function ProjectDetails() {
                   </span>
                 </p>
 
-                <p className="flex justify-between">
-                  <span className="text-gray-500">Assigned To</span>
-                  <span className="font-semibold text-gray-700">
-                    {/* {(project?.AssignedTo || []).join(", ") || "-"} */}
-                    {project?.PMId?.name || "-"}
-                  </span>
-                </p>
+              <p className="flex justify-between">
+                <span className="text-gray-500">Assigned To</span>
+  {(() => {
+    // Combine all members from project and feeds
+    const combinedMembers = [
+      project.PMId && { name: project.PMId.name, roleName: "PM", avatar: project.PMId.avatar },
+      project.TLId && { name: project.TLId.name, roleName: "TL", avatar: project.TLId.avatar },
+      project.QAId && { name: project.QAId.name, roleName: "QA", avatar: project.QAId.avatar },
+      // ...(project.BDEId?.map(bde => ({ name: bde.name, roleName: "BDE", avatar: bde.avatar })) || []),
+      ...(project.Feeds?.flatMap(feed => [
+        ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
+        feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
+        feed.createdBy && { name: feed.createdBy.name, roleName: "Creator", avatar: feed.createdBy.avatar },
+      ]) || [])
+    ].filter(Boolean);
+
+    const maxVisible = 3; // how many avatars to show
+    const visible = combinedMembers.slice(0, maxVisible);
+    const extraCount = combinedMembers.length - visible.length;
+
+    return combinedMembers.length === 0 ? (
+      <span className="text-gray-400">-</span>
+    ) : (
+      <div className="flex items-center -space-x-2">
+        {visible.map((m, i) => (
+          <div
+            key={i}
+            className="relative group"
+            title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}
+          >
+            <img
+              src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+              alt={m.name}
+              className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
+            />
+          </div>
+        ))}
+
+        {extraCount > 0 && (
+          <button
+            onClick={() => console.log("Show all members", combinedMembers)}
+            className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+          >
+            +{extraCount}
+          </button>
+        )}
+      </div>
+    );
+  })()}
+</p>
+
 
                 <p className="flex justify-between">
                   <span className="text-gray-500">History</span>
@@ -646,7 +690,7 @@ export default function ProjectDetails() {
               <div className="space-y-2 text-sm">
                 
                       <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
-                        <a href="" onClick={() => navigate(`/project/${project._id}/files`)}>View</a>
+                        <a href="" onClick={() => navigate(`/project/${project._id}/attachments`)}>View</a>
                       </button>
               </div>
             </div>

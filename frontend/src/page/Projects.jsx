@@ -893,7 +893,7 @@ export default function Projects() {
 
                             <td className="px-3 py-2">
                               <button
-                                onClick={() => navigate(`/project/${project._id}/files`)}
+                                onClick={() => navigate(`/project/${project._id}/attachments`)}
                                 className="text-blue-600 hover:underline cursor-pointer"
                               >
                                 View Files
@@ -1053,7 +1053,7 @@ export default function Projects() {
 
                             <td className="px-3 py-2">
                               <button
-                                onClick={() => navigate(`/project/${project._id}/files`)}
+                                onClick={() => navigate(`/project/${project._id}/attachments`)}
                                 className="text-blue-600 hover:underline cursor-pointer"
                               >
                                 View Files
@@ -1452,7 +1452,7 @@ export default function Projects() {
                               {/* Attachments */}
                               <td className="px-3 py-2">
                                 <button
-                                  onClick={() => navigate(`/project/${project._id}/files`)}
+                                  onClick={() => navigate(`/project/${project._id}/attachments`)}
                                   className="text-blue-600 hover:underline cursor-pointer"
                                 >
                                   View Files
