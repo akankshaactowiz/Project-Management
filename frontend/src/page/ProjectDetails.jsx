@@ -1,6 +1,6 @@
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, Fragment ,useRef  } from "react";
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import Select from "react-select";
 import { useAuth } from "../hooks/useAuth";
 import Pagination from "../components/Pagination"
@@ -18,6 +18,9 @@ export default function ProjectDetails() {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [showPopover, setShowPopover] = useState(false);
+   const popoverRef = useRef(null);
+
   const [form, setForm] = useState({
     TLId: "",
     DeveloperIds: [],
@@ -27,7 +30,22 @@ export default function ProjectDetails() {
 
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
-
+  
+  
+  // ✅ Close popover on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setShowPopover(false);
+      }
+    }
+    if (showPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPopover]);
   const handleShowAll = (members) => {
     setSelectedMembers(members);
   };
@@ -171,7 +189,7 @@ export default function ProjectDetails() {
                 {/* Top Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Feeds List */}
-                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
+                  <div className="bg-white cursor-pointer border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
                     onClick={() => setActiveTab("Feeds")}>
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
@@ -320,13 +338,13 @@ export default function ProjectDetails() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Search by Feed Name..."
+                          placeholder="Search..."
                           value={search}
                           onChange={(e) => {
                             setSearch(e.target.value);
                             setCurrentPage(1);
                           }}
-                          className="border rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="border border-gray-200 rounded-lg px-4 py-2 pr-10 text-sm "
                         />
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -388,14 +406,14 @@ export default function ProjectDetails() {
           <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
           <td
             className="px-4 py-2 text-blue-600 cursor-pointer whitespace-nowrap"
-            onClick={() => navigate(`/project/feed/${feed._id}`)}
+            onClick={() => navigate(`/projects/feed/${feed._id}`)}
           >
             {feed.FeedName}
           </td>
           <td className="px-4 py-2 align-top whitespace-nowrap">
             <div className="flex flex-col gap-1">
               <span
-                className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit ${
+                className={`inline-block px-3 py-1 text-xs rounded-full w-fit ${
                   feed.Frequency === "Daily"
                     ? "bg-green-100 text-green-700"
                     : feed.Frequency === "Weekly"
@@ -407,7 +425,7 @@ export default function ProjectDetails() {
                     : "bg-gray-100 text-gray-600"
                 }`}
               >
-                {feed.Frequency ?? "-"}
+                {feed.Frequency ?? "No schedule"}
               </span>
 
               <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
@@ -588,7 +606,7 @@ export default function ProjectDetails() {
                 </p>
 
                 <p className="flex justify-between">
-                  
+                  <span className="text-gray-500">Project Type</span>
                   <span className="font-semibold text-gray-800">
                     {project?.ProjectType}
                   </span>
@@ -625,14 +643,14 @@ export default function ProjectDetails() {
   {(() => {
     // Combine all members from project and feeds
     const combinedMembers = [
-      project.PMId && { name: project.PMId.name, roleName: "PM", avatar: project.PMId.avatar },
-      project.TLId && { name: project.TLId.name, roleName: "TL", avatar: project.TLId.avatar },
+      project.PMId && { name: project.PMId.name, roleName: "Manager", avatar: project.PMId.avatar },
+      project.TLId && { name: project.TLId.name, roleName: "Team Lead", avatar: project.TLId.avatar },
       project.QAId && { name: project.QAId.name, roleName: "QA", avatar: project.QAId.avatar },
       // ...(project.BDEId?.map(bde => ({ name: bde.name, roleName: "BDE", avatar: bde.avatar })) || []),
       ...(project.Feeds?.flatMap(feed => [
         ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
         feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
-        feed.createdBy && { name: feed.createdBy.name, roleName: "Creator", avatar: feed.createdBy.avatar },
+       
       ]) || [])
     ].filter(Boolean);
 
@@ -660,15 +678,54 @@ export default function ProjectDetails() {
 
         {extraCount > 0 && (
           <button
-            onClick={() => console.log("Show all members", combinedMembers)}
+            onClick={() => setShowPopover(!showPopover)}
             className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
           >
             +{extraCount}
           </button>
         )}
+   {/* Popover */}
+          {showPopover && (
+            <div className="absolute top-10 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 z-50">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                All Assignees
+              </h3>
+              <ul className="space-y-2 max-h-48 overflow-y-auto">
+                {combinedMembers.map((m, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <img
+                      src={
+                        m.avatar ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          m.name || "U"
+                        )}&background=random`
+                      }
+                      alt={m.name}
+                      className="w-6 h-6 rounded-full border"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {m.name}{" "}
+                      <span className="text-gray-400 text-xs">
+                        ({m.roleName})
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {/* <button
+                onClick={() => setShowPopover(false)}
+                className="mt-2 w-full text-xs text-gray-600 hover:text-gray-800"
+              >
+                Close
+              </button> */}
+            </div>
+          )}
+        
       </div>
     );
   })()}
+
+
 </p>
 
 

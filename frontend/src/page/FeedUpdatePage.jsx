@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { useAuth } from "../hooks/useAuth"
+import Modal from "react-modal";
+import toast from "react-hot-toast";
+Modal.setAppElement("#root");
 
 import Breadcrumb from "../components/Breadcrumb";
 
@@ -17,10 +20,51 @@ function FeedUpdate() {
   const [bauUsers, setBauUsers] = useState([]);
 
   const [rules, setRules] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newRule, setNewRule] = useState({
+    field: "",
+    type: "",
+    threshold: "",
+    createdBy: user?._id,
+  });
+
+  
   const [activeTab, setActiveTab] = useState("Feed Details");
   const [startDate, setStartDate] = useState("");
   const [frequency, setFrequency] = useState("Daily");
   const [schedule, setSchedule] = useState({});
+
+// Open modal
+  const openModal = () => {
+    setNewRule({
+      field: "",
+      type: "",
+      threshold: "",
+      createdBy: user?._id,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Add new rule
+  const saveRule = () => {
+    setRules([
+      ...rules,
+      { ...newRule, createdAt: new Date().toLocaleString() },
+    ]);
+    closeModal();
+  };
+
+  // Delete rule
+  const removeRule = (index) => {
+    const updated = [...rules];
+    updated.splice(index, 1);
+    setRules(updated);
+  };
 
   const formatDate = (format) => {
     const now = new Date();
@@ -165,32 +209,32 @@ function FeedUpdate() {
   };
 
   // --- QA Rules CRUD ---
-const addRule = () =>
-  setRules([
-    ...rules,
-    {
-      field: "",
-      type: "",
-      threshold: "",
-      createdBy: user?._id,
-      isEditable: true, // 🔹 make new rule editable initially
-    },
-  ]);
+// const addRule = () =>
+//   setRules([
+//     ...rules,
+//     {
+//       field: "",
+//       type: "",
+//       threshold: "",
+//       createdBy: user?._id,
+//       isEditable: true, // 🔹 make new rule editable initially
+//     },
+//   ]);
 
-const updateRule = (index, key, value) => {
-  const newRules = [...rules];
-  // 🔒 Only allow editing if row is still editable
-  if (newRules[index].isEditable) {
-    newRules[index][key] = value;
-    setRules(newRules);
-  }
-};
+// const updateRule = (index, key, value) => {
+//   const newRules = [...rules];
+//   // 🔒 Only allow editing if row is still editable
+//   if (newRules[index].isEditable) {
+//     newRules[index][key] = value;
+//     setRules(newRules);
+//   }
+// };
 
-const removeRule = (index) => {
-  const newRules = [...rules];
-  newRules.splice(index, 1);
-  setRules(newRules);
-};
+// const removeRule = (index) => {
+//   const newRules = [...rules];
+//   newRules.splice(index, 1);
+//   setRules(newRules);
+// };
   // --- Submit all updates ---
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,13 +264,13 @@ const removeRule = (index) => {
       const data = await res.json();
       if (res.ok) {
          setRules(lockedRules);
-        alert("✅ Feed updated successfully!");
-        navigate(`/project/feed/${id}`);
+        toast.success("Feed updated successfully!");
+        navigate(`/projects/feed/${id}`);
       } else {
-        alert(`❌ Update failed: ${data.message}`);
+        toast.error(`Update failed: ${data.message}`);
       }
     } catch (err) {
-      console.error("Update failed:", err);
+      toast.error("Update failed:", err);
     }
   };
 
@@ -1008,7 +1052,7 @@ const removeRule = (index) => {
       </button>
       <button
         className="px-4 py-2 text-sm border border-green-200 rounded-md text-green-600 hover:bg-green-50 transition"
-        onClick={addRule}
+        onClick={openModal}
       >
         + Add Rule
       </button>
@@ -1022,7 +1066,7 @@ const removeRule = (index) => {
   <div className="overflow-x-auto">
     <table className="w-full text-sm border border-gray-100 overflow-hidden">
       <thead className="bg-gray-50 text-gray-700">
-        <tr>
+        <tr >
           <th className="px-4 py-2 font-medium">No</th>
           <th className="px-4 py-2 font-medium">Fields</th>
           <th className="px-4 py-2 font-medium">Rule</th>
@@ -1033,91 +1077,30 @@ const removeRule = (index) => {
         </tr>
       </thead>
 
-      <tbody className="divide-y divide-gray-100">
-        {rules.length === 0 ? (
-          <tr>
-            <td
-              colSpan={7}
-              className="text-center py-6 text-gray-500 bg-gray-50"
-            >
-              No Rules Added
-            </td>
-          </tr>
-        ) : (
-          rules.map((rule, index) => {
-            const isNewRule = !rule.saved; // 👈 flag: editable if new
-            return (
+     <tbody className="divide-y divide-gray-100">
+          {rules.length === 0 ? (
+            <tr>
+              <td
+                colSpan={7}
+                className="text-center py-6 text-gray-500 bg-gray-50"
+              >
+                No Rules Added
+              </td>
+            </tr>
+          ) : (
+            rules.map((rule, index) => (
               <tr
                 key={index}
                 className="hover:bg-gray-50 transition-colors duration-150"
               >
-                <td className="px-4 py-2 text-gray-600">{index + 1}</td>
-
-                {/* Field */}
-                <td className="px-4 py-2">
-                  <input
-                    type="text"
-                    value={rule.field}
-                    // disabled={!isNewRule}
-                    onChange={(e) =>
-                      updateRule(index, "field", e.target.value)
-                    }
-                    disabled={!rule.isEditable}
-                    className={`w-full px-2 py-1 text-center text-sm ${
-                      isNewRule
-                        ? "focus:ring-2 focus:ring-blue-500 border-gray-300"
-                        : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    }`}
-                  />
-                </td>
-
-                {/* Rule */}
-                <td className="px-4 py-2">
-                  <input
-                    type="text"
-                    value={rule.type}
-                    // disabled={!isNewRule}
-                    onChange={(e) =>
-                      updateRule(index, "type", e.target.value)
-                    }
-                    disabled={!rule.isEditable} 
-                    className={`w-full px-2 py-1 text-center text-sm ${
-                      isNewRule
-                        ? "focus:ring-2 focus:ring-blue-500 border-gray-300"
-                        : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    }`}
-                  />
-                </td>
-
-                {/* Threshold */}
-                <td className="px-4 py-2 text-center">
-                  <input
-                    type="number"
-                    value={rule.threshold}
-                    // disabled={!isNewRule}
-                    onChange={(e) =>
-                      updateRule(index, "threshold", e.target.value)
-                    }
-                    disabled={!rule.isEditable} 
-                    className={`w-full px-2 py-1 text-center text-sm ${
-                      isNewRule
-                        ? "focus:ring-2 focus:ring-blue-500 border-gray-300"
-                        : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    }`}
-                  />
-                </td>
-
-                {/* Created By */}
-                <td className="px-4 py-2 text-gray-700">
+                <td className="px-4 py-2 text-center text-gray-600">{index + 1}</td>
+                <td className="px-4 py-2 text-center text-gray-700">{rule.field}</td>
+                <td className="px-4 py-2 text-center text-gray-700">{rule.type}</td>
+                <td className="px-4 py-2 text-center text-gray-700">{rule.threshold}</td>
+                <td className="px-4 py-2 text-center text-gray-700">
                   {rule.createdBy?.name || "-"}
                 </td>
-
-                {/* Created At */}
-                <td className="px-4 py-2 text-gray-700">
-                  {rule.createdAt || "-"}
-                </td>
-
-                {/* Action */}
+                <td className="px-4 py-2 text-center text-gray-700">{rule.createdAt}</td>
                 <td className="px-4 py-2">
                   <button
                     onClick={() => removeRule(index)}
@@ -1127,11 +1110,64 @@ const removeRule = (index) => {
                   </button>
                 </td>
               </tr>
-            );
-          })
-        )}
-      </tbody>
+            ))
+          )}
+        </tbody>
     </table>
+
+    {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        className="bg-white rounded-lg shadow-lg max-w-md mx-auto mt-24 p-6 outline-none"
+        overlayClassName="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center"
+      >
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">
+          Add New Rule
+        </h2>
+
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Field"
+            value={newRule.field}
+            onChange={(e) => setNewRule({ ...newRule, field: e.target.value })}
+            className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="text"
+            placeholder="Rule"
+            value={newRule.type}
+            onChange={(e) => setNewRule({ ...newRule, type: e.target.value })}
+            className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="number"
+            placeholder="Threshold"
+            value={newRule.threshold}
+            onChange={(e) =>
+              setNewRule({ ...newRule, threshold: e.target.value })
+            }
+            className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Modal buttons */}
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={closeModal}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={saveRule}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Save
+          </button>
+        </div>
+      </Modal>
   </div>
 
   {/* Footer */}

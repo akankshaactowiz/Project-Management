@@ -16,7 +16,7 @@ function Breadcrumb({ feedName }) {
   );
 
   return (
-    <nav aria-label="breadcrumb" className="bg-gray-50 px-6 py-2 text-gray-600">
+    <nav aria-label="breadcrumb" className="bg-gray-100 rounded-lg mb-2 px-2 py-2 text-md text-gray-600">
       <ol className="list-none p-0 inline-flex space-x-2">
         <li>
           <Link to="/home" className="hover:text-purple-700">
@@ -29,7 +29,7 @@ function Breadcrumb({ feedName }) {
 
           // ✅ Special handling: if breadcrumb is "feed", attach the id
           if (value.toLowerCase() === "feed" && id) {
-            to = `/project/feed/${id}`;
+            to = `/projects/feed/${id}`;
           }
 
           // Use feedName if last breadcrumb

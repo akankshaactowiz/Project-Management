@@ -55,7 +55,7 @@ app.use("/api/tickets",protect, authorize("Support", "view"), ticketRoute);
 app.use("/api/permissions", permissionsRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/department",deparmentRoute);
-app.use("/api/projects", protect, authorize("Project", "view"), projectRoute); 
+app.use("/api/projects", protect, authorize("Projects", "view"), projectRoute); 
 app.use("/api/work", protect, authorize("Work", "view"), workRoute)
 app.use("/api/reports", protect, reportRoute)
 

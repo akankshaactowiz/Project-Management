@@ -2,6 +2,9 @@
 /* @import "datatables.net-dt/css/jquery.dataTables.css"; */
 
 body{
+   font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  letter-spacing: 0.2px;
   /* font-family: "Fira Code", monospace; */
   /* font-size: 12px; */
 }

@@ -74,9 +74,10 @@ export default function FeedDetails() {
         setFeed({
           feedId: data.FeedId || "-",
           feedName: data.FeedName || "-",
-          domainName: data.DomainName || "-",
-          applicationType: data.ApplicationType || "-",
-          countryName: data.CountryName || "-",
+          // domainName: data.DomainName || "-",
+          // applicationType: data.ApplicationType || "-",
+          // countryName: data.CountryName || "-",
+          platform : data.Platform || "-",
           status: data.Status || "-",
           BAUStatus: data.BAUStatus || "-",
           POC: data.POC || "-",
@@ -305,7 +306,7 @@ export default function FeedDetails() {
 
               <button
                 className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
-                onClick={() => navigate(`/project/feed/${id}/update`)}
+                onClick={() => navigate(`/projects/feed/${id}/update`)}
               >
                 <FaEdit size={16} />
                 <span>Edit</span>
@@ -319,7 +320,7 @@ export default function FeedDetails() {
                 { label: "Feed ID", value: feed?.feedId },
                 { label: "Project", value: `${feed?.projectCode} ${feed?.projectName}` },
                 { label: "Frequency", value: feed?.frequency, badge: true },
-                { label: "Platform", value: `${feed?.domainName}|${feed?.applicationType}|${feed?.countryName}` },
+                { label: "Platform", value: feed?.platform },
                 { label: "Status", value: feed?.status, badgeColor: "blue" },
                 { label: "BAU", value: feed?.BAUStatus },
                 { label: "POC", value: feed?.POC },

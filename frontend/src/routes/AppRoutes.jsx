@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
-
 import Dashboard from "../page/Home.jsx";
 import Project from "../page/Projects.jsx";
 import FeedPage from "../page/Feed.jsx";
@@ -27,7 +26,7 @@ import ProjectInfo from "../page/ProjectDetails.jsx";
 import ProjectFilesPage from "../page/DocumentMaterialPage.jsx";
 function AppRoutes() {
 
-  
+
   return (
     <Routes>
       {/* Public route */}
@@ -37,17 +36,17 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/home" element={<Dashboard />} />
-          <Route path="/project" element={<ProtectedRoute requiredModule="Project" requiredAction="view"><Project /></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute requiredModule="Projects" requiredAction="view"><Project /></ProtectedRoute>} />
           {/* <Route path="/project/:id" element={<ProtectedRoute requiredModule="Project" requiredAction="view"><ProjectInfo /></ProtectedRoute>} ></Route> */}
-          <Route path="/project/:id/details" element={<ProtectedRoute requiredModule="Project" requiredAction="update"><ProjectInfo /></ProtectedRoute>} key="project-update"></Route>
+          <Route path="/projects/:id/details" element={<ProtectedRoute requiredModule="Projects" requiredAction="update"><ProjectInfo /></ProtectedRoute>} key="project-update"></Route>
           {/* <Route path="/project/feed/:id" element={
            <FeedDetails />} /> */}
-           <Route path="/project/feed/" element={
+           <Route path="/projects/feed/" element={
            <ProjectInfo />} />
-          <Route path="/project/feed/:id" element={<FeedDetails />} key="feed"></Route>
-          <Route path="/project/:id/attachments" element={<ProjectFilesPage />} />
+          <Route path="/projects/feed/:id" element={<FeedDetails />} key="feed"></Route>
+          <Route path="/projects/:id/attachments" element={<ProjectFilesPage />} />
 
-          <Route path="/project/feed/:id/update" element={<ProtectedRoute requiredModule="Feed" requiredAction="update"><FeedUpdate /></ProtectedRoute>} key="feed-update"></Route>
+          <Route path="/projects/feed/:id/update" element={<ProtectedRoute requiredModule="Feed" requiredAction="update"><FeedUpdate /></ProtectedRoute>} key="feed-update"></Route>
           <Route path="/escalation" element={<ProtectedRoute requiredModule="Escalation" requiredAction="view"><Escalations /></ProtectedRoute>} />
           <Route path="/qa" element={<ProtectedRoute requiredModule="QA" requiredAction="view"><QA /></ProtectedRoute>} />
            <Route path="/qa/:id" element={<QAReportDetails />} />

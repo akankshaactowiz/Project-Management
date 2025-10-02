@@ -70,7 +70,7 @@ export default function Header() {
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <header className="sticky top-0 left-0 right-0 flex items-center justify-between px-6 py-2 bg-white border-b border-gray-300 z-50">
+    <header className="sticky top-0 left-0 right-0 flex items-center justify-between px-6 py-2 bg-white border-gray-300 z-50 sm:bg-white">
       {/* Logo */}
        <div className="flex items-center space-x-2" 
        onClick={() => navigate("/")}
@@ -83,7 +83,7 @@ export default function Header() {
       </button>
 
       {/* Navigation */}
-      <nav className={`${menuOpen ? "block" : "hidden"} absolute top-full left-0 w-full md:static md:block md:w-auto`}>
+      <nav className={`${menuOpen ? "block" : "hidden"} absolute top-full left-0 bg-white w-full md:static  md:block md:w-auto`}>
         <ul className="md:flex md:space-x-6 md:items-center">
           {filteredNavItems.map(({ label: title, path: key, icon }) => (
             <li

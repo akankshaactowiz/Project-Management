@@ -16,7 +16,6 @@ export const createProject = async (req, res) => {
       ProjectName,
       FeedName,
       PMId,
-
       BDEId,
       DepartmentId: Department,
       Frequency,
@@ -33,16 +32,19 @@ export const createProject = async (req, res) => {
 
     const createdBy = req.user?._id || null;
 
-    const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.111/:5000";
+     if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
+    if (!ProjectName) return res.status(400).json({ success: false, message: "Project Name is required" });
+    
+    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.111/:5000";
 
     const SOWFile = req.files?.SOWFile?.map(f => ({
-      fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
+      fileName: `/uploads/projects/${f.filename}`,
       uploadedBy: createdBy,
       uploadedAt: new Date(),
     })) || [];
 
     const SampleFiles = req.files?.SampleFiles?.map(f => ({
-      fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
+      fileName: `/uploads/projects/${f.filename}`,
       uploadedBy: createdBy,
       uploadedAt: new Date(),
     })) || [];
@@ -83,6 +85,7 @@ export const createProject = async (req, res) => {
       DomainName,
       ApplicationType,
       CountryName,
+      Platform: `${DomainName}|${ApplicationType}|${CountryName}`,
       createdBy,
     });
 
@@ -99,7 +102,25 @@ export const createProject = async (req, res) => {
 
   } catch (error) {
     console.error("Error creating project:", error);
-    res.status(500).json({ success: false, message: error.message });
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "A project with this Project Code already exists."
+      });
+    }
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid project data. Please check all fields."
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Unexpected server error while creating project. Please try again later."
+    });
   }
 };
 
@@ -594,13 +615,13 @@ export const updateProject = async (req, res) => {
 // };
 
 export const getProjects = async (req, res) => {
+  const objectId = (id) => new mongoose.Types.ObjectId(id);
   try {
     const {
       page = 1,
       pageSize = 10,
       status,
       search,
-      date_range,
       qaid,
       CreatedDate,
       tab,
@@ -643,11 +664,11 @@ export const getProjects = async (req, res) => {
     // 🔹 Role-based filters
     if (!(role === "Superadmin")) {
       if (department === "Sales") {
-        if (role === "Sales Manager") matchStage.CreatedBy = userId;
+        if (role === "Sales Manager") matchStage.CreatedBy = objectId(userId);
         if (role === "Business Development Executive") matchStage.BDEId = userId;
       } else {
-        if (role === "Manager") matchStage.PMId = userId;
-        if (role === "Team Lead") matchStage.TLId = userId;
+        if (role === "Manager") matchStage.PMId = objectId(userId);
+        if (role === "Team Lead") matchStage.TLId = objectId(userId);
       }
     }
 
@@ -674,7 +695,7 @@ export const getProjects = async (req, res) => {
           as: "BDEId",
         },
       },
-      { $unwind: { path: "$PMId", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$BDEId", preserveNullAndEmptyArrays: true } },
 
       // 🔹 Lookup for CreatedBy
       {

@@ -39,7 +39,7 @@ router.put(
 router.post(
   "/",
   protect,
-  authorize("Project", "create"),
+  authorize("Projects", "create"),
   upload.fields([
     { name: "SOWFile", maxCount: 1 },
     { name: "SampleFiles", maxCount: 5 },
@@ -47,7 +47,7 @@ router.post(
   createProject
 );
 
-router.put("/:id/update-team", protect, authorize("Project", "update"), updateProjectTeam);
+router.put("/:id/update-team", protect, authorize("Projects", "update"), updateProjectTeam);
 
 router.post("/:id/transition",protect, transitionProject);
 router.get("/:id/history", protect, getProjectHistory);

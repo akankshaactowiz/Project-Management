@@ -127,7 +127,7 @@ export default function Projects() {
 
   const canCreateProject =
     user?.permissions?.some(
-      (perm) => perm.module === "Project" && perm.actions.includes("create")
+      (perm) => perm.module === "Projects" && perm.actions.includes("create")
     ) && !(user?.department === "QA" && user?.roleName === "Manager");
 
   const canCreateFeed = user?.permissions?.some(
@@ -136,7 +136,7 @@ export default function Projects() {
 
   const canAssignProject =
     user?.permissions?.some(
-      (perm) => perm.module === "Project" && perm.actions.includes("assign")
+      (perm) => perm.module === "Projects" && perm.actions.includes("assign")
     ) && !(user?.department === "QA" && user?.roleName === "Manager");
 
   // Fetch projects using filters
@@ -240,7 +240,7 @@ export default function Projects() {
   //     if(user.roleName === "Manager") {
 
   //       const res = await fetch(
-  //         `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${selectedProject._id}/update-team`,
+  //         `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projectss/${selectedProject._id}/update-team`,
   //         {
   //           method: "PUT",
   //           headers: { "Content-Type": "application/json" },
@@ -791,15 +791,9 @@ export default function Projects() {
     )}
   </div>
 </div>
-
-
-
-
-
           {/* ==========SALES Department Table start========== */}
           {user?.department === "Sales" && (
             <>
-           
               {/* Table */}
               <div className="flex flex-col">
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -831,7 +825,7 @@ export default function Projects() {
                             <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
                             <td
                               className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                              onClick={() => navigate(`/project/${project._id}/details`)}
+                              onClick={() => navigate(`/projects/${project._id}/details`)}
                             >
                               {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
                             </td>
@@ -893,7 +887,7 @@ export default function Projects() {
 
                             <td className="px-3 py-2">
                               <button
-                                onClick={() => navigate(`/project/${project._id}/attachments`)}
+                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                 className="text-blue-600 hover:underline cursor-pointer"
                               >
                                 View Files
@@ -996,7 +990,7 @@ export default function Projects() {
                             <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
                             <td
                               className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                              onClick={() => navigate(`/project/${project._id}/details`)}
+                              onClick={() => navigate(`/projects/${project._id}/details`)}
                             >
                               {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
                             </td>
@@ -1053,7 +1047,7 @@ export default function Projects() {
 
                             <td className="px-3 py-2">
                               <button
-                                onClick={() => navigate(`/project/${project._id}/attachments`)}
+                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                 className="text-blue-600 hover:underline cursor-pointer"
                               >
                                 View Files
@@ -1252,7 +1246,7 @@ export default function Projects() {
 
                               {/* Project Code + Name */}
                               <td className="px-3 py-2 whitespace-nowrap text-blue-600 cursor-pointer hover:underline"
-                                onClick={() => navigate(`/project/${project._id}/details`)}
+                                onClick={() => navigate(`/projects/${project._id}/details`)}
                               >
                                 {project.ProjectCode || project.ProjectName
                                   ? `${project.ProjectCode ?? "-"} ${project.ProjectName ?? "-"
@@ -1264,7 +1258,7 @@ export default function Projects() {
                               <td
                                 className="px-3 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
                                 onClick={() =>
-                                  (window.location.href = `/project/feed/${feed._id}`)
+                                  (window.location.href = `/projects/feed/${feed._id}`)
                                 }
                               >
 
@@ -1452,7 +1446,7 @@ export default function Projects() {
                               {/* Attachments */}
                               <td className="px-3 py-2">
                                 <button
-                                  onClick={() => navigate(`/project/${project._id}/attachments`)}
+                                  onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                   className="text-blue-600 hover:underline cursor-pointer"
                                 >
                                   View Files
@@ -1902,7 +1896,7 @@ export default function Projects() {
                           key={row._id || idx}
                           className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                         // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
-                        // onClick={() => navigate(`/project/${row._id}`)}
+                        // onClick={() => navigate(`/projects/${row._id}`)}
                         >
                           <td className="px-3 py-2">
                             {(currentPage - 1) * pageSize + idx + 1}
@@ -1912,7 +1906,7 @@ export default function Projects() {
                             className="px-3 py-2 cursor-pointer text-blue-600 hover:text-blue-800"
                             onClick={() => {
                               if (user.roleName !== "Developer") {
-                                navigate(`/project/feed`);
+                                navigate(`/projects/feed`);
                               }
                             }}
                           >
@@ -2017,7 +2011,7 @@ export default function Projects() {
                                         const res = await fetch(
                                           `http://${import.meta.env
                                             .VITE_BACKEND_NETWORK_ID
-                                          }/api/projects/${projectId}/assign-to-qa`,
+                                          }/api/projectss/${projectId}/assign-to-qa`,
                                           {
                                             method: "POST",
                                             body: formData,
@@ -2070,7 +2064,7 @@ export default function Projects() {
                             //             if (fileLink) formData.append("fileLink", fileLink);
 
                             //             const res = await fetch(
-                            //               `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${projectId}/assign-to-qa`,
+                            //               `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projectss/${projectId}/assign-to-qa`,
                             //               { method: "POST", body: formData, credentials: "include" }
                             //             );
                             //             const result = await res.json();
