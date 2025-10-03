@@ -3,13 +3,17 @@ import { FaFilePdf, FaFileCsv } from "react-icons/fa6";
 import { FaSearch } from "react-icons/fa";
 import { RiFileExcel2Fill } from "react-icons/ri";
 import { LuFileJson } from "react-icons/lu";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 import Pagination from "../components/Pagination";
 import Img from "../assets/no-data-found.svg";
 import flattenObject from "../utils/flattenObject";
 import Model from "../components/CreateTask";
 import { useAuth } from "../hooks/useAuth";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 export default function TaskPage() {
   const { user } = useAuth();
@@ -68,8 +72,8 @@ export default function TaskPage() {
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
         const data = await res.json();
-        const flattenedData = data.map((item) => flattenObject(item));
-        setTaskData(flattenedData);
+        // const flattenedData = data.map((item) => flattenObject(item));
+        // setTaskData(flattenedData);
       } catch (err) {
         console.error("Error fetching task data:", err);
       } finally {
@@ -101,67 +105,160 @@ export default function TaskPage() {
     (perm) => perm.module === "Tasks" && perm.actions.includes("create")
   );
 
-  // Filtered & paginated data
-  const filteredData = taskData.filter((task) => {
-    const searchLower = search.toLowerCase();
-    const matchesSearch =
-      task.no?.toLowerCase().includes(searchLower) ||
-      task.project?.toLowerCase().includes(searchLower) ||
-      task.task?.toLowerCase().includes(searchLower) ||
-      task.assignedBy?.toLowerCase().includes(searchLower) ||
-      task.assignedTo?.toLowerCase().includes(searchLower) ||
-      task.taskStatus?.toLowerCase().includes(searchLower);
+  // Filtering
+  // useEffect(() => {
+  //   if (currentPage > totalPages) setCurrentPage(1);
+  // }, [entries, filteredData.length, currentPage, totalPages]);
 
-    const matchesStatus =
-      activeStatus === "All" || task.taskStatus === activeStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const totalPages = Math.ceil(filteredData.length / entries) || 1;
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(1);
-  }, [entries, filteredData.length, currentPage, totalPages]);
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * entries,
-    currentPage * entries
-  );
+  // const paginatedData = filteredData.slice(
+  //   (currentPage - 1) * entries,
+  //   currentPage * entries
+  // );
 
   return (
     <>
-      <ToastContainer
-        position="top-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       <div className="px-4 pt-2">
-        {/* <div>
-          <h1 className="text-xl font-bold mb-4">Tasks Table</h1>
-        </div> */}
-        {/* Tabs */}
-        <div className="bg-gray-100 px-2 py-2 rounded-md mb-4 flex flex-wrap gap-1 select-none">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1 rounded font-medium ${activeTab === tab
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-300 text-gray-700"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex items-center justify-between mt-4">
+    {/* Heading */}
+    <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+      Tasks
+    </h2>
+</div>
 
-          {/* Create Task Button */}
+{/* Controllers and Filters */}
+<div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
+ 
+ {/* Left side: Search + Filters + Clear */}
+  <div className="flex flex-wrap md:flex-nowrap items-center gap-3 flex-1">
+    {/* Search */}
+    <div className="flex-1 md:max-w-xs mt-6">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-full border border-gray-200 rounded pl-10 pr-4 py-2 text-sm focus:outline-none"
+        />
+        <svg
+          className="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <line x1="16.5" y1="16.5" x2="21" y2="21" />
+        </svg>
+      </div>
+    </div>
+
+    {/* Filters */}
+    <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
+      {/* TAsk */}
+      <div className="flex flex-col">
+<label className="text-sm font-medium text-gray-500 mb-1">
+         
+          Task
+
+        </label>
+  <select
+    value={activeTab}
+    onChange={(e) => setActiveTab(e.target.value)}
+    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    {tabs.map((tab) => (
+      <option key={tab} value={tab}>
+        {tab}
+      </option>
+    ))}
+  </select>
+</div>
+
+      {/* Status Dropdown */}
+<  div className="mb-4 mt-6">
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Status
+  </label>
+  <select
+    value={activeStatus}
+    onChange={(e) => setActiveStatus(e.target.value)}
+    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+  >
+    {statusTabs.map((status) => (
+      <option key={status} value={status}>
+        {status}
+      </option>
+    ))}
+  </select>
+</div>
+
+      </div>
+      
+
+      
+
+      {/* Date */}
+      {/* <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-500 mb-1">Date</label>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+            value={filterDate ? dayjs(filterDate, "DD/MM/YYYY") : null}
+            format="DD/MM/YYYY"
+            onChange={(newValue) => {
+              setFilterDate(newValue ? newValue.format("DD/MM/YYYY") : "");
+              setCurrentPage(1);
+            }}
+            slotProps={{
+              textField: { size: "small", sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } } },
+            }}
+          />
+        </LocalizationProvider>
+      </div> */}
+
+      {/* Clear Button */}
+      <button
+        className="bg-gray-200 hover:bg-gray-300 text-gray-700  px-3 py-2 rounded text-sm transition mt-2 md:mt-6"
+        // onClick={() => {
+        //   setFilterDate("");
+        //   setActiveStatus("");
+        //   setActiveTab("");
+        //   setActiveSalesTab("");
+        //   setSalesActiveStatusTabs("");
+        //   setSearch("");
+        //   setCurrentPage(1);
+        // }}
+      >
+        Clear
+      </button>
+    </div>
+
+    <div className="flex flex-wrap md:flex-nowrap items-center mt-6 gap-3">
+        {/* Export */}
+        <div className="flex flex-col">
+          <select
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none text-gray-400"
+            onChange={(e) => {
+              const format = e.target.value;
+              if (format) {
+                exportData(format, data, "projects");
+                e.target.value = ""; // reset dropdown
+              }
+            }}
+            defaultValue=""
+          >
+            <option value="" disabled hidden>Export</option>
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+    
+       {/* Create Task Button */}
           {canCreateTask && (
             <button
               className="ml-auto bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
@@ -170,7 +267,9 @@ export default function TaskPage() {
               + Create Task
             </button>
           )}
-        </div>
+      </div>
+  </div>
+
 
         {isModalOpen && (
           <Model isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
@@ -179,25 +278,11 @@ export default function TaskPage() {
           />
         )}
 
-        {/* Status Tabs */}
-        <div className="border-b border-gray-200 mb-4 overflow-x-auto whitespace-nowrap">
-          {statusTabs.map((status) => (
-            <button
-              key={status}
-              onClick={() => setActiveStatus(status)}
-              className={`inline-block px-4 py-2 text-xs font-medium transition-colors duration-200 ${activeStatus === status
-                  ? "border-b-2 border-purple-800 text-purple-800"
-                  : "text-gray-500"
-                }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+
 
         {/* Table Controls */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 gap-4">
-          <div className="flex items-center space-x-2">
+          {/* <div className="flex items-center space-x-2">
             <label htmlFor="entries" className="text-gray-700 text-sm">
               Show
             </label>
@@ -214,32 +299,11 @@ export default function TaskPage() {
               ))}
             </select>
             <span className="text-gray-700 text-sm">entries</span>
-          </div>
+          </div> */}
 
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-gray-300 rounded pl-8 pr-3 py-1 text-sm"
-              />
-              <FaSearch className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
+          
 
-            <button title="PDF">
-              <FaFilePdf size={16} className="text-red-700" />
-            </button>
-            <button title="Excel">
-              <RiFileExcel2Fill size={16} className="text-green-600" />
-            </button>
-            <button title="CSV">
-              <FaFileCsv size={16} className="text-blue-600" />
-            </button>
-            <button title="JSON">
-              <LuFileJson size={16} className="text-yellow-500" />
-            </button>
+            
           </div>
         </div>
 
@@ -258,7 +322,7 @@ export default function TaskPage() {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            {/* <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className="text-center p-8 text-gray-500">
@@ -336,16 +400,16 @@ export default function TaskPage() {
                   </td>
                 </tr>
               )}
-            </tbody>
+            </tbody> */}
           </table>
         </div>
 
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          // currentPage={currentPage}
+          // // totalPages={totalPages}
+          // onPageChange={setCurrentPage}
         />
-      </div>
+      {/* </div> */}
     </>
   );
 }

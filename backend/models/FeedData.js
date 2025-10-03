@@ -1,5 +1,6 @@
 // models/FeedData.js
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
+import { format } from "path";
 
 const feedSchema = new mongoose.Schema(
   {
@@ -58,6 +59,7 @@ const feedSchema = new mongoose.Schema(
     DatabaseSettings: {
     databaseType: String,
     host: String,
+    mongoURI: String,
     port: String,
     username: String,
     password: String,
@@ -65,7 +67,8 @@ const feedSchema = new mongoose.Schema(
     tableName: String,
     hasDataTable: Boolean,
     dateFormat: String,
-    datePosition: String
+    datePosition: String,
+    format: String
   },
   // QARules: [{
   //   field: String,

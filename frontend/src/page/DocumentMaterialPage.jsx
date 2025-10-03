@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
+import dayjs from "dayjs";
 export default function ProjectFilesPage() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
@@ -91,8 +91,8 @@ export default function ProjectFilesPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {file.uploadedAt
-                          ? new Date(file.uploadedAt).toLocaleString()
-                          : "-"}
+  ? dayjs(file.uploadedAt).format("YYYY/MM/DD hh:mm A")
+  : "-"}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {file.uploadedByName ||
@@ -159,8 +159,9 @@ export default function ProjectFilesPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {file.uploadedAt
-                          ? new Date(file.uploadedAt).toLocaleString()
-                          : "-"}
+  ? dayjs(file.uploadedAt).format("YYYY/MM/DD hh:mm A")
+  : "-"}
+
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {file.uploadedBy?.name || "Unknown"}

@@ -20,9 +20,12 @@ export default function ProjectDetails() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [showPopover, setShowPopover] = useState(false);
+  const [openPopoverFeedId, setOpenPopoverFeedId] = useState(null);
+
   const [showFeedPopover, setShowFeedPopover] = useState(false);
    const popoverRef = useRef(null);
-   const buttonRef = useRef(null);
+   const buttonRef = useRef({}); // store refs per feed row
+
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [form, setForm] = useState({
     TLId: "",
@@ -42,7 +45,7 @@ export default function ProjectDetails() {
       buttonRef.current &&
       !buttonRef.current.contains(event.target)
     ) {
-      setShowFeedPopover(false);
+      setOpenPopoverFeedId(false);
     }
   };
 
@@ -53,16 +56,19 @@ export default function ProjectDetails() {
   return () => {
     document.removeEventListener("mousedown", handleClickOutside);
   };
-}, [showFeedPopover]);
+}, [openPopoverFeedId]);
 
 
-  const handleToggle = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
-    }
-    setShowFeedPopover(!showFeedPopover);
-  };
+ const handleToggle = (feedId) => {
+  const button = buttonRef.current[feedId];
+  if (button) {
+    const rect = button.getBoundingClientRect();
+    setPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
+  }
+  setOpenPopoverFeedId(openPopoverFeedId === feedId ? null : feedId);
+};
+
+
 
   // ✅ Close popover on outside click
   useEffect(() => {
@@ -427,17 +433,30 @@ export default function ProjectDetails() {
                       <tbody>
   {project?.Feeds && project.Feeds.length > 0 ? (
     project.Feeds.map((feed, idx) => {
-const devs = feed.DeveloperIds || [];
-      const pm = project.PMId ? [project.PMId] : [];
-      const tl = project.TLId ? [project.TLId] : [];
-    const pc = project.PCId ? [project.PCId] : [];
-    const qa = project.QAId ? [project.QAId] : [];
+const getNormalizedMember = (m, defaultRole = "Unknown") => ({
+  _id: m._id,
+  name: m.name || "Unknown",
+  avatar: m.avatar || null,
+  roleName: m.roleName || (m.roleId && m.roleId.name) || defaultRole,
+});
 
-    const projectMembers = [...pm, ...tl, ...pc, ...qa];
-      const members = feed.DeveloperIds?.length > 0 ? feed.DeveloperIds : [];
-      const combinedMembers = [...members, ...projectMembers];
-      const visible = combinedMembers.slice(0, 3);
-      const extraCount = combinedMembers.length - visible.length;
+// Project members
+const projectMembers = [
+  ...(project.PMId ? [project.PMId] : []),
+  ...(project.TLId ? [project.TLId] : []),
+  ...(project.PCId ? [project.PCId] : []),
+  ...(project.QAId ? [project.QAId] : []),
+].map((m) => getNormalizedMember(m, "Manager"));
+
+// Feed developers
+const devMembers = (feed.DeveloperIds || []).map((dev) =>
+  getNormalizedMember(dev, "Developer")
+);
+
+// Combine all
+const combinedMembers = [...devMembers, ...projectMembers];
+const visible = combinedMembers.slice(0, 3);
+const extraCount = combinedMembers.length - visible.length;
 
       return (
         <tr key={idx} className="">
@@ -531,47 +550,41 @@ const devs = feed.DeveloperIds || [];
                   </div>
                 ))}
 
-                {extraCount > 0 && (
-                  <button
-                    // onClick={() => handleShowAll(combinedMembers)}
-                    //  onClick={() => setShowFeedPopover(!showFeedPopover)}
-                    ref={buttonRef}
-          onClick={handleToggle}
-                    className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
-                  >
-                    +{extraCount}
-                  </button>
-                )}
- {showFeedPopover &&
-        ReactDOM.createPortal(
-          <div
-            ref={popoverRef}
-            id="feed-popover"
-            className="absolute bg-white border rounded-lg shadow-lg p-3 w-64 z-50"
-            style={{ top: position.top, left: position.left }}
-          >
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
-            <ul className="space-y-2 max-h-48 overflow-y-auto">
-              {combinedMembers.map((m, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <img
-                    src={
-                      m.avatar ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`
-                    }
-                    alt={m.name}
-                    className="w-6 h-6 rounded-full border"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {m.name}{" "}
-                    <span className="text-gray-400 text-xs">({m.roleName})</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>,
-          document.body
-        )}
+              {extraCount > 0 && (
+  <button
+    ref={(el) => (buttonRef.current[feed._id] = el)}
+    onClick={() => handleToggle(feed._id)}
+    className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+  >
+    +{extraCount}
+  </button>
+)}
+
+ {openPopoverFeedId === feed._id &&
+  ReactDOM.createPortal(
+    <div
+      className="absolute bg-white border rounded-lg shadow-lg p-3 w-64 z-50"
+      style={{ top: position.top, left: position.left }}
+    >
+      <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
+      <ul className="space-y-2 max-h-48 overflow-y-auto">
+        {combinedMembers.map((m, i) => (
+          <li key={i} className="flex items-center gap-2">
+            <img
+              src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+              alt={m.name}
+              className="w-6 h-6 rounded-full border"
+            />
+            <span className="text-sm text-gray-700">
+              {m.name} <span className="text-gray-400 text-xs">({m.roleName})</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>,
+    document.body
+)}
+
               </div>
             )}
           </td>
@@ -819,7 +832,7 @@ const devs = feed.DeveloperIds || [];
               <div className="space-y-2 text-sm">
                 
                       <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
-                        <a href="" onClick={() => navigate(`/project/${project._id}/attachments`)}>View</a>
+                        <a href="" onClick={() => navigate(`/projects/${project._id}/attachments`)}>View</a>
                       </button>
               </div>
             </div>

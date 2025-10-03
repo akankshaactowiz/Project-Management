@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa6";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 import Img from "../assets/login-illustration.jpg";
 
 export default function AuthPage() {
@@ -9,6 +11,7 @@ export default function AuthPage() {
   const [isSuccess, setIsSuccess] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(false);
+   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // ✅ Check if user already logged in
@@ -111,18 +114,30 @@ export default function AuthPage() {
               />
             </div>
 
-            <div className="relative">
-              <FaLock className="absolute left-3 top-3 text-fuchsia-700" />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="w-full pl-10 pr-4 py-2 border-b focus:outline-none"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
+             <div className="relative">
+      {/* Lock Icon */}
+      <FaLock className="absolute left-3 top-3 text-fuchsia-700" />
+
+      {/* Password Field */}
+      <input
+        type={showPassword ? "text" : "password"}
+        name="password"
+        placeholder="Password"
+        className="w-full pl-10 pr-10 py-2 border-b focus:outline-none"
+        value={formData.password}
+        onChange={handleChange}
+        required
+      />
+
+      {/* Toggle Button */}
+      <button
+        type="button"
+        onClick={() => setShowPassword((prev) => !prev)}
+        className="absolute right-3 top-2.5 text-gray-500 hover:text-fuchsia-700"
+      >
+        {showPassword ? <FaEyeSlash /> : <FaEye />}
+      </button>
+    </div>
 
             <div className="text-right text-sm">
               <a href="#" className="text-blue-600 hover:underline">

@@ -178,14 +178,14 @@ function CreateFeed({ onClose, onSuccess }) {
             {/* Project */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project
+                Project <span className="text-red-500">*</span>
               </label>
               <select
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
-                className="w-full border border-gray-300 rounded-r p-2 text-gray-400"
+                className="w-full border border-gray-300 rounded-r p-2"
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select Project
                 </option>
                 {projects.map((proj) => (
@@ -214,7 +214,7 @@ function CreateFeed({ onClose, onSuccess }) {
             {/* Feed Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Feed Name
+                Feed Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"

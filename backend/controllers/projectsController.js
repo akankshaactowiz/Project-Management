@@ -637,33 +637,54 @@ export const getProjects = async (req, res) => {
     const department = req.user.departmentId?.department;
 
     const matchStage = {};
+     
+    // Status
+if (status) {
+  matchStage.Status = { $regex: `^${status}$`, $options: "i" };
+}
 
-    // 🔹 Status filter
-    if (status && status !== "All") {
-      matchStage.Status = { $regex: `^${status}$`, $options: "i" };
-    }
+// DeliveryType / tab
+if (tab) {
+  matchStage.DeliveryType = { $regex: `^${tab}$`, $options: "i" };
+}
 
-    // 🔹 Created date filter
-    if (CreatedDate) {
-      const start = new Date(CreatedDate);
-      const end = new Date(CreatedDate);
-      end.setHours(23, 59, 59, 999);
-      matchStage.CreatedDate = { $gte: start, $lte: end };
-    }
+// CreatedDate
+if (CreatedDate) {
+  const start = new Date(CreatedDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(CreatedDate);
+  end.setHours(23, 59, 59, 999);
+  matchStage.CreatedDate = { $gte: start, $lte: end };
+}
+
+//     // 🔹 Status filter
+//     if (status && status !== "All") {
+//       matchStage.Status = { $regex: `^${status}$`, $options: "i" };
+//     }
+
+//     // 🔹 Created date filter
+//     if (CreatedDate) {
+//   const start = new Date(CreatedDate);
+//   start.setHours(0, 0, 0, 0);
+//   const end = new Date(CreatedDate);
+//   end.setHours(23, 59, 59, 999);
+//   matchStage.CreatedDate = { $gte: start, $lte: end };
+// }
+
 
     // 🔹 QA filter
-    if (qaid) matchStage.QAId = qaid;
+    // if (qaid) matchStage.QAId = qaid;
 
     // 🔹 Sales Tab filters
-    const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
-    if (department === "Sales" && tab && tab !== "All" && salesTabs.includes(tab)) {
-      matchStage.DeliveryType = tab;
-    }
+    // const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
+    // if (tab !== "All" && salesTabs.includes(tab)) {
+    //   matchStage.DeliveryType = tab;
+    // }
 
-    const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
-    if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
-      matchStage.Status = statusTab;
-    }
+    // const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
+    // if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
+    //   matchStage.Status = statusTab;
+    // }
 
     // 🔹 Role-based filters
     if (!(role === "Superadmin")) {
@@ -1070,6 +1091,15 @@ export const getProjectById = async (req, res) => {
 
     const project = await Project.findById(id)
       .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name roleId")
+       .populate({
+    path: "PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", // user refs
+    select: "name roleId", // fetch name and roleId
+    populate: {
+      path: "roleId",       // populate roleId inside each user
+      select: "name",   // only bring roleName
+    },
+  })
+
 
       .populate("SOWFile.uploadedBy", "name")
       .populate("SampleFiles.uploadedBy", "name")

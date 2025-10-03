@@ -32,7 +32,7 @@ import UpdateProjectModal from "../components/UpdateProjectModel";
 export default function Projects() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("All Deliveries");
+  const [activeTab, setActiveTab] = useState("All");
   const [salesActiveStatusTabs, setSalesActiveStatusTabs] = useState("All");
   const [activeSalesTab, setActiveSalesTab] = useState("All");
   const [search, setSearch] = useState("");
@@ -87,27 +87,27 @@ export default function Projects() {
   const [bauPersonOptions, setBauPersonOptions] = useState([]);
   const [developerOptions, setDeveloperOptions] = useState([]);
   const devOptionsRS = developerOptions.map((dev) => ({ value: dev._id, label: dev.name }));
-  const tabs = [
-    "All Deliveries",
-    "Today",
-    "Tomorrow",
-    "Yesterday",
-    "This Week",
-    "Last Week",
-    "Next Week",
-    "This Month",
-    "Next Month",
-    "Last Month",
-    "Delayed",
-    "Escalated",
-    // "Date",
-  ];
+  // const tabs = [
+  //   "All Deliveries",
+  //   "Today",
+  //   "Tomorrow",
+  //   "Yesterday",
+  //   "This Week",
+  //   "Last Week",
+  //   "Next Week",
+  //   "This Month",
+  //   "Next Month",
+  //   "Last Month",
+  //   "Delayed",
+  //   "Escalated",
+  //   // "Date",
+  // ];
 
   // sales tab filters
-  const salesTabs = ["All ", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
+  const tabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
 
-  const salesStatusTabs = [
-    "All Projects",
+  const statusTabs= [
+    "All",
     "New",
     "Under Development",
     "On-Hold",
@@ -117,15 +117,15 @@ export default function Projects() {
   ];
 
   // const statusTabs = ["All", "New", "Under Development", "assigned_to_qa", "qa_passed", "qa_failed", "Completed"];
-  const statusTabs = [
-    { key: "All Projects", label: "All Projects" },
-    { key: "New", label: "New" },
-    { key: "Under Development", label: "Under Development" },
-    { key: "assigned_to_qa", label: "Assigned to QA" },
-    { key: "qa_passed", label: "QA Passed" },
-    { key: "qa_failed", label: "QA Failed" },
-    { key: "Completed", label: "Completed" },
-  ];
+  // const statusTabs = [
+  //   { key: "All Projects", label: "All Projects" },
+  //   { key: "New", label: "New" },
+  //   { key: "Under Development", label: "Under Development" },
+  //   { key: "assigned_to_qa", label: "Assigned to QA" },
+  //   { key: "qa_passed", label: "QA Passed" },
+  //   { key: "qa_failed", label: "QA Failed" },
+  //   { key: "Completed", label: "Completed" },
+  // ];
 
   const canCreateProject =
     user?.permissions?.some(
@@ -147,21 +147,23 @@ export default function Projects() {
     try {
       setLoading(true);
       const params = new URLSearchParams({
+        // status: activeStatus !== "All" ? activeStatus : "",
+        // tab:
+        //   user.department === "Sales" && activeSalesTab !== "All"
+        //     ? activeSalesTab
+        //     : "", // send tab only for Sales
+        // statusTab:
+        //   user.department === "Sales" && salesActiveStatusTabs !== "All"
+        //     ? salesActiveStatusTabs
+        //     : "",
         status: activeStatus !== "All" ? activeStatus : "",
-        tab:
-          user.department === "Sales" && activeSalesTab !== "All"
-            ? activeSalesTab
-            : "", // send tab only for Sales
-        statusTab:
-          user.department === "Sales" && salesActiveStatusTabs !== "All"
-            ? salesActiveStatusTabs
-            : "",
+        tab: activeTab !== "All" ? activeTab : "",
         date_range: activeTab.toLowerCase().replace(" ", "_"),
         page: currentPage.toString(),
         pageSize: entries.toString(),
         search: search || "",
         department: user.department || "",
-        CreatedDate: filterDate ? new Date(filterDate).toISOString() : "",
+        CreatedDate: filterDate ? dayjs(filterDate, "YYYY/MM/DD").format("YYYY/MM/DD") : "",
       });
 
       const response = await fetch(
@@ -698,105 +700,83 @@ console.log("Selected QA:", selectedQA);
     </div>
 
     {/* Filters */}
-    <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
-      {/* Deliveries / Delivery Type */}
-      <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-500 mb-1">
-          {/* {user.roleName === "Developer" ? "Deliveries" : "Delivery Type"} */}
-          Delivery Type
+   <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
+  {/* Delivery Type */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-500 mb-1">
+      Delivery Type
+    </label>
+    <select
+      className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
+      value={activeTab} // single state for all users
+      onChange={(e) => {
+        setActiveTab(e.target.value);
+        setCurrentPage(1); // reset page when filter changes
+      }}
+    >
+      {tabs.map((tab) => (
+        <option key={tab} value={tab}>
+          {tab}
+        </option>
+      ))}
+    </select>
+  </div>
 
-        </label>
-        {/* <select
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
-          value={user.department !== "Sales" ? activeTab : activeSalesTab}
-          onChange={(e) => {
-            if (user.department !== "Sales") setActiveTab(e.target.value);
-            else setActiveSalesTab(e.target.value);
-          }}
-        >
-          {user.department !== "Sales"
-            ? tabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)
-            : salesTabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)}
-        </select> */}
-        <select
-  value={activeStatus} // single state for all users
-  onChange={(e) => setActiveStatus(e.target.value)}
-  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
->
-  {salesTabs.map((opt) => (
-    <option key={opt.key || opt} value={opt.key || opt}>
-      {opt.label || opt}
-    </option>
-  ))}
-</select>
+  {/* Status */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-500 mb-1">
+      Status
+    </label>
+    <select
+      value={activeStatus} // single state
+      onChange={(e) => {
+        setActiveStatus(e.target.value);
+        setCurrentPage(1);
+      }}
+      className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+    >
+      {statusTabs.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  </div>
 
-      </div>
-
-      {/* Status */}
-      <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-500 mb-1">Status</label>
-        {/* <select
-          value={user.department !== "Sales" ? activeStatus : salesActiveStatusTabs}
-          onChange={(e) => {
-            if (user.department !== "Sales") setActiveStatus(e.target.value);
-            else setSalesActiveStatusTabs(e.target.value);
-          }}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
-        >
-          {(user.department !== "Sales" ? statusTabs : salesStatusTabs).map((opt) => (
-            <option key={opt.key || opt} value={opt.key || opt}>
-              {opt.label || opt}
-            </option>
-          ))}
-        </select> */}
-        <select
-  value={activeStatus} // just use a single state
-  onChange={(e) => salesActiveStatusTabs(e.target.value)}
-  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
->
-  {salesStatusTabs.map((opt) => (
-    <option key={opt.key || opt} value={opt.key || opt}>
-      {opt.label || opt}
-    </option>
-  ))}
-</select>
-      </div>
-
-      {/* Date */}
-      <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-500 mb-1">Date</label>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
-            value={filterDate ? dayjs(filterDate, "DD/MM/YYYY") : null}
-            format="DD/MM/YYYY"
-            onChange={(newValue) => {
-              setFilterDate(newValue ? newValue.format("DD/MM/YYYY") : "");
-              setCurrentPage(1);
-            }}
-            slotProps={{
-              textField: { size: "small", sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } } },
-            }}
-          />
-        </LocalizationProvider>
-      </div>
-
-      {/* Clear Button */}
-      <button
-        className="bg-gray-200 hover:bg-gray-300 text-gray-700  px-3 py-2 rounded text-sm transition mt-2 md:mt-6"
-        onClick={() => {
-          setFilterDate("");
-          setActiveStatus("");
-          setActiveTab("");
-          setActiveSalesTab("");
-          setSalesActiveStatusTabs("");
-          setSearch("");
+  {/* Date */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-500 mb-1">Date</label>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DatePicker
+        className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+        value={filterDate ? dayjs(filterDate, "YYYY/MM/DD") : null}
+        format="YYYY/MM/DD"
+        onChange={(newValue) => {
+          setFilterDate(newValue ? newValue.format("YYYY/MM/DD") : "");
           setCurrentPage(1);
         }}
-      >
-        Clear
-      </button>
-    </div>
+        slotProps={{
+          textField: { size: "small", sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } } },
+        }}
+      />
+    </LocalizationProvider>
+  </div>
+
+  {/* Clear Button */}
+  <button
+    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm transition mt-2 md:mt-6"
+    onClick={() => {
+      setFilterDate("");
+      setActiveStatus("");
+      setActiveTab("");
+      setSearch("");
+      setCurrentPage(1);
+    }}
+  >
+    Clear
+  </button>
+</div>
+
   </div>
 
   {/* Right side: Export + Create Buttons */}
@@ -947,7 +927,10 @@ console.log("Selected QA:", selectedQA);
                             <td className="px-3 py-2">{project.ProjectType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
                             <td className="px-3 py-2">
-                              {new Date(project.CreatedDate).toLocaleDateString() ?? "-"}
+                              {/* {new Date(project.CreatedDate).toLocaleDateString() ?? "-"} */}
+                              {project.CreatedDate
+            ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
+            : "-"}
                             </td>
                             {user?.roleName !== "Business Development Executive" && (
                               <td className="px-3 py-2">
@@ -1107,7 +1090,9 @@ console.log("Selected QA:", selectedQA);
                             <td className="px-3 py-2">{project.ProjectType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
                             <td className="px-3 py-2">
-                              {new Date(project.CreatedDate).toLocaleDateString() ?? "-"}
+                              {project.CreatedDate
+            ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
+            : "-"}
                             </td>
                             {/* <td className="px-4 py-2 text-right">
                                 {canAssignProject && (

@@ -266,7 +266,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Project Code */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Project Code
+              Project Code <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 pointer-events-none">
@@ -287,7 +287,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Project Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Project Name
+              Project Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -302,7 +302,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
 
           {/* SOW Document */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">SOW Document</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">SOW Document <span className="text-red-500">*</span></label>
             <div className="flex w-full rounded-lg border border-gray-500">
               <label
                 htmlFor="sow-file"
@@ -325,7 +325,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
 
           {/* Sample File Attachments (Multiple) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sample Files</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sample Files<span className="text-red-500">*</span></label>
             {form.InputFiles.map((file, idx) => (
               <div key={idx} className="flex items-center space-x-2 mb-2">
                 <div className="flex flex-1 rounded-lg border border-gray-500">
