@@ -313,7 +313,7 @@ function Home() {
                   <div
                     key={index}
                     className={`flex items-center p-3 cursor-pointer ${item.bg} rounded-lg hover:shadow-md transition`}
-                    onClick={() => navigate("/project")}
+                    onClick={() => navigate("/projects")}
                   >
                     {/* Icon */}
                     <div
@@ -410,7 +410,7 @@ function Home() {
                   <div
                     key={index}
                     className={`flex items-center p-3 cursor-pointer ${type.bg} hover:shadow-md transition`}
-                    onClick={() => navigate("/project")}
+                    onClick={() => navigate("/projects")}
                   >
                     {/* Icon */}
                     <div
@@ -446,7 +446,7 @@ function Home() {
                   <div
                     key={index}
                     className={`flex items-center p-3 cursor-pointer ${status.bg} hover:shadow-md transition`}
-                    onClick={() => navigate("/project")}
+                    onClick={() => navigate("/projects")}
                   >
                     {/* Icon */}
                     <div

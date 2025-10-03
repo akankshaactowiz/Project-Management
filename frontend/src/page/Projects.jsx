@@ -52,7 +52,7 @@ export default function Projects() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   const [feedModalOpen, setFeedModalOpen] = useState(false);
-  const [feed, setFeed] = useState([]);
+  const [feeds, setFeeds] = useState([]);
   const [status, setStatus] = useState("All");
   // const [qaModalOpen, setQaModalOpen] = useState(false);
 
@@ -62,7 +62,7 @@ export default function Projects() {
 
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
-
+   const [feedOptions, setFeedOptions] = useState([]);
   const [selectedFeed, setSelectedFeed] = useState(null);
 
   const [refresh, setRefresh] = useState(false);
@@ -227,6 +227,11 @@ export default function Projects() {
       }
     })();
   }, [isAssignOpen]);
+  
+
+  console.log("Selected TL:", selectedTL);
+console.log("Selected PC:", selectedPC);
+console.log("Selected QA:", selectedQA);
 
   // const handleAssign = () => {
   //   if (!selectedTL || !selectedPC) return alert("Select TL and PC");
@@ -308,7 +313,7 @@ export default function Projects() {
       // TL / PC: update developers for feed
       if ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && selectedFeed) {
         res = await fetch(
-          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed._id}/update-team`,
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed.value}/update-team`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -834,9 +839,10 @@ export default function Projects() {
                             <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
                             {/* <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td> */}
                             <td className="px-3 py-2">
-  {project.BDEId && project.BDEId.length > 0
+  {/* {project.BDEId && project.BDEId.length > 0
     ? project.BDEId.map(bde => bde.name).join(", ")
-    : "-"}
+    : "-"} */}
+    {project.BDEId?.name ?? "-"}
 </td>
                             {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                             <td className="px-3 py-2">
@@ -2236,11 +2242,28 @@ export default function Projects() {
             )}
 
             {/* Developers — only TL or PC */}
-            {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && selectedFeed && (
+            {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
               <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+                {/* <p className="text-sm font-medium text-gray-700 mb-2">
                   Feed: {selectedFeed.FeedName || selectedFeed._id}
-                </p>
+                </p> */}
+                <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Feed
+            </label>
+            <Select
+  options={
+    selectedProject?.Feeds?.map((f) => ({
+      value: f._id,
+      label: f.FeedName || f._id,
+    })) || []
+  }
+  value={selectedFeed}
+  onChange={setSelectedFeed}
+  placeholder="Select Feed"
+/>
+
+          </div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Developers</label>
                 <Select
                   options={devOptionsRS}
@@ -2266,7 +2289,7 @@ export default function Projects() {
               Cancel
             </button>
             <button
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
+              className="cursor-pointer px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
               onClick={handleAssign}
 
             >

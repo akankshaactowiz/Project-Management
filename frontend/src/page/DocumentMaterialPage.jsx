@@ -101,7 +101,7 @@ export default function ProjectFilesPage() {
                       </td>
                       <td className="px-4 py-3 flex gap-2">
                         <button
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                           onClick={() => {
                             const fileUrl = `${BACKEND_URL}${file.fileName}`;
                             window.open(
@@ -167,7 +167,7 @@ export default function ProjectFilesPage() {
                       </td>
                       <td className="px-4 py-3 flex gap-2">
                         <button
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                           onClick={() => {
                             const fileUrl = `${BACKEND_URL}${file.fileName}`;
 

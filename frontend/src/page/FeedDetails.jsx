@@ -145,7 +145,14 @@ export default function FeedDetails() {
   return (
     <>
     
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="px-4 pt-2">
+
+      <div className="flex items-center justify-between mt-4">
+    {/* Heading */}
+    <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+      Feed Details
+    </h2>
+</div>
       {/* <div className="flex bg-gray-50 items-center justify-end px-2">
         <Breadcrumb feedName={feed?.feedName} />
         <button
@@ -224,7 +231,7 @@ export default function FeedDetails() {
 
       <div className="bg-white rounded-lg shadow p-6 mt-4">
         {/* Project Title */}
-        <h3 className="mb-4 text-2xl font-bold">
+        <h3 className="mb-4 text-lg font-bold">
           {feed?.feedName || "Feed Details"}
         </h3>
 

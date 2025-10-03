@@ -19,6 +19,7 @@ export default function ProjectDetails() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [showPopover, setShowPopover] = useState(false);
+  const [showFeedPopover, setShowFeedPopover] = useState(false);
    const popoverRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -31,7 +32,21 @@ export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
   
+
   
+   useEffect(() => {
+    function handleClickOutside(event) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setShowFeedPopover(false);
+      }
+    }
+    if (showPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showFeedPopover]);
   // ✅ Close popover on outside click
   useEffect(() => {
     function handleClickOutside(event) {
@@ -395,6 +410,13 @@ export default function ProjectDetails() {
                       <tbody>
   {project?.Feeds && project.Feeds.length > 0 ? (
     project.Feeds.map((feed, idx) => {
+const devs = feed.DeveloperIds || [];
+      const pm = project.PMId ? [project.PMId] : [];
+      const tl = project.TLId ? [project.TLId] : [];
+    const pc = project.PCId ? [project.PCId] : [];
+    const qa = project.QAId ? [project.QAId] : [];
+
+    const projectMembers = [...pm, ...tl, ...pc, ...qa];
       const members = feed.DeveloperIds?.length > 0 ? feed.DeveloperIds : [];
       const combinedMembers = [...members, ...projectMembers];
       const visible = combinedMembers.slice(0, 3);
@@ -481,7 +503,7 @@ export default function ProjectDetails() {
             {combinedMembers.length === 0 ? (
               <span className="text-gray-400">-</span>
             ) : (
-              <div className="flex items-center -space-x-2">
+              <div className="flex items-center -space-x-2 relative">
                 {visible.map((m, i) => (
                   <div key={i} className="relative group" title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}>
                     <img
@@ -494,12 +516,49 @@ export default function ProjectDetails() {
 
                 {extraCount > 0 && (
                   <button
-                    onClick={() => handleShowAll(combinedMembers)}
-                    className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                    // onClick={() => handleShowAll(combinedMembers)}
+                     onClick={() => setShowFeedPopover(!showFeedPopover)}
+                    className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
                   >
                     +{extraCount}
                   </button>
                 )}
+
+                {showFeedPopover && (
+            <div className="relative top-10 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 z-50">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                All Assignees
+              </h3>
+              <ul className="space-y-2 max-h-48 overflow-y-auto">
+                {combinedMembers.map((m, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <img
+                      src={
+                        m.avatar ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          m.name || "U"
+                        )}&background=random`
+                      }
+                      alt={m.name}
+                      className="w-6 h-6 rounded-full border"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {m.name}{" "}
+                      <span className="text-gray-400 text-xs">
+                        ({m.roleName})
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {/* <button
+                onClick={() => setShowPopover(false)}
+                className="mt-2 w-full text-xs text-gray-600 hover:text-gray-800"
+              >
+                Close
+              </button> */}
+            </div>
+          )}
               </div>
             )}
           </td>
@@ -661,7 +720,7 @@ export default function ProjectDetails() {
     return combinedMembers.length === 0 ? (
       <span className="text-gray-400">-</span>
     ) : (
-      <div className="flex items-center -space-x-2">
+      <div className="flex items-center -space-x-2 relative">
         {visible.map((m, i) => (
           <div
             key={i}

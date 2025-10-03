@@ -3,8 +3,8 @@ import Select from "react-select";
 import { FaTimes } from "react-icons/fa";
 import { getData } from "country-list";
 import { useNavigate } from "react-router-dom";
-
-export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate }) {
+import toast from "react-hot-toast";
+export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate, onSuccess, onError }) {
      const navigate = useNavigate();    
 
     const [domainName, setDomainName] = useState("");
@@ -175,13 +175,13 @@ const [form, setForm] = useState({
 
             const result = await res.json();
             if (result.success) {
-                alert("Project updated successfully!");
+                toast.success("Project updated successfully");
                 onUpdate(result.project);
                 onClose();
             } else alert(result.message || "Failed to update project");
         } catch (err) {
             console.error(err);
-            alert("Server error while updating project");
+            toast.error("Error updating project");
         }
     };
 

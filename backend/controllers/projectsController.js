@@ -32,10 +32,10 @@ export const createProject = async (req, res) => {
 
     const createdBy = req.user?._id || null;
 
-     if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
+    if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
     if (!ProjectName) return res.status(400).json({ success: false, message: "Project Name is required" });
-    
-    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.111/:5000";
+
+    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.102/:5000";
 
     const SOWFile = req.files?.SOWFile?.map(f => ({
       fileName: `/uploads/projects/${f.filename}`,
@@ -163,7 +163,7 @@ export const updateProject = async (req, res) => {
     }
 
     // Get newly uploaded files (if any)
-    const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
+    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
     // const newSOW = req.files?.SOWFile
     //   ? req.files.SOWFile.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
     //   : [];
@@ -174,7 +174,7 @@ export const updateProject = async (req, res) => {
     // Convert new uploads to objects with metadata
     const newSOW = req.files?.SOWFile
       ? req.files.SOWFile.map(f => ({
-        fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
+        fileName: `/uploads/projects/${f.filename}`,
         uploadedBy: req.user._id, // assumes user is attached to req
         uploadedAt: new Date()
       }))
@@ -182,7 +182,7 @@ export const updateProject = async (req, res) => {
 
     const newSamples = req.files?.SampleFiles
       ? req.files.SampleFiles.map(f => ({
-        fileName: `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`,
+        fileName: `/uploads/projects/${f.filename}`,
         uploadedBy: req.user._id,
         uploadedAt: new Date()
       }))
@@ -324,7 +324,7 @@ export const updateProject = async (req, res) => {
 //       }
 //     }
 
-   
+
 
 
 
@@ -335,7 +335,7 @@ export const updateProject = async (req, res) => {
 //     // Query database
 //     const total = await Project.countDocuments(filter);
 
-   
+
 
 //     const projects = await Project.find(filter)
 //       .populate("PMId PCId TLId QAId BAUPersonId BDEId", "name")
@@ -358,7 +358,7 @@ export const updateProject = async (req, res) => {
 //         populate: [
 //           // { path: "TLId", select: "name email roleId" },
 //           { path: "DeveloperIds", select: "name email roleId" },
-          
+
 //           // { path: "QAId", select: "name email roleId" },
 //           { path: "BAUId", select: "name email roleId" },
 //           { path: "createdBy", select: "name email" },
@@ -382,13 +382,13 @@ export const updateProject = async (req, res) => {
 
 
 
-     
+
 
 //       .skip((parsedPage - 1) * parsedPageSize)
 //       .limit(parsedPageSize);
 
 //       const projectsFilterByFeed = req.query.filterByFeedUser === 'true'; // You would need a query parameter to enable this
-    
+
 //     if (projectsFilterByFeed) {
 //         projects = projects.filter(project => {
 //             if (!project.Feeds || project.Feeds.length === 0) return false;
@@ -396,7 +396,7 @@ export const updateProject = async (req, res) => {
 //             return project.Feeds.some(feed => {
 //                 // Check if userId is in DeveloperIds array in the feed
 //                 const isDeveloper = feed.DeveloperIds && feed.DeveloperIds.some(dev => dev && dev._id && dev._id.toString() === userId);
-                
+
 //                 // Check if userId is the createdBy user of the feed
 //                 const isCreator = feed.createdBy && feed.createdBy._id && feed.createdBy._id.toString() === userId.toString();
 
@@ -404,7 +404,7 @@ export const updateProject = async (req, res) => {
 //             });
 //         });
 //     }
-     
+
 
 
 //     // Send response
@@ -450,9 +450,9 @@ export const updateProject = async (req, res) => {
 //         { ProjectCode: regex },
 //         { Frequency: regex },
 //         { IndustryType: regex, },
-        
-       
-    
+
+
+
 //       ];
 //     }
 
@@ -550,13 +550,13 @@ export const updateProject = async (req, res) => {
 //       .sort({ CreatedDate: -1 })
 //       .skip((parsedPage - 1) * parsedPageSize)
 //       .limit(parsedPageSize);
-     
+
 
 //       if (search) {
 //   const lowerSearch = search.toLowerCase();
 //   projects = projects.filter((p) => {
 //     return (
-     
+
 //       p.PMId?.name?.toLowerCase().includes(lowerSearch) ||
 //       p.TLId?.name?.toLowerCase().includes(lowerSearch) ||
 //       p.QAId?.name?.toLowerCase().includes(lowerSearch) ||
@@ -665,10 +665,11 @@ export const getProjects = async (req, res) => {
     if (!(role === "Superadmin")) {
       if (department === "Sales") {
         if (role === "Sales Manager") matchStage.CreatedBy = objectId(userId);
-        if (role === "Business Development Executive") matchStage.BDEId = userId;
+        if (role === "Business Development Executive") matchStage.BDEId = objectId(userId);
       } else {
         if (role === "Manager") matchStage.PMId = objectId(userId);
         if (role === "Team Lead") matchStage.TLId = objectId(userId);
+        if (role === "Project Coordinator") matchStage.PCId = objectId(userId);
       }
     }
 
@@ -708,23 +709,55 @@ export const getProjects = async (req, res) => {
       },
       { $unwind: { path: "$CreatedBy", preserveNullAndEmptyArrays: true } },
 
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "TLId",
+          foreignField: "_id",
+          as: "TLId",
+        },
+      },
+      { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
+
+        {
+        $lookup: {
+          from: "User-data",
+          localField: "PCId",
+          foreignField: "_id",
+          as: "PCId",
+        },
+      },
+      { $unwind: { path: "$PCId", preserveNullAndEmptyArrays: true } },
+
+       { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
+
+        {
+        $lookup: {
+          from: "User-data",
+          localField: "QAId",
+          foreignField: "_id",
+          as: "QAId",
+        },
+      },
+      { $unwind: { path: "$QAId", preserveNullAndEmptyArrays: true } },
+
       // 🔹 Optional search filter
       ...(search
         ? [
-            {
-              $match: {
-                $or: [
-                  { ProjectName: { $regex: search, $options: "i" } },
-                  { ProjectCode: { $regex: search, $options: "i" } },
-                  { Frequency: { $regex: search, $options: "i" } },
-                  { IndustryType: { $regex: search, $options: "i" } },
-                  { "PMId.name": { $regex: search, $options: "i" } },
-                  { "CreatedBy.name": { $regex: search, $options: "i" } },
-                  { "BDEId.name": { $regex: search, $options: "i" } },
-                ],
-              },
+          {
+            $match: {
+              $or: [
+                { ProjectName: { $regex: search, $options: "i" } },
+                { ProjectCode: { $regex: search, $options: "i" } },
+                { Frequency: { $regex: search, $options: "i" } },
+                { IndustryType: { $regex: search, $options: "i" } },
+                { "PMId.name": { $regex: search, $options: "i" } },
+                { "CreatedBy.name": { $regex: search, $options: "i" } },
+                { "BDEId.name": { $regex: search, $options: "i" } },
+              ],
             },
-          ]
+          },
+        ]
         : []),
 
       // 🔹 Sort by CreatedDate
@@ -743,6 +776,22 @@ export const getProjects = async (req, res) => {
           as: "Feeds",
         },
       },
+      
+  //     {
+  //   $lookup: {
+  //     from: "User-data",              // users collection
+  //     localField: "Feeds.DeveloperIds",
+  //     foreignField: "_id",
+  //     as: "Feeds.DeveloperIds"
+  //   }
+  // },
+  // {
+  //   $group: {
+  //     _id: "$_id",
+  //     ProjectName: { $first: "$ProjectName" },
+  //     Feeds: { $push: "$Feeds" }
+  //   }
+  // }
     ];
 
     // 🔹 Execute aggregation
@@ -766,7 +815,7 @@ export const getProjects = async (req, res) => {
 
 export const getProjectCounts = async (req, res) => {
   try {
-     const { userId, role, department } = req.user; // assuming req.user has these
+    const { userId, role, department } = req.user; // assuming req.user has these
 
     // Build filter based on role/department
     const filter = {};
@@ -802,7 +851,7 @@ export const getProjectCounts = async (req, res) => {
       }
     }
 
-   
+
     const counts = await Project.aggregate([
       { $match: filter },
       {
@@ -987,17 +1036,17 @@ export const getProjectById = async (req, res) => {
 
     // Search filter
     if (search) {
-  filter.Feeds = {
-    $elemMatch: {
-      $or: [
-        { FeedName: { $regex: search, $options: "i" } },
-        { FeedId: { $regex: search, $options: "i" } },
-        { Frequency: { $regex: search, $options: "i" } },
-      ],
-    },
-  };
-}
-   
+      filter.Feeds = {
+        $elemMatch: {
+          $or: [
+            { FeedName: { $regex: search, $options: "i" } },
+            { FeedId: { $regex: search, $options: "i" } },
+            { Frequency: { $regex: search, $options: "i" } },
+          ],
+        },
+      };
+    }
+
     const project = await Project.findById(id)
       .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name")
 
@@ -1006,14 +1055,14 @@ export const getProjectById = async (req, res) => {
       .populate({
         path: "Feeds",
         match: search
-      ? {
-          $or: [
-            { FeedName: { $regex: search, $options: "i" } },
-            { FeedId: { $regex: search, $options: "i" } },
-            { Frequency: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {},
+          ? {
+            $or: [
+              { FeedName: { $regex: search, $options: "i" } },
+              { FeedId: { $regex: search, $options: "i" } },
+              { Frequency: { $regex: search, $options: "i" } },
+            ],
+          }
+          : {},
 
         populate: [
           // { path: "TLId", select: "name email roleId" },
@@ -1057,14 +1106,23 @@ export const getProjectById = async (req, res) => {
 // };
 
 export const updateProjectTeam = async (req, res) => {
+
   try {
     const { id } = req.params;
-    const { TLId, PCId, QAId, DeveloperIds } = req.body;
-    const userRole = req.user.role;
+    const { TLId, PCId, QAId,
+      //  DeveloperIds 
+    } = req.body;
+    const userRole = req.user.roleId?.name;
+    console.log("Request Body:", req.body);
 
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
-
+    // Only Manager can assign TL, PC, QA
+    if (userRole === "Manager") {
+      if (TLId && mongoose.Types.ObjectId.isValid(TLId)) project.TLId = TLId;
+      if (PCId && mongoose.Types.ObjectId.isValid(PCId)) project.PCId = PCId;
+      if (QAId && mongoose.Types.ObjectId.isValid(QAId)) project.QAId = QAId;
+    }
     // Initialize missing fields
     if (!("TLId" in project)) project.TLId = null;
     if (!("PCId" in project)) project.PCId = null;
@@ -1076,11 +1134,12 @@ export const updateProjectTeam = async (req, res) => {
       if (PCId) project.PCId = PCId;
       if (QAId) project.QAId = QAId;
     }
+    console.log("User Role:", userRole);
 
     // TL or PC can update Developers
-    if ((userRole === "Team Lead" || userRole === "Project Coordinator") && DeveloperIds) {
-      project.DeveloperIds = DeveloperIds;
-    }
+    // if ((userRole === "Team Lead" || userRole === "Project Coordinator") && DeveloperIds) {
+    //   project.DeveloperIds = DeveloperIds;
+    // }
 
     await project.save();
 
@@ -1089,7 +1148,10 @@ export const updateProjectTeam = async (req, res) => {
       .populate("TLId", "name")
       .populate("PCId", "name")
       .populate("QAId", "name")
-      .populate("DeveloperIds", "name");
+      .populate("PMId", "name")       // <-- populate PM
+      .populate("BDEId", "name")      // <-- populate BDE
+      .populate("CreatedBy", "name");
+    // .populate("DeveloperIds", "name");
 
     res.json({ message: "Project team updated", project: updatedProject });
   } catch (err) {
