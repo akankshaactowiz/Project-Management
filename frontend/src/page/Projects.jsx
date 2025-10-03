@@ -78,11 +78,13 @@ export default function Projects() {
   const [selectedTL, setSelectedTL] = useState("");
   const [selectedPC, setSelectedPC] = useState("");
   const [selectedQA, setSelectedQA] = useState("");
+  const [selectedBauPerson, setSelectedBauPerson] = useState("");
   const [selectedDevelopers, setSelectedDevelopers] = useState([]);
 
   const [tlOptions, setTlOptions] = useState([]);
   const [pcOptions, setPcOptions] = useState([]);
   const [qaOptions, setQaOptions] = useState([]);
+  const [bauPersonOptions, setBauPersonOptions] = useState([]);
   const [developerOptions, setDeveloperOptions] = useState([]);
   const devOptionsRS = developerOptions.map((dev) => ({ value: dev._id, label: dev.name }));
   const tabs = [
@@ -216,6 +218,7 @@ export default function Projects() {
 
         setTlOptions(data.tlUsers || []);
         setPcOptions(data.pcUsers || []);
+        setBauPersonOptions(data.bauPerson || []);
         setDeveloperOptions(data.devUsers || []);
         setQaOptions(data.qaLead || []);
       } catch (err) {
@@ -474,6 +477,21 @@ console.log("Selected QA:", selectedQA);
       "Created Date",
       "Action",
     ],
+    "Project Coordinator": [
+     "Project",
+      "Feeds",
+      "Industry",
+      "Project Manager",
+      "BDE",
+      "Delivery Type",
+      // "Frequency",
+      "Status",
+      "Attachments",
+      "Project Type",
+      "Created By",
+      "Created Date",
+      "Action",
+    ],
     QA: ["QA Report Count", "QA Rules"],
     Developer: ["Project Name",
       "Feed Name",
@@ -521,6 +539,8 @@ console.log("Selected QA:", selectedQA);
         return true
 
       case "Team Lead":
+        return true
+      case "Project Coordinator":
         return true
       default:
         return false;
@@ -682,9 +702,11 @@ console.log("Selected QA:", selectedQA);
       {/* Deliveries / Delivery Type */}
       <div className="flex flex-col">
         <label className="text-sm font-medium text-gray-500 mb-1">
-          {user.department !== "Sales" ? "Deliveries" : "Delivery Type"}
+          {/* {user.roleName === "Developer" ? "Deliveries" : "Delivery Type"} */}
+          Delivery Type
+
         </label>
-        <select
+        {/* <select
           className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
           value={user.department !== "Sales" ? activeTab : activeSalesTab}
           onChange={(e) => {
@@ -695,13 +717,25 @@ console.log("Selected QA:", selectedQA);
           {user.department !== "Sales"
             ? tabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)
             : salesTabs.map((tab) => <option key={tab} value={tab}>{tab}</option>)}
-        </select>
+        </select> */}
+        <select
+  value={activeStatus} // single state for all users
+  onChange={(e) => setActiveStatus(e.target.value)}
+  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+>
+  {salesTabs.map((opt) => (
+    <option key={opt.key || opt} value={opt.key || opt}>
+      {opt.label || opt}
+    </option>
+  ))}
+</select>
+
       </div>
 
       {/* Status */}
       <div className="flex flex-col">
         <label className="text-sm font-medium text-gray-500 mb-1">Status</label>
-        <select
+        {/* <select
           value={user.department !== "Sales" ? activeStatus : salesActiveStatusTabs}
           onChange={(e) => {
             if (user.department !== "Sales") setActiveStatus(e.target.value);
@@ -714,7 +748,18 @@ console.log("Selected QA:", selectedQA);
               {opt.label || opt}
             </option>
           ))}
-        </select>
+        </select> */}
+        <select
+  value={activeStatus} // just use a single state
+  onChange={(e) => salesActiveStatusTabs(e.target.value)}
+  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
+>
+  {salesStatusTabs.map((opt) => (
+    <option key={opt.key || opt} value={opt.key || opt}>
+      {opt.label || opt}
+    </option>
+  ))}
+</select>
       </div>
 
       {/* Date */}
@@ -1121,7 +1166,8 @@ console.log("Selected QA:", selectedQA);
         (user.roleName === "Manager" &&
           project?.TLId &&
           project?.PCId &&
-          project?.QAId) ||
+          project?.BAUPersonId &&
+          project?.QAId)  ||
         ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
           project?.feed?.DeveloperIds?.length > 0)
           ? "bg-gray-400 cursor-not-allowed"
@@ -1131,6 +1177,7 @@ console.log("Selected QA:", selectedQA);
         (user.roleName === "Manager" &&
           project?.TLId &&
           project?.PCId &&
+          project?.BAUPersonId &&
           project?.QAId) ||
         ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
           project?.feed?.DeveloperIds?.length > 0)
@@ -1139,7 +1186,7 @@ console.log("Selected QA:", selectedQA);
         // Open modal only if assignment not done
         const canAssign =
           (user.roleName === "Manager" &&
-            (!project?.TLId || !project?.PCId || !project?.QAId)) ||
+            (!project?.TLId || !project?.PCId || !project?.QAId || !project?.BAUPersonId)) ||
           ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
             (!project?.feed?.DeveloperIds || project.feed.DeveloperIds.length === 0));
 
@@ -1153,7 +1200,7 @@ console.log("Selected QA:", selectedQA);
       }}
     >
       {user.roleName === "Manager"
-        ? project?.TLId && project?.PCId && project?.QAId
+        ? project?.TLId && project?.PCId && project?.QAId && project?.BAUPersonId
           ? "Assigned"
           : "Assign"
         : project?.feed?.DeveloperIds?.length > 0
@@ -1251,8 +1298,8 @@ console.log("Selected QA:", selectedQA);
                               <td>{rowCounter++}</td>
 
                               {/* Project Code + Name */}
-                              <td className="px-3 py-2 whitespace-nowrap text-blue-600 cursor-pointer hover:underline"
-                                onClick={() => navigate(`/projects/${project._id}/details`)}
+                              <td className="px-3 py-2 whitespace-nowrap"
+                                // onClick={() => navigate(`/projects/${project._id}/details`)}
                               >
                                 {project.ProjectCode || project.ProjectName
                                   ? `${project.ProjectCode ?? "-"} ${project.ProjectName ?? "-"
@@ -1377,11 +1424,11 @@ console.log("Selected QA:", selectedQA);
                               </td>
 
                               {/* PC */}
-                              <td className="px-3 py-2 whitespace-nowrap">{project.PCId?.name ?? "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{project.PCId?.name ?? "Not Assigned Yet"}</td>
 
                               {/* TL */}
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {project.TLId?.name ?? "-"}
+                                {project.TLId?.name ?? "Not Assigned Yet"}
                               </td>
 
                               {/* Developer */}
@@ -1447,7 +1494,7 @@ console.log("Selected QA:", selectedQA);
 
                               {/* BAU Person */}
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {feed.BAUId?.name ?? "-"}
+                                {project.BAUPersonId?.name ?? "-"}
                               </td>
                               {/* Attachments */}
                               <td className="px-3 py-2">
@@ -2238,42 +2285,58 @@ console.log("Selected QA:", selectedQA);
                     ))}
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    BAU Person
+                  </label>
+                  <select
+                    value={selectedBauPerson}
+                    onChange={(e) => setSelectedBauPerson(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
+                  >
+                    <option value="">Select BAU Person</option>
+                    {bauPersonOptions.map((bauPerson) => (
+                      <option key={bauPerson._id} value={bauPerson._id}>{bauPerson.name}</option>
+                    ))}
+                  </select>
+                </div>
               </>
             )}
 
             {/* Developers — only TL or PC */}
             {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
-              <div className="mb-4">
-                {/* <p className="text-sm font-medium text-gray-700 mb-2">
-                  Feed: {selectedFeed.FeedName || selectedFeed._id}
-                </p> */}
-                <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Feed
-            </label>
-            <Select
-  options={
-    selectedProject?.Feeds?.map((f) => ({
-      value: f._id,
-      label: f.FeedName || f._id,
-    })) || []
-  }
-  value={selectedFeed}
-  onChange={setSelectedFeed}
-  placeholder="Select Feed"
-/>
+             <>
+  <div className="flex-1">
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Feed
+    </label>
+    <Select
+      options={
+        selectedProject?.Feeds?.map((f) => ({
+          value: f._id,
+          label: f.FeedName || f._id,
+        })) || []
+      }
+      value={selectedFeed}
+      onChange={setSelectedFeed}
+      placeholder="Select Feed"
+    />
+  </div>
+  <div className="flex-1">
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Developers
+    </label>
+    <Select
+      options={devOptionsRS}
+      value={selectedDevelopers} // must be [{value, label}, ...]
+      onChange={setSelectedDevelopers}
+      isMulti
+      placeholder="Select Developers"
+    />
+  </div>
+  </>
 
-          </div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Developers</label>
-                <Select
-                  options={devOptionsRS}
-                  value={selectedDevelopers} // must be [{value, label}, ...]
-                  onChange={setSelectedDevelopers}
-                  isMulti
-                  placeholder="Select Developers"
-                />
-
-              </div>
             )}
 
 

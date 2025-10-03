@@ -24,18 +24,20 @@ export default function TaskPage() {
 
   // Static columns
   const columns = [
-    "Title",
-    "Department",
-    "Related To",
-    "Task Type",
-    "Task Priority",
-    "Task Status",
-    "Feed",
+    "No",
+    "Task ID",
+    "Task", //Task name will be Project Code + Task title
+    "Project", //Related To will be Project name
+    "Assigned Date", // date + time   
+    "Status",
+    "Due Date", // date + time
+    "Priority",
     "Assigned To",
     "Assigned By",
-    "Estimate Start Date",
-    "Estimate End Date",
-    "Watcher"
+    "Completed Date",
+    "Time Taken",
+    "Last Updated",
+    "Actions",
   ];
 
   const columnKeyMap = {
@@ -61,7 +63,7 @@ export default function TaskPage() {
           `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/tasks`,
           {
             credentials: "include",
-          }
+          } 
         );
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
@@ -79,19 +81,20 @@ export default function TaskPage() {
   }, []);
 
   // Tabs
-  const tabs = ["My task", "Task assigned by me", "My Watcher"];
+  const tabs = ["My task", "Assigned by me", "Watchers"];
   const statusTabs = [
     "All",
     "New",
-    "Pending",
     "In Progress",
-    "Complete",
-    "Decline",
+    "Completed",
+    "Declined",
     "On Hold",
     "Terminated",
     "Recurring",
+    "Closed",
     "Reopen",
   ];
+  const Priority = ["Low","High", "Medium"];
 
   // Permissions
   const canCreateTask = user?.permissions?.some(

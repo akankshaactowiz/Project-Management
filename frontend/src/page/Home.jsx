@@ -349,8 +349,8 @@ function Home() {
                   <FaTasks size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">0</p>
                   <p className="text-gray-500 text-sm">Delivery</p>
+                  <p className="text-2xl font-bold text-gray-800">0</p>
                 </div>
               </div>
 
@@ -360,8 +360,8 @@ function Home() {
                   <FaRocket size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">0</p>
                   <p className="text-gray-500 text-sm">Crawl Start</p>
+                  <p className="text-2xl font-bold text-gray-800">0</p>
                 </div>
               </div>
 
@@ -371,8 +371,8 @@ function Home() {
                   <FaCheckCircle size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">0</p>
                   <p className="text-gray-500 text-sm">Delivered</p>
+                  <p className="text-2xl font-bold text-gray-800">0</p>
                 </div>
               </div>
             </div>
@@ -389,8 +389,8 @@ function Home() {
                   <FaCube size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">1</p>
                   <p className="text-gray-500 text-sm">Escalation</p>
+                  <p className="text-2xl font-bold text-gray-800">1</p>
                 </div>
               </div>
             </div>
@@ -489,8 +489,8 @@ function Home() {
                       <FaTasks size={18} />
                     </div>
                     <div className ="min-w-0">
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">Scheduled</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -500,8 +500,8 @@ function Home() {
                       <FaClock size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">Crawl Running</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -511,8 +511,8 @@ function Home() {
                       <FaCheckCircle size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">Crawl Finished</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -522,10 +522,10 @@ function Home() {
                       <FaRocket size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">20</p>
                       <p className="text-gray-500 text-sm">
                         Crawl Yet To Start
                       </p>
+                      <p className="text-2xl font-bold text-gray-800">20</p>
                     </div>
                   </div>
                 </div>
@@ -541,8 +541,8 @@ function Home() {
                       <FaTasks size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">Assigned to QA</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -552,8 +552,8 @@ function Home() {
                       <FaClock size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">QA Failed</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -563,8 +563,8 @@ function Home() {
                       <FaCheckCircle size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
                       <p className="text-gray-500 text-sm">QA Rejected</p>
+                      <p className="text-2xl font-bold text-gray-800">0</p>
                     </div>
                   </div>
 
@@ -574,8 +574,8 @@ function Home() {
                       <FaRocket size={18} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-800">20</p>
                       <p className="text-gray-500 text-sm">QA Passed</p>
+                      <p className="text-2xl font-bold text-gray-800">20</p>
                     </div>
                   </div>
                 </div>
@@ -649,7 +649,7 @@ function Home() {
                     <td
                       className="px-4 py-2  border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
                       onClick={() =>
-                        navigate(`/project/${feed.projectId._id}/details`)
+                        navigate(`/projects/${feed.projectId._id}/details`)
                       }
                     >
                       {feed.projectId.ProjectCode || feed.projectId?.ProjectName
@@ -661,7 +661,7 @@ function Home() {
                     <td className="px-4 py-2 ">{feed.FeedId || "-"}</td>
                     <td
                       className="px-4 py-2  text-blue-600 font-medium cursor-pointer hover:underline"
-                      onClick={() => navigate(`/project/feed/${feed._id}`)}
+                      onClick={() => navigate(`/projects/feed/${feed._id}`)}
                     >
                       {feed.FeedName || "-"}
                     </td>

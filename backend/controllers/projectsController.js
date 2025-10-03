@@ -6,6 +6,8 @@ import Notification from "../models/Notification.js";
 import Feed from "../models/FeedData.js";
 import { generateFeedId } from "../utils/generateFeedId.js";
 import mongoose from "mongoose";
+import getDateRangeFilter from "../utils/ScheduleFilter.js";
+
 
 
 
@@ -615,6 +617,8 @@ export const updateProject = async (req, res) => {
 // };
 
 export const getProjects = async (req, res) => {
+
+  
   const objectId = (id) => new mongoose.Types.ObjectId(id);
   try {
     const {
@@ -670,6 +674,7 @@ export const getProjects = async (req, res) => {
         if (role === "Manager") matchStage.PMId = objectId(userId);
         if (role === "Team Lead") matchStage.TLId = objectId(userId);
         if (role === "Project Coordinator") matchStage.PCId = objectId(userId);
+        if (role === "QA") matchStage.QAId = objectId(userId);
       }
     }
 
@@ -718,7 +723,15 @@ export const getProjects = async (req, res) => {
         },
       },
       { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
-
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "BAUPersonId",
+          foreignField: "_id",
+          as: "BAUPersonId",
+        },
+      },
+      { $unwind: { path: "$BAUPersonId", preserveNullAndEmptyArrays: true } },
         {
         $lookup: {
           from: "User-data",
@@ -768,30 +781,38 @@ export const getProjects = async (req, res) => {
       { $limit: parseInt(pageSize, 10) },
 
       // 🔹 Optional: populate Feeds if needed
+      // {
+      //   $lookup: {
+      //     from: "Feed-data",
+      //     localField: "Feeds",
+      //     foreignField: "_id",
+      //     as: "Feeds",
+      //   },
+      // },
+
+      {
+  $lookup: {
+    from: "Feed-data",
+    let: { feedIds: "$Feeds" },
+    pipeline: [
+      { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
+      // Lookup Developers inside each feed
       {
         $lookup: {
-          from: "Feed-data",
-          localField: "Feeds",
+          from: "User-data",
+          localField: "DeveloperIds",
           foreignField: "_id",
-          as: "Feeds",
-        },
-      },
+          as: "DeveloperIds"
+        }
+      }
+    ],
+    as: "Feeds"
+  }
+}
+
+    
       
-  //     {
-  //   $lookup: {
-  //     from: "User-data",              // users collection
-  //     localField: "Feeds.DeveloperIds",
-  //     foreignField: "_id",
-  //     as: "Feeds.DeveloperIds"
-  //   }
-  // },
-  // {
-  //   $group: {
-  //     _id: "$_id",
-  //     ProjectName: { $first: "$ProjectName" },
-  //     Feeds: { $push: "$Feeds" }
-  //   }
-  // }
+ 
     ];
 
     // 🔹 Execute aggregation
@@ -1048,7 +1069,7 @@ export const getProjectById = async (req, res) => {
     }
 
     const project = await Project.findById(id)
-      .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name")
+      .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name roleId")
 
       .populate("SOWFile.uploadedBy", "name")
       .populate("SampleFiles.uploadedBy", "name")
@@ -1109,7 +1130,7 @@ export const updateProjectTeam = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { TLId, PCId, QAId,
+    const { TLId, PCId, QAId, BAUPersonId,
       //  DeveloperIds 
     } = req.body;
     const userRole = req.user.roleId?.name;
@@ -1122,17 +1143,20 @@ export const updateProjectTeam = async (req, res) => {
       if (TLId && mongoose.Types.ObjectId.isValid(TLId)) project.TLId = TLId;
       if (PCId && mongoose.Types.ObjectId.isValid(PCId)) project.PCId = PCId;
       if (QAId && mongoose.Types.ObjectId.isValid(QAId)) project.QAId = QAId;
+      if (BAUPersonId && mongoose.Types.ObjectId.isValid(BAUPersonId)) project.BAUPersonId = BAUPersonId;
     }
     // Initialize missing fields
     if (!("TLId" in project)) project.TLId = null;
     if (!("PCId" in project)) project.PCId = null;
     if (!("QAId" in project)) project.QAId = null;
+    if (!("BAUPersonId" in project)) project.BAUPersonId = null;
 
-    // Only Manager can assign TL, PC, QA
+    // Only Manager can assign TL, PC, QA, BAU
     if (userRole === "Manager") {
       if (TLId) project.TLId = TLId;
       if (PCId) project.PCId = PCId;
       if (QAId) project.QAId = QAId;
+      if (BAUPersonId) project.BAUPersonId = BAUPersonId;
     }
     console.log("User Role:", userRole);
 
@@ -1148,6 +1172,7 @@ export const updateProjectTeam = async (req, res) => {
       .populate("TLId", "name")
       .populate("PCId", "name")
       .populate("QAId", "name")
+      .populate("BAUPersonId", "name")
       .populate("PMId", "name")       // <-- populate PM
       .populate("BDEId", "name")      // <-- populate BDE
       .populate("CreatedBy", "name");

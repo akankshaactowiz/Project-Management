@@ -1,4 +1,5 @@
 import { useEffect, useState, Fragment ,useRef  } from "react";
+import ReactDOM from "react-dom";
 
 import { useParams, useNavigate} from "react-router-dom";
 import Select from "react-select";
@@ -21,7 +22,8 @@ export default function ProjectDetails() {
   const [showPopover, setShowPopover] = useState(false);
   const [showFeedPopover, setShowFeedPopover] = useState(false);
    const popoverRef = useRef(null);
-
+   const buttonRef = useRef(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const [form, setForm] = useState({
     TLId: "",
     DeveloperIds: [],
@@ -32,21 +34,36 @@ export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
   
+ useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      popoverRef.current &&
+      !popoverRef.current.contains(event.target) &&
+      buttonRef.current &&
+      !buttonRef.current.contains(event.target)
+    ) {
+      setShowFeedPopover(false);
+    }
+  };
 
-  
-   useEffect(() => {
-    function handleClickOutside(event) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setShowFeedPopover(false);
-      }
+  if (showFeedPopover) {
+    document.addEventListener("mousedown", handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [showFeedPopover]);
+
+
+  const handleToggle = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
     }
-    if (showPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showFeedPopover]);
+    setShowFeedPopover(!showFeedPopover);
+  };
+
   // ✅ Close popover on outside click
   useEffect(() => {
     function handleClickOutside(event) {
@@ -517,48 +534,44 @@ const devs = feed.DeveloperIds || [];
                 {extraCount > 0 && (
                   <button
                     // onClick={() => handleShowAll(combinedMembers)}
-                     onClick={() => setShowFeedPopover(!showFeedPopover)}
+                    //  onClick={() => setShowFeedPopover(!showFeedPopover)}
+                    ref={buttonRef}
+          onClick={handleToggle}
                     className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
                   >
                     +{extraCount}
                   </button>
                 )}
-
-                {showFeedPopover && (
-            <div className="relative top-10 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 z-50">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                All Assignees
-              </h3>
-              <ul className="space-y-2 max-h-48 overflow-y-auto">
-                {combinedMembers.map((m, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <img
-                      src={
-                        m.avatar ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          m.name || "U"
-                        )}&background=random`
-                      }
-                      alt={m.name}
-                      className="w-6 h-6 rounded-full border"
-                    />
-                    <span className="text-sm text-gray-700">
-                      {m.name}{" "}
-                      <span className="text-gray-400 text-xs">
-                        ({m.roleName})
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {/* <button
-                onClick={() => setShowPopover(false)}
-                className="mt-2 w-full text-xs text-gray-600 hover:text-gray-800"
-              >
-                Close
-              </button> */}
-            </div>
-          )}
+ {showFeedPopover &&
+        ReactDOM.createPortal(
+          <div
+            ref={popoverRef}
+            id="feed-popover"
+            className="absolute bg-white border rounded-lg shadow-lg p-3 w-64 z-50"
+            style={{ top: position.top, left: position.left }}
+          >
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
+            <ul className="space-y-2 max-h-48 overflow-y-auto">
+              {combinedMembers.map((m, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <img
+                    src={
+                      m.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`
+                    }
+                    alt={m.name}
+                    className="w-6 h-6 rounded-full border"
+                  />
+                  <span className="text-sm text-gray-700">
+                    {m.name}{" "}
+                    <span className="text-gray-400 text-xs">({m.roleName})</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body
+        )}
               </div>
             )}
           </td>

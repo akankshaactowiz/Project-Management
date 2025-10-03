@@ -145,9 +145,8 @@ export default function FeedDetails() {
   return (
     <>
     
-    <div className="px-4 pt-2">
-
-      <div className="flex items-center justify-between mt-4">
+    <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-6">
     {/* Heading */}
     <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
       Feed Details
@@ -229,7 +228,7 @@ export default function FeedDetails() {
         )
       )} */}
 
-      <div className="bg-white rounded-lg shadow p-6 mt-4">
+      <div className="p-2 mt-4">
         {/* Project Title */}
         <h3 className="mb-4 text-lg font-bold">
           {feed?.feedName || "Feed Details"}

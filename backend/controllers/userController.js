@@ -130,14 +130,15 @@ export const getTLAndDevelopers = async (req, res) => {
 
     const qaLead = users.filter((u) => u.roleId?.name === "QA Lead");
 
-    const BAU = users.filter((u) => u.roleId?.name === "BAU");
+    const bauPerson = users.filter((u) => u.roleId?.name === "BAU");
 
     return res.status(200).json({
       tlUsers: tlUsers.map((u) => ({ _id: u._id, name: u.name })),
       pcUsers: pcUsers.map((u) => ({ _id: u._id, name: u.name })),
+      bauPerson: bauPerson.map((u) => ({ _id: u._id, name: u.name })),
       devUsers: devUsers.map((u) => ({ _id: u._id, name: u.name })),
       qaLead: qaLead.map((u) => ({ _id: u._id, name: u.name })),
-      BAU: BAU.map((u) => ({ _id: u._id, name: u.name })),
+      // BAU: BAU.map((u) => ({ _id: u._id, name: u.name })),
     });
   } catch (err) {
     console.error("Error fetching TL & Developers:", err);
