@@ -34,10 +34,14 @@ export const createProject = async (req, res) => {
 
     const createdBy = req.user?._id || null;
 
-    if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
-    if (!ProjectName) return res.status(400).json({ success: false, message: "Project Name is required" });
+    const errors = {};
 
-    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.102/:5000";
+    // if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
+    if (!ProjectCode) errors.ProjectCode = "Project Code is required";
+    if (!ProjectName) errors.ProjectName = "Project Name is required";
+    // if (!ProjectName) return res.status(400).json({ success: false, message: "Project Name is required" });
+
+    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.120/:5000";
 
     const SOWFile = req.files?.SOWFile?.map(f => ({
       fileName: `/uploads/projects/${f.filename}`,
@@ -50,6 +54,37 @@ export const createProject = async (req, res) => {
       uploadedBy: createdBy,
       uploadedAt: new Date(),
     })) || [];
+
+
+    if (SOWFile.length === 0) errors.SOWFile = "SOW File is required";
+    if (SampleFiles.length === 0) errors.SampleFiles = "Sample Files are required";
+
+    // ✅ Field-wise backend validation
+    // Feed-related
+    if (!FeedName) errors.FeedName = "Feed Name is required";
+    if (!DomainName) errors.DomainName = "Domain Name is required";
+    if (!ApplicationType) errors.ApplicationType = "Application Type is required";
+    if (!CountryName) errors.CountryName = "Country Name is required";
+
+    // Assignment
+    if (!PMId) errors.PMId = "Project Manager is required";
+    if (!BDEId) errors.BDEId = "Business Development Executive is required";
+    if (!Department) errors.Department = "Department is required";
+
+    // Project details
+    // if (!Frequency) errors.Frequency = "Frequency is required";
+    // if (!Priority) errors.Priority = "Priority is required";
+    if (!ProjectType) errors.ProjectType = "Project Type is required";
+    if (!IndustryType) errors.IndustryType = "Industry Type is required";
+    if (!DeliveryType) errors.DeliveryType = "Delivery Type is required";
+
+    // ✅ If any errors exist, return them all together
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        errors,
+      });
+    }
 
     // Prepend ACT prefix
     const finalProjectCode = `[ACT-${ProjectCode}]`;
@@ -618,7 +653,7 @@ export const updateProject = async (req, res) => {
 
 export const getProjects = async (req, res) => {
 
-  
+
   const objectId = (id) => new mongoose.Types.ObjectId(id);
   try {
     const {
@@ -637,39 +672,39 @@ export const getProjects = async (req, res) => {
     const department = req.user.departmentId?.department;
 
     const matchStage = {};
-     
+
     // Status
-if (status) {
-  matchStage.Status = { $regex: `^${status}$`, $options: "i" };
-}
+    if (status) {
+      matchStage.Status = { $regex: `^${status}$`, $options: "i" };
+    }
 
-// DeliveryType / tab
-if (tab) {
-  matchStage.DeliveryType = { $regex: `^${tab}$`, $options: "i" };
-}
+    // DeliveryType / tab
+    if (tab) {
+      matchStage.DeliveryType = { $regex: `^${tab}$`, $options: "i" };
+    }
 
-// CreatedDate
-if (CreatedDate) {
-  const start = new Date(CreatedDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(CreatedDate);
-  end.setHours(23, 59, 59, 999);
-  matchStage.CreatedDate = { $gte: start, $lte: end };
-}
+    // CreatedDate
+    if (CreatedDate) {
+      const start = new Date(CreatedDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(CreatedDate);
+      end.setHours(23, 59, 59, 999);
+      matchStage.CreatedDate = { $gte: start, $lte: end };
+    }
 
-//     // 🔹 Status filter
-//     if (status && status !== "All") {
-//       matchStage.Status = { $regex: `^${status}$`, $options: "i" };
-//     }
+    //     // 🔹 Status filter
+    //     if (status && status !== "All") {
+    //       matchStage.Status = { $regex: `^${status}$`, $options: "i" };
+    //     }
 
-//     // 🔹 Created date filter
-//     if (CreatedDate) {
-//   const start = new Date(CreatedDate);
-//   start.setHours(0, 0, 0, 0);
-//   const end = new Date(CreatedDate);
-//   end.setHours(23, 59, 59, 999);
-//   matchStage.CreatedDate = { $gte: start, $lte: end };
-// }
+    //     // 🔹 Created date filter
+    //     if (CreatedDate) {
+    //   const start = new Date(CreatedDate);
+    //   start.setHours(0, 0, 0, 0);
+    //   const end = new Date(CreatedDate);
+    //   end.setHours(23, 59, 59, 999);
+    //   matchStage.CreatedDate = { $gte: start, $lte: end };
+    // }
 
 
     // 🔹 QA filter
@@ -753,7 +788,7 @@ if (CreatedDate) {
         },
       },
       { $unwind: { path: "$BAUPersonId", preserveNullAndEmptyArrays: true } },
-        {
+      {
         $lookup: {
           from: "User-data",
           localField: "PCId",
@@ -763,9 +798,9 @@ if (CreatedDate) {
       },
       { $unwind: { path: "$PCId", preserveNullAndEmptyArrays: true } },
 
-       { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
 
-        {
+      {
         $lookup: {
           from: "User-data",
           localField: "QAId",
@@ -785,7 +820,10 @@ if (CreatedDate) {
                 { ProjectCode: { $regex: search, $options: "i" } },
                 { Frequency: { $regex: search, $options: "i" } },
                 { IndustryType: { $regex: search, $options: "i" } },
+                { ProjectType: { $regex: search, $options: "i" } },
                 { "PMId.name": { $regex: search, $options: "i" } },
+                { "TLId.name": { $regex: search, $options: "i" } },
+                { "QAId.name": { $regex: search, $options: "i" } },
                 { "CreatedBy.name": { $regex: search, $options: "i" } },
                 { "BDEId.name": { $regex: search, $options: "i" } },
               ],
@@ -812,28 +850,28 @@ if (CreatedDate) {
       // },
 
       {
-  $lookup: {
-    from: "Feed-data",
-    let: { feedIds: "$Feeds" },
-    pipeline: [
-      { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
-      // Lookup Developers inside each feed
-      {
         $lookup: {
-          from: "User-data",
-          localField: "DeveloperIds",
-          foreignField: "_id",
-          as: "DeveloperIds"
+          from: "Feed-data",
+          let: { feedIds: "$Feeds" },
+          pipeline: [
+            { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
+            // Lookup Developers inside each feed
+            {
+              $lookup: {
+                from: "User-data",
+                localField: "DeveloperIds",
+                foreignField: "_id",
+                as: "DeveloperIds"
+              }
+            }
+          ],
+          as: "Feeds"
         }
       }
-    ],
-    as: "Feeds"
-  }
-}
 
-    
-      
- 
+
+
+
     ];
 
     // 🔹 Execute aggregation
@@ -855,73 +893,73 @@ if (CreatedDate) {
 };
 
 
-export const getProjectCounts = async (req, res) => {
-  try {
-    const { userId, role, department } = req.user; // assuming req.user has these
+// export const getProjectCounts = async (req, res) => {
+//   try {
+//     const { userId, role, department } = req.user; // assuming req.user has these
 
-    // Build filter based on role/department
-    const filter = {};
+//     // Build filter based on role/department
+//     const filter = {};
 
-    if (role === "Superadmin") {
-      // No filter, get all projects
-    } else if (department === "Sales") {
-      if (role === "Sales Head") {
-        // All Sales projects
-        // filter.department = "Sales"; // optional if you want to filter Sales only
-      } else if (role === "Sales Manager") {
-        filter.CreatedBy = userId;
-      } else if (role === "Business Development Executive") {
-        filter.BDEId = userId; // assuming single BDEId
-        // if it's an array, use: filter.BDEIds = userId;
-      }
-    } else {
-      // Other departments
-      if (role === "Manager") {
-        filter.PMId = userId;
-      } else if (role === "Team Lead") {
-        filter.TLId = userId;
-      } else {
-        filter.$or = [
-          { PMId: userId },
-          { PCId: userId },
-          { TLId: userId },
-          { DeveloperIds: userId },
-          { QAId: userId },
-          { BAUId: userId },
-          { BDEId: userId },
-        ];
-      }
-    }
+//     if (role === "Superadmin") {
+//       // No filter, get all projects
+//     } else if (department === "Sales") {
+//       if (role === "Sales Head") {
+//         // All Sales projects
+//         // filter.department = "Sales"; // optional if you want to filter Sales only
+//       } else if (role === "Sales Manager") {
+//         filter.CreatedBy = userId;
+//       } else if (role === "Business Development Executive") {
+//         filter.BDEId = userId; // assuming single BDEId
+//         // if it's an array, use: filter.BDEIds = userId;
+//       }
+//     } else {
+//       // Other departments
+//       if (role === "Manager") {
+//         filter.PMId = userId;
+//       } else if (role === "Team Lead") {
+//         filter.TLId = userId;
+//       } else {
+//         filter.$or = [
+//           { PMId: userId },
+//           { PCId: userId },
+//           { TLId: userId },
+//           { DeveloperIds: userId },
+//           { QAId: userId },
+//           { BAUId: userId },
+//           { BDEId: userId },
+//         ];
+//       }
+//     }
 
 
-    const counts = await Project.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          bau: { $sum: { $cond: [{ $eq: ["$DeliveryType", "BAU"] }, 1, 0] } },
-          adhoc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Adhoc"] }, 1, 0] } },
-          onceOff: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Once-Off"] }, 1, 0] } },
-          poc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "POC"] }, 1, 0] } },
-          rnd: { $sum: { $cond: [{ $eq: ["$DeliveryType", "R&D"] }, 1, 0] } },
-          newStatus: { $sum: { $cond: [{ $eq: ["$Status", "New"] }, 1, 0] } },
-          underDevelopment: { $sum: { $cond: [{ $eq: ["$Status", "Under Development"] }, 1, 0] } },
-          onHold: { $sum: { $cond: [{ $eq: ["$Status", "On-Hold"] }, 1, 0] } },
-          devCompleted: { $sum: { $cond: [{ $eq: ["$Status", "Production"] }, 1, 0] } },
-          bauStarted: { $sum: { $cond: [{ $eq: ["$Status", "BAU-Started"] }, 1, 0] } },
-          closed: { $sum: { $cond: [{ $eq: ["$Status", "Closed"] }, 1, 0] } },
-          totalFeeds: { $sum: { $size: "$Feeds" } },
-        },
-      },
-    ]);
+//     const counts = await Project.aggregate([
+//       { $match: filter },
+//       {
+//         $group: {
+//           _id: null,
+//           total: { $sum: 1 },
+//           bau: { $sum: { $cond: [{ $eq: ["$DeliveryType", "BAU"] }, 1, 0] } },
+//           adhoc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Adhoc"] }, 1, 0] } },
+//           onceOff: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Once-Off"] }, 1, 0] } },
+//           poc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "POC"] }, 1, 0] } },
+//           rnd: { $sum: { $cond: [{ $eq: ["$DeliveryType", "R&D"] }, 1, 0] } },
+//           newStatus: { $sum: { $cond: [{ $eq: ["$Status", "New"] }, 1, 0] } },
+//           underDevelopment: { $sum: { $cond: [{ $eq: ["$Status", "Under Development"] }, 1, 0] } },
+//           onHold: { $sum: { $cond: [{ $eq: ["$Status", "On-Hold"] }, 1, 0] } },
+//           devCompleted: { $sum: { $cond: [{ $eq: ["$Status", "Production"] }, 1, 0] } },
+//           bauStarted: { $sum: { $cond: [{ $eq: ["$Status", "BAU-Started"] }, 1, 0] } },
+//           closed: { $sum: { $cond: [{ $eq: ["$Status", "Closed"] }, 1, 0] } },
+//           totalFeeds: { $sum: { $size: "$Feeds" } },
+//         },
+//       },
+//     ]);
 
-    res.status(200).json(counts[0] || {}); // return the aggregated counts
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch project counts" });
-  }
-};
+//     res.status(200).json(counts[0] || {}); // return the aggregated counts
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Failed to fetch project counts" });
+//   }
+// };
 
 // export const getProjects = async (req, res) => {
 //   try {
@@ -1049,6 +1087,113 @@ export const getProjectCounts = async (req, res) => {
 //   }
 // };
 
+export const getProjectCounts = async (req, res) => {
+  try {
+    const userId = req.user._id; // ObjectId
+const role = req.user.roleId?.name; // e.g. "Sales Head"
+const department = req.user.departmentId?.department; // e.g. "Sales"
+
+
+    console.log("req.user:", req.user);
+
+    // Convert userId to ObjectId
+    // const uid = mongoose.Types.ObjectId.isValid(userId)
+    //   ? new mongoose.Types.ObjectId(userId)
+    //   : userId; // fallback to string if not valid ObjectId
+
+    let filter = {};
+
+const uid = mongoose.Types.ObjectId.isValid(userId)
+  ? new mongoose.Types.ObjectId(userId)
+  : userId; // fallback to string if not ObjectId
+
+if (role === "Superadmin" || role === "Sales Head") {
+  filter = {}; // all projects
+} else if (department === "Sales") {
+  if (role === "Sales Manager") {
+    filter = { CreatedBy: uid };
+  } else if (role === "Business Development Executive") {
+    filter = { BDEId: uid };
+  }
+} else {
+  if (role === "Manager") {
+    filter = { PMId: uid };
+  } else if (role === "Team Lead") {
+    filter = { TLId: uid };
+  } else {
+    // everyone else: PC, Developer, QA, BAU
+    filter = {
+      $or: [
+        { PMId: uid },
+        { PCId: uid },
+        { TLId: uid },
+        { DeveloperIds: uid },
+        { QAId: uid },
+        { BAUId: uid },
+        { BDEId: uid },
+      ],
+    };
+  }
+}
+
+    // 🔹 DEBUG: Log filter
+    console.log("Filter applied:", filter);
+    
+
+    // Aggregation to calculate counts
+    const counts = await Project.aggregate([
+      { $match: filter },
+      
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          bau: { $sum: { $cond: [{ $eq: ["$DeliveryType", "BAU"] }, 1, 0] } },
+          adhoc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Adhoc"] }, 1, 0] } },
+          onceOff: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Once-off"] }, 1, 0] } },
+          poc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "POC"] }, 1, 0] } },
+          rnd: { $sum: { $cond: [{ $eq: ["$DeliveryType", "R&D"] }, 1, 0] } },
+          newStatus: { $sum: { $cond: [{ $eq: ["$Status", "New"] }, 1, 0] } },
+          underDevelopment: { $sum: { $cond: [{ $eq: ["$Status", "Under Development"] }, 1, 0] } },
+          onHold: { $sum: { $cond: [{ $eq: ["$Status", "On-Hold"] }, 1, 0] } },
+          devCompleted: { $sum: { $cond: [{ $eq: ["$Status", "Production"] }, 1, 0] } },
+          bauStarted: { $sum: { $cond: [{ $eq: ["$Status", "BAU-Started"] }, 1, 0] } },
+          closed: { $sum: { $cond: [{ $eq: ["$Status", "Closed"] }, 1, 0] } },
+          // totalFeeds: { $sum: { $size: "$Feeds" } },
+          totalFeeds: {
+        $sum: { $size: { $ifNull: ["$Feeds", []] } }
+      }
+        },
+      },
+    ]);
+
+    // Optional: If no projects matched, return zeros
+    const result = counts[0] || {
+      total: 0,
+      bau: 0,
+      adhoc: 0,
+      onceOff: 0,
+      poc: 0,
+      rnd: 0,
+      newStatus: 0,
+      underDevelopment: 0,
+      onHold: 0,
+      devCompleted: 0,
+      bauStarted: 0,
+      closed: 0,
+      totalFeeds: 0,
+    };
+
+    
+    
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("Error in getProjectCounts:", err);
+    res.status(500).json({ message: "Failed to fetch project counts" });
+  }
+};
+
 
 export const getProjectById = async (req, res) => {
   const { id } = req.params;
@@ -1091,14 +1236,14 @@ export const getProjectById = async (req, res) => {
 
     const project = await Project.findById(id)
       .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name roleId")
-       .populate({
-    path: "PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", // user refs
-    select: "name roleId", // fetch name and roleId
-    populate: {
-      path: "roleId",       // populate roleId inside each user
-      select: "name",   // only bring roleName
-    },
-  })
+      .populate({
+        path: "PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", // user refs
+        select: "name roleId", // fetch name and roleId
+        populate: {
+          path: "roleId",       // populate roleId inside each user
+          select: "name",   // only bring roleName
+        },
+      })
 
 
       .populate("SOWFile.uploadedBy", "name")

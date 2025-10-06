@@ -1,64 +1,14 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { FaFilePdf, FaFileCsv } from "react-icons/fa6";
-import { RiFileExcel2Fill } from "react-icons/ri";
-import { LuFileJson } from "react-icons/lu";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
 
-import Breadcrumb from "../components/Breadcrumb";
-import Pagination from "../components/Pagination";
-import Img from "../assets/no-data-found.svg";
-import { exportData } from "../utils/exportUtils";
-
-export default function FeedDetails() {
+const FeedDetails = ({ allUsers }) => {
   const { id } = useParams();
-  const [feed, setFeed] = useState(null);
-  const [activeTab, setActiveTab] = useState("Feed Log");
-  const [entries, setEntries] = useState(25);
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [dataRows, setDataRows] = useState([]);
-  // const [columns, setColumns] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const tabs = ["Feed Log", "Auto QA Rules", "Last Approved Sample File"];
   const navigate = useNavigate();
+  const [feed, setFeed] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // Fetch feed details
-  // useEffect(() => {
-  //   const fetchFeed = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const res = await fetch(
-  //         `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
-  //         {
-  //           credentials: "include",
-  //         }
-  //       );
-  //       const data = await res.json();
-
-  //       // Handle non-breaking space key
-  //       const feedKey = Object.keys(data).find(
-  //         (k) => k.replace(/\s/g, "").toLowerCase() === "feedname"
-  //       );
-  //       const projectKey = Object.keys(data).find(
-  //         (k) => k.replace(/\s/g, "").toLowerCase() === "projectname"
-  //       );
-
-  //       setFeed({
-  //         ...data,
-  //         feedName: data[feedKey],
-  //         projectName: data[projectKey],
-  //       });
-  //     } catch (err) {
-  //       console.error("Error fetching feed:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchFeed();
-  // }, [id]);
-
+  // Fetch feed & project data
   useEffect(() => {
     const fetchFeed = async () => {
       try {
@@ -68,25 +18,21 @@ export default function FeedDetails() {
           { credentials: "include" }
         );
         const data = await res.json();
-
-        // Map feed & project data
         const project = data.projectId || {};
+
         setFeed({
           feedId: data.FeedId || "-",
           feedName: data.FeedName || "-",
-          // domainName: data.DomainName || "-",
-          // applicationType: data.ApplicationType || "-",
-          // countryName: data.CountryName || "-",
-          platform : data.Platform || "-",
+          platform: data.Platform || "-",
           status: data.Status || "-",
           BAUStatus: data.BAUStatus || "-",
           POC: data.POC || "-",
           PCId: data.PCId || "-",
           TLId: data.TLId || "-",
-          QAId: data.QAId || "-",
-          BAUPersonId: data.BAUPersonId || "-",
+          QAId: data.QAId || null,
+          BAUPersonId: data.BAUPersonId || null,
           Frequency: data.Frequency || "-",
-          DeliveryStatus: data.DeliveryType,
+          DeliveryStatus: data.DeliveryType || "-",
           StartTime: data.StartTime,
           DeliveryTime: data.DeliveryTime,
           DeliveryCode: data.DeliveryCode,
@@ -97,7 +43,7 @@ export default function FeedDetails() {
           deliveryType: project.DeliveryType || "-",
           industryType: project.IndustryType || "-",
           frameworkType: data.FrameworkType || "-",
-          manageBy: project.ManageBy || "-",
+          manageBy: data.ManageBy || "-",
           qaRules: project.QARules ?? "-",
           rulesStatus: project.RulesStatus || "-",
           rulesApply: project.RulesApply || "-",
@@ -105,9 +51,8 @@ export default function FeedDetails() {
           projectStatus: project.Status || "-",
           assignedBy: project.CreatedBy || "-",
           createdDate: project.CreatedDate || "-",
-          developerIds: project.DeveloperIds || [],
-
-
+          developerIds: data.DeveloperIds || [],
+          assignedTo: data.assignedTo || [],
         });
       } catch (err) {
         console.error("Error fetching feed:", err);
@@ -115,21 +60,8 @@ export default function FeedDetails() {
         setLoading(false);
       }
     };
-
     fetchFeed();
   }, [id]);
-
-
-
-  // const columns = [
-  //   "Timestamp",
-  //   "Status",
-  //   "Message",
-  //   "Processed Records",
-  //   "Failed Records",
-  //   "Duration",
-  //   "Executed By",
-  // ];
 
   const columns = [
     "No.",
@@ -138,229 +70,204 @@ export default function FeedDetails() {
     "Delivery Time",
     "Delivery Code",
     "File Path",
-    // "Frequency",
-    // "POC"
+  ];
 
-  ]
+  const colors = ["#1E40AF", "#9333EA", "#D9E021", "#EC4899", "#F97316"];
+  const getAvatarColor = (name) => {
+    if (!name) return "#6B7280"; // default gray
+    const charCodeSum = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return colors[charCodeSum % colors.length];
+  };
+
+  // Component for Assigned To avatars + popover
+
+  const AssignedToAvatars = ({ assignedTo, getAvatarColor }) => {
+    const [popoverOpen, setPopoverOpen] = useState(false);
+    const [openIdx, setOpenIdx] = useState(null); // for individual avatar clicks
+    const popoverRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+          setPopoverOpen(false);
+          setOpenIdx(null);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const validMembers = (assignedTo || []).filter((m) => m && m.name);
+
+    if (validMembers.length === 0) {
+      return <div className="text-gray-400 text-xs">Unassigned</div>;
+    }
+
+    return (
+      <div className="flex -space-x-2 relative" ref={popoverRef}>
+        {validMembers.slice(0, 3).map((member, idx) => (
+          <div key={idx} className="relative">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer"
+              style={{
+                backgroundColor: getAvatarColor(member.name),
+                zIndex: validMembers.length - idx,
+              }}
+              onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
+            >
+              {member.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+
+            {/* Popover for individual avatar */}
+            {openIdx === idx && (
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-40 bg-white border rounded shadow-lg z-50 p-2">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="font-semibold">{member.name}</span>
+                  <span className="text-gray-500 text-sm">{member.role || "Role"}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Overflow +X */}
+        {validMembers.length > 3 && (
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-400 text-white text-xs font-bold cursor-pointer"
+            onClick={() => setPopoverOpen(!popoverOpen)}
+          >
+            +{validMembers.length - 3}
+          </div>
+        )}
+
+        {/* Popover for overflow members */}
+        {popoverOpen && (
+          <div className="absolute top-full mt-2 right-0 w-56 bg-white border rounded shadow-lg z-50 p-2">
+            {validMembers.slice(3).map((member, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 py-1 hover:bg-gray-100 px-1 rounded"
+              >
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: getAvatarColor(member.name) }}
+                >
+                  {member.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </div>
+                <div className="flex flex-col text-sm">
+                  <span className="font-semibold">{member.name}</span>
+                  <span className="text-gray-500">{member.roleName || "Role"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
+
+
   return (
     <>
-    
-    <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-6">
-    {/* Heading */}
-    <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
-      Feed Details
-    </h2>
-</div>
-      {/* <div className="flex bg-gray-50 items-center justify-end px-2">
-        <Breadcrumb feedName={feed?.feedName} />
-        <button
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded cursor-pointer"
-          onClick={() => navigate(`/feed/${id}/update`)}
-        >
-          <FaEdit size={18} />
-          <span>Edit</span>
-        </button>
-      </div> */}
+          <h2 className="text-xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
+            Feed Details
+          </h2>
+        </div>
 
-      {/* Top summary card */}
-      {/* 
-      {loading ? (
-        <>
-          <div className="flex justify-center items-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-blue-600 motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-          </div>
-        </>
-      ) : (
-        feed && (
-          <div className="bg-white rounded-lg shadow p-6 mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
-                {feed?.projectName || "Feed Details"}
-              </h3>
-              <button
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded cursor-pointer"
-                onClick={() => navigate(`/project/feed/${id}/update`)}
-              >
-                <FaEdit size={18} />
-                <span>Edit</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Feed Name:</p>
-                <p className="font-semibold">{feed.FeedName}</p>
+        <div className="p-2 mt-4">
+          {/* Feed Title */}
+          {/* <h3 className="mb-4 text-lg font-bold">
+            {feed?.projectCode} {feed?.projectName} &gt; {feed?.feedName}
+          </h3> */}
+          <h3 className="mb-4 text-lg">
+  <span className="font-bold">{feed?.projectCode}</span>{" "}
+  <span className="font-bold">{feed?.projectName}</span>{" "}
+  <span className=" font-bold text-lg">
+    &gt; 
+    </span>{" "}
+  <span className="text-gray-700 font-semibold">{feed?.feedName}</span>
+</h3>
+
+
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 m-0">
+                  <span className="w-2 h-6 bg-blue-500 rounded"></span>
+                  Feed Details
+                </h4>
+
+                <button
+                  className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
+                  onClick={() => navigate(`/projects/feed/${id}/update`)}
+                >
+                  <FaEdit size={16} />
+                  <span>Edit</span>
+                </button>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Feed Id:</p>
-                <p className="font-semibold">{feed["FeedId"]}</p>
+
+              <hr className="border-gray-200 mb-4" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                {[
+                  { label: "Feed ID", value: feed?.feedId },
+                  { label: "Project", value: `${feed?.projectCode} ${feed?.projectName}` },
+                  { label: "Frequency", value: feed?.Frequency, badge: true },
+                  { label: "Platform", value: feed?.platform },
+                  { label: "Status", value: feed?.status, badgeColor: "blue" },
+                  { label: "BAU", value: feed?.BAUStatus },
+                  { label: "POC", value: feed?.POC },
+                  { label: "DB Status", value: feed?.dbStatus },
+                  { label: "Framework Type", value: feed?.frameworkType },
+                  { label: "Manage By", value: feed?.manageBy },
+                  { label: "QA Rules", value: feed?.qaRules },
+                  { label: "Rules Status", value: feed?.rulesStatus },
+                  { label: "Rules Apply", value: feed?.rulesApply },
+                  { label: "Delivery Type", value: feed?.deliveryType },
+                  { label: "Project Status", value: feed?.projectStatus },
+                  { label: "Industry", value: feed?.industryType },
+                  {
+                    label: "Assigned To",
+                    value: <AssignedToAvatars assignedTo={feed.assignedTo} getAvatarColor={getAvatarColor} />,
+                  },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <span className="text-gray-500 w-32">{item.label}</span>
+                    {item.badge ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {item.value}
+                      </span>
+                    ) : item.badgeColor === "blue" ? (
+                      <span className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-600">
+                        {item.value}
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-gray-800">{item.value}</span>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Platform:</p>
-                <p className="font-semibold">{feed.Platform}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">PM:</p>
-                <p className="font-semibold">{feed.PM}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Developer:</p>
-                <p className="font-semibold">{feed.Developer}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">BAU:</p>
-                <p className="font-semibold">{feed.BAU}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">QA:</p>
-                <p className="font-semibold">{feed.QA}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Rules Status:</p>
-                <p className="font-semibold">{feed["Rules Status"]}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Rules Apply On:</p>
-                <p className="font-semibold">{feed["Rules Apply"]}</p>
-              </div>
-            </div>
-          </div>
-        )
-      )} */}
-
-      <div className="p-2 mt-4">
-        {/* Project Title */}
-        <h3 className="mb-4 text-lg font-bold">
-          {feed?.feedName || "Feed Details"}
-        </h3>
-
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* LEFT SIDE (Tabs + Summary/Feeds) */}
-          {/* <div className="lg:col-span-3 min-w-0">
-           
-            <div className="flex gap-2 mb-4 bg-gray-100 p-2 rounded-sm">
-              <button
-                className="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 text-white"
-
-              >
-                Feed Deliveries
-              </button>
-
-            </div>
-
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-100 shadow overflow-hidden">
-                <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                  <tr>
-                    {columns.map((col) => (
-                      <th
-                        key={col}
-                        className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody className="bg-white">
-                  
-                  {feed && feed.DeliveryCode ? (
-                    <tr className="border-t">
-                      <td className="px-4 py-2"></td>
-                      <td className="px-4 py-2">{feed.DeliveryStatus}</td>
-                      <td className="px-4 py-2">{feed.StartTime}</td>
-                      <td className="px-4 py-2">{feed.DeliveryTime}</td>
-                      <td className="px-4 py-2">{feed.DeliveryCode}</td>
-                      <td className="px-4 py-2">{feed.FilePath}</td>
-                    </tr>
-                  ) : (
-                    <tr>
-                      <td colSpan={14} className="text-center p-8 text-gray-500">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <img
-                            src={Img}
-                            alt="No data"
-                            className="w-32 h-32 object-contain opacity-80"
-                          />
-                          <p className="font-semibold text-lg text-gray-600">No Data Found</p>
-                          <p className="text-sm text-gray-400">
-                            Try adding new projects to see them here.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-
-                </tbody>
-              </table>
-            </div>
-
-
-          </div> */}
-
-          {/* RIGHT SIDE (Always visible Project Details) */}
-          <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
-
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 m-0">
-                <span className="w-2 h-6 bg-blue-500 rounded"></span>
-                Feed Details
-              </h4>
-
-              <button
-                className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
-                onClick={() => navigate(`/projects/feed/${id}/update`)}
-              >
-                <FaEdit size={16} />
-                <span>Edit</span>
-              </button>
-            </div>
-            
-<hr className="border-gray-200 mb-4" />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              {[
-                { label: "Feed ID", value: feed?.feedId },
-                { label: "Project", value: `${feed?.projectCode} ${feed?.projectName}` },
-                { label: "Frequency", value: feed?.frequency, badge: true },
-                { label: "Platform", value: feed?.platform },
-                { label: "Status", value: feed?.status, badgeColor: "blue" },
-                { label: "BAU", value: feed?.BAUStatus },
-                { label: "POC", value: feed?.POC },
-                { label: "DB Status", value: feed?.dbStatus },
-                { label: "Framework Type", value: feed?.frameworkType },
-                { label: "Manage By", value: feed?.manageBy },
-                { label: "QA Rules", value: feed?.qaRules },
-                { label: "Rules Status", value: feed?.rulesStatus },
-                { label: "Rules Apply", value: feed?.rulesApply },
-                { label: "Delivery Type", value: feed?.deliveryType },
-                { label: "Project Status", value: feed?.projectStatus },
-                { label: "Industry", value: feed?.industryType },
-                { label: "Assigned To", value: feed?.developerIds?.length ? feed.developerIds.join(", ") : "-" },
-              ].map((item, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <span className="text-gray-500 w-32">{item.label}</span>
-                  {item.badge ? (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {item.value}
-                    </span>
-                  ) : item.badgeColor === "blue" ? (
-                    <span className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-600">
-                      {item.value}
-                    </span>
-                  ) : (
-                    <span className="font-semibold text-gray-800">{item.value}</span>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
-}
+};
+
+export default FeedDetails;

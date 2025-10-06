@@ -52,7 +52,7 @@ export default function ProjectFilesPage() {
       </div>
       <h1 className="text-xl font-bold mb-8 text-gray-900">
         <span className="">{project.ProjectCode}</span> {project.ProjectName}{" "}
-        Attachments
+        
       </h1>
 
       {/* SOW & Sample Files Container */}
@@ -66,7 +66,7 @@ export default function ProjectFilesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm tracking-wide">
+                  <tr className="bg-gray-100 text-gray-600 text-sm tracking-wide">
                     <th className="w-[10%] px-4 py-3">Version</th>
                     <th className="w-[40%] px-4 py-3">File</th>
                     <th className="w-[20%] px-4 py-3">Uploaded At</th>
@@ -134,7 +134,7 @@ export default function ProjectFilesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm tracking-wide">
+                  <tr className="bg-gray-100 text-gray-600 text-sm tracking-wide">
                     <th className="w-[10%] px-4 py-3">Version</th>
                     <th className="w-[40%] px-4 py-3">File</th>
                     <th className="w-[20%] px-4 py-3">Uploaded At</th>

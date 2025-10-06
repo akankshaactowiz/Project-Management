@@ -162,6 +162,7 @@ function FeedUpdate() {
 
         setFeed({
           projectId: feedData.projectId?._id || "",
+          FeedId: feedData.FeedId || "",
           DeveloperIds: feedData.DeveloperIds || [],
           QAId: feedData.QAId || null, // <- use null instead of ""
           BAUId: feedData.BAUId || null,
@@ -323,7 +324,21 @@ function FeedUpdate() {
             className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-6"
           >
             {/* Row 1: Project & Feed Title */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Feed ID
+                </label>
+                <input
+                  type="text"
+                  name="FeedId"
+                  value={feed.FeedId || ""}
+                  // onChange={handleChange}
+                  readOnly
+                  placeholder="Enter Feed Title"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none"
+                />
+              </div>
               {/* Project */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -341,7 +356,7 @@ function FeedUpdate() {
                   <option value="" hidden>Select Project</option>
                   {projects.map((p) => (
                     <option key={p._id} value={p._id}>
-                      {p.ProjectName}
+                      {p.ProjectCode} {p.ProjectName}
                     </option>
                   ))}
                 </select>
@@ -661,7 +676,7 @@ function FeedUpdate() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-0">
         {(frequency === "Weekly" || frequency === "Custom") && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-lg font-medium text-gray-700 mb-2">
               Day
             </label>
             <select
@@ -708,7 +723,7 @@ function FeedUpdate() {
 
         {/* Time */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-lg font-medium text-gray-700 mb-2">
             Time
           </label>
           <input
@@ -717,7 +732,7 @@ function FeedUpdate() {
             onChange={(e) =>
               setSchedule({ ...schedule, time: e.target.value })
             }
-            className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-gray-300 rounded-lg px-3 py-3 focus:ring-2 focus:ring-blue-400"
           />
         </div>
       </div>

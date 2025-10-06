@@ -41,7 +41,7 @@ export const getPMAndQAUsers = async (req, res) => {
 
     // Find users with role=Manager + department=QA
     const qaUsers = pmUsers.filter(
-      (u) => u.roleId?.name === "Manager" && u.departmentId?.department === "QA"
+      (u) => u.roleId?.name === "QA Lead" && u.departmentId?.department === "QA"
     );
 
     return res.status(200).json({
@@ -88,8 +88,8 @@ export const getBDE = async (req, res) => {
 
 export const getPC = async (req, res) => {
   try {
-    // Find users with role=Manager + department in R&D/Operations
-    const bdeUsers = await User.find()
+    // Fetch all users with role and department populated
+    const allUsers = await User.find()
       .populate("roleId", "name")
       .populate("departmentId", "department")
       .where("roleId")
@@ -97,20 +97,20 @@ export const getPC = async (req, res) => {
       .where("departmentId")
       .ne(null);
 
-    const filteredPCUsers = pcUsers.filter(
-      (u) =>
-        u.roleId?.name === "Project Coordinator" 
+    // Filter only Project Coordinators
+    const filteredPCUsers = allUsers.filter(
+      (u) => u.roleId?.name === "Project Coordinator"
     );
 
     return res.status(200).json({
       pcUsers: filteredPCUsers.map((u) => ({ _id: u._id, name: u.name })),
-
     });
   } catch (err) {
-    console.error("Error fetching BDE:", err);
+    console.error("Error fetching PC:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 export const getTLAndDevelopers = async (req, res) => {
   try {

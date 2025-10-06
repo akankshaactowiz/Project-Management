@@ -127,6 +127,10 @@ export default function Projects() {
   //   { key: "Completed", label: "Completed" },
   // ];
 
+
+
+
+
   const canCreateProject =
     user?.permissions?.some(
       (perm) => perm.module === "Projects" && perm.actions.includes("create")
@@ -527,6 +531,49 @@ console.log("Selected QA:", selectedQA);
     console.log("Updated Project Data:", updatedData);
     setIsModalOpen(false);
   };
+
+//   const isAssigned = (project) => {
+//   if (!project) return false;
+
+//   if (user.roleName === "Manager") {
+//     // Check either project object OR selected values
+//     return Boolean(
+//       project.TLId || selectedTL
+//     ) && Boolean(
+//       project.PCId || selectedPC
+//     ) && Boolean(
+//       project.QAId || selectedQA
+//     ) && Boolean(
+//       project.BAUPersonId || selectedBauPerson
+//     );
+//   } else if (user.roleName === "Team Lead" || user.roleName === "Project Coordinator") {
+//     // TL/PC: all feeds assigned
+//     return Boolean(
+//       project.Feeds?.every((feed) => feed.DeveloperIds?.length > 0)
+//     );
+//   }
+
+//   return false;
+// };
+const isAssigned = (project) => {
+  if (!project) return false;
+
+  if (user.roleName === "Manager") {
+    // Manager: all roles must be assigned
+    return Boolean(project.TLId?._id) &&
+           Boolean(project.PCId?._id) &&
+           Boolean(project.QAId?._id) 
+          //  Boolean(project.BAUPersonId?._id);
+  } else if (user.roleName === "Team Lead" || user.roleName === "Project Coordinator") {
+    // TL/PC: all feeds must have at least one developer
+    return project.Feeds?.length > 0 &&
+           project.Feeds.every(feed => feed.DeveloperIds?.length > 0);
+  }
+
+  return false;
+};
+
+
 
   const filteredData = data.filter((project) => {
     switch (user?.roleName) {
@@ -1144,56 +1191,49 @@ console.log("Selected QA:", selectedQA);
                                 )}
                               </td> */}
 
-                              <td className="px-4 py-2 text-right">
+ <td className="px-4 py-2 text-right">
   {canAssignProject && (
     <button
-      className={`px-3 py-1 rounded text-sm text-white ${
-        (user.roleName === "Manager" &&
-          project?.TLId &&
-          project?.PCId &&
-          project?.BAUPersonId &&
-          project?.QAId)  ||
-        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-          project?.feed?.DeveloperIds?.length > 0)
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-blue-600 hover:bg-blue-700"
-      }`}
-      disabled={
-        (user.roleName === "Manager" &&
-          project?.TLId &&
-          project?.PCId &&
-          project?.BAUPersonId &&
-          project?.QAId) ||
-        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-          project?.feed?.DeveloperIds?.length > 0)
-      }
-      onClick={() => {
-        // Open modal only if assignment not done
-        const canAssign =
-          (user.roleName === "Manager" &&
-            (!project?.TLId || !project?.PCId || !project?.QAId || !project?.BAUPersonId)) ||
-          ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-            (!project?.feed?.DeveloperIds || project.feed.DeveloperIds.length === 0));
+  className={`px-3 py-1 rounded text-sm text-white ${
+    isAssigned(project)
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
+  disabled={isAssigned(project)}
+  onClick={() => {
+  if (isAssigned(project)) return;
 
-        if (!canAssign) return;
+  setSelectedProject(project);
 
-        setSelectedProject(project);
-        // Only set selectedFeed if it exists
-        if (project?.feed?._id) setSelectedFeed(project.feed);
+  if (user.roleName === "Manager") {
+    // Optionally prefill dropdowns from project
+    setSelectedTL(project.TLId || "");
+    setSelectedPC(project.PCId || "");
+    setSelectedQA(project.QAId || "");
+    setSelectedBauPerson(project.BAUPersonId || "");
+  }
 
-        setIsAssignOpen(true);
-      }}
-    >
-      {user.roleName === "Manager"
-        ? project?.TLId && project?.PCId && project?.QAId && project?.BAUPersonId
-          ? "Assigned"
-          : "Assign"
-        : project?.feed?.DeveloperIds?.length > 0
-        ? "Assigned"
-        : "Assign"}
-    </button>
+  if ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
+      project.Feeds?.length > 0) {
+    const firstUnassignedFeed = project.Feeds.find(
+      (f) => !f.DeveloperIds || f.DeveloperIds.length === 0
+    );
+    setSelectedFeed(firstUnassignedFeed || project.Feeds[0]);
+  }
+
+  setIsAssignOpen(true);
+}}
+
+>
+  {isAssigned(project) ? "Assigned" : "Assign"}
+</button>
+
   )}
 </td>
+
+
+
+
 
                           </tr>
                         ))
@@ -2230,7 +2270,7 @@ console.log("Selected QA:", selectedQA);
                     onChange={(e) => setSelectedTL(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
                   >
-                    <option value="">Select Team Lead</option>
+                    <option value="" hidden>Select Team Lead</option>
                     {tlOptions.map((tl) => (
                       <option key={tl._id} value={tl._id}>{tl.name}</option>
                     ))}
@@ -2247,7 +2287,7 @@ console.log("Selected QA:", selectedQA);
                     onChange={(e) => setSelectedPC(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
                   >
-                    <option value="">Select Project Coordinator</option>
+                    <option value="" hidden>Select Project Coordinator</option>
                     {pcOptions.map((pc) => (
                       <option key={pc._id} value={pc._id}>{pc.name}</option>
                     ))}
@@ -2264,14 +2304,14 @@ console.log("Selected QA:", selectedQA);
                     onChange={(e) => setSelectedQA(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
                   >
-                    <option value="">Select QA Lead</option>
+                    <option value="" hidden>Select QA Lead</option>
                     {qaOptions.map((qa) => (
                       <option key={qa._id} value={qa._id}>{qa.name}</option>
                     ))}
                   </select>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     BAU Person
                   </label>
@@ -2280,12 +2320,12 @@ console.log("Selected QA:", selectedQA);
                     onChange={(e) => setSelectedBauPerson(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm transition"
                   >
-                    <option value="">Select BAU Person</option>
+                    <option value="" hidden>Select BAU Person</option>
                     {bauPersonOptions.map((bauPerson) => (
                       <option key={bauPerson._id} value={bauPerson._id}>{bauPerson.name}</option>
                     ))}
                   </select>
-                </div>
+                </div> */}
               </>
             )}
 

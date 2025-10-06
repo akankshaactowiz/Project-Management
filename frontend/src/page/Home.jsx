@@ -162,22 +162,50 @@ function Home() {
     fetchCounts();
   }, []);
 
+  // useEffect(() => {
+  //   const fetchFeeds = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await fetch(
+  //         `http://${
+  //           import.meta.env.VITE_BACKEND_NETWORK_ID
+  //         }/api/feed?page=${currentPage}&pageSize=10&search=${encodeURIComponent(
+  //           search
+  //         )}`,
+  //         { credentials: "include" }
+  //       );
+
+  //       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+  //       const data = await res.json();
+  //       setFeeds(data.data || []);
+  //       setTotalPages(Math.ceil(data.total / entries));
+  //     } catch (err) {
+  //       console.error("Error fetching feed data:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchFeeds();
+  // }, [currentPage, entries, search]);
+
   useEffect(() => {
     const fetchFeeds = async () => {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://${
-            import.meta.env.VITE_BACKEND_NETWORK_ID
-          }/api/feed?page=${currentPage}&pageSize=10&search=${encodeURIComponent(
-            search
-          )}`,
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed?page=${currentPage}&pageSize=${entries}&search=${encodeURIComponent(search)}`,
           { credentials: "include" }
         );
 
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
         const data = await res.json();
+        projects.forEach((proj, idx) => {
+          console.log(`Project ${idx + 1} (_id: ${proj._id}): Feeds count = ${proj.Feeds?.length || 0}`);
+          console.log("Feeds array:", proj.Feeds);
+        });
         setFeeds(data.data || []);
         setTotalPages(Math.ceil(data.total / entries));
       } catch (err) {
@@ -309,24 +337,22 @@ function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {overviewCards.map((item, index) => {
                 const Icon = item.icon;
+                const isClickable = item.label === "Total Projects"; // Only this card is clickable
+
                 return (
                   <div
                     key={index}
-                    className={`flex items-center p-3 cursor-pointer ${item.bg} rounded-lg hover:shadow-md transition`}
-                    onClick={() => navigate("/projects")}
+                    className={`flex items-center p-3 rounded-lg ${item.bg} ${isClickable ? "cursor-pointer hover:shadow-md transition" : ""}`}
+                    onClick={isClickable ? () => navigate("/projects") : undefined}
                   >
                     {/* Icon */}
-                    <div
-                      className={`p-2 rounded-full ${item.color} text-white mr-3 flex-shrink-0`}
-                    >
+                    <div className={`p-2 rounded-full ${item.color} text-white mr-3 flex-shrink-0`}>
                       <Icon size={20} />
                     </div>
 
                     {/* Content */}
                     <div className="flex flex-col">
-                      <p className="text-gray-600 text-sm font-medium">
-                        {item.label}
-                      </p>
+                      <p className="text-gray-600 text-sm font-medium">{item.label}</p>
                       <h3 className="text-xl font-bold text-gray-900 mt-1">
                         {loading ? "..." : item.value || 0}
                       </h3>
@@ -334,6 +360,7 @@ function Home() {
                   </div>
                 );
               })}
+
             </div>
           </div>
 
@@ -390,7 +417,7 @@ function Home() {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Escalation</p>
-                  <p className="text-2xl font-bold text-gray-800">1</p>
+                  <p className="text-2xl font-bold text-gray-800">0</p>
                 </div>
               </div>
             </div>
@@ -401,7 +428,7 @@ function Home() {
           {/* Column 1: Project Types */}
           <div className="bg-white shadow-md rounded-lg p-4 w-full">
             <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mb-4">
-              Project Types
+              Project's Delivery Status Overview
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {typeCards.map((type, index) => {
@@ -475,115 +502,115 @@ function Home() {
           user?.roleName === "Team Lead" ||
           user?.roleName === "Project-Coordinator" ||
           user?.roleName === "Developer") && (
-          <>
-            {/* Crawl and QA summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-2  gap-4 w-full">
-              <div className="bg-white shadow-md rounded-lg p-5 w-full">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
-                  Crawl Summary
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Total Tasks */}
-                  <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-2">
-                    <div className="bg-purple-500 text-white p-2 rounded-full mr-3">
-                      <FaTasks size={18} />
+            <>
+              {/* Crawl and QA summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-2  gap-4 w-full">
+                <div className="bg-white shadow-md rounded-lg p-5 w-full">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+                    Crawl Summary
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Total Tasks */}
+                    <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-2">
+                      <div className="bg-purple-500 text-white p-2 rounded-full mr-3">
+                        <FaTasks size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-gray-500 text-sm">Scheduled</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
                     </div>
-                    <div className ="min-w-0">
-                      <p className="text-gray-500 text-sm">Scheduled</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
+
+                    {/* Pending */}
+                    <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+                      <div className="bg-red-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaClock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Crawl Running</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
+                    </div>
+
+                    {/* In Progress */}
+                    <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+                      <div className="bg-blue-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaCheckCircle size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Crawl Finished</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
+                    </div>
+
+                    {/* Completed */}
+                    <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+                      <div className="bg-yellow-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaRocket size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">
+                          Crawl Yet To Start
+                        </p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
                     </div>
                   </div>
+                </div>
+                <div className="bg-white  shadow-md rounded-lg p-5 w-full">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
+                    QA Summary
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Total Tasks */}
+                    <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+                      <div className="bg-purple-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaTasks size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Assigned to QA</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
+                    </div>
 
-                  {/* Pending */}
-                  <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
-                    <div className="bg-red-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaClock size={18} />
+                    {/* Pending */}
+                    <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
+                      <div className="bg-red-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaClock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">QA Failed</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">Crawl Running</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                  </div>
 
-                  {/* In Progress */}
-                  <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
-                    <div className="bg-blue-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaCheckCircle size={18} />
+                    {/* In Progress */}
+                    <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
+                      <div className="bg-blue-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaCheckCircle size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">QA Rejected</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">Crawl Finished</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                  </div>
 
-                  {/* Completed */}
-                  <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
-                    <div className="bg-yellow-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaRocket size={18} />
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">
-                        Crawl Yet To Start
-                      </p>
-                      <p className="text-2xl font-bold text-gray-800">20</p>
+                    {/* Completed */}
+                    <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
+                      <div className="bg-yellow-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
+                        <FaRocket size={18} />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">QA Passed</p>
+                        <p className="text-2xl font-bold text-gray-800">0</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-white  shadow-md rounded-lg p-5 w-full">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">
-                  QA Summary
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Total Tasks */}
-                  <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
-                    <div className="bg-purple-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaTasks size={18} />
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">Assigned to QA</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                  </div>
 
-                  {/* Pending */}
-                  <div className="flex items-center p-4 bg-red-50 rounded-lg space-x-3">
-                    <div className="bg-red-500 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaClock size={18} />
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">QA Failed</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                  </div>
-
-                  {/* In Progress */}
-                  <div className="flex items-center p-4 bg-blue-50 rounded-lg space-x-3">
-                    <div className="bg-blue-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaCheckCircle size={18} />
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">QA Rejected</p>
-                      <p className="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                  </div>
-
-                  {/* Completed */}
-                  <div className="flex items-center p-4 bg-yellow-50 rounded-lg space-x-3">
-                    <div className="bg-yellow-400 text-white p-2 rounded-full mr-3 flex-shrink-0">
-                      <FaRocket size={18} />
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">QA Passed</p>
-                      <p className="text-2xl font-bold text-gray-800">20</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-          </>
-        )}
+            </>
+          )}
         <div>
           {/* Feeds Table */}
           <div className="bg-white p-6 border rounded-sm shadow-sm border-gray-100 overflow-x-auto">
@@ -603,7 +630,7 @@ function Home() {
                     setSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border border-gray-200 rounded-md px-4 py-2 pr-10 text-sm focus:outline-none"
+                  className="border border-gray-200 rounded-md px-4 py-2 pr-10 text-sm"
                 />
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -622,98 +649,97 @@ function Home() {
               </div>
             </div>
 
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto"></div>
-            <table className="min-w-full border border-gray-200 text-gray-700 text-sm">
-              <thead className="bg-gray-100 sticky top-0">
-                <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={col}
-                      className="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200"
-                    >
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+            <div className=" max-h-[500px] overflow-auto ">
+              <table className="min-w-full border border-gray-200 text-gray-700 text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col}
+                        className="px-4 py-2 text-left font-semibold text-gray-700 border-b border-gray-200"
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-              <tbody>
-                {(feeds || []).map((feed, idx) => (
-                  <tr
-                    key={feed._id || idx}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-4 py-2">
-                      {(currentPage - 1) * pageSize + idx + 1}
-                    </td>
-                    <td
-                      className="px-4 py-2  border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
-                      onClick={() =>
-                        navigate(`/projects/${feed.projectId._id}/details`)
-                      }
+                <tbody>
+                  {(feeds || []).map((feed, idx) => (
+                    <tr
+                      key={feed._id || idx}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
-                      {feed.projectId.ProjectCode || feed.projectId?.ProjectName
-                        ? `${feed.projectId.ProjectCode ?? "-"} ${
-                            feed.projectId.ProjectName ?? "-"
+                      <td className="px-4 py-2">
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
+                      <td
+                        className="px-4 py-2  border-gray-200 text-blue-600 font-medium cursor-pointer hover:underline"
+                        onClick={() =>
+                          navigate(`/projects/${feed.projectId._id}/details`)
+                        }
+                      >
+                        {feed.projectId.ProjectCode || feed.projectId?.ProjectName
+                          ? `${feed.projectId.ProjectCode ?? "-"} ${feed.projectId.ProjectName ?? "-"
                           }`
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-2 ">{feed.FeedId || "-"}</td>
-                    <td
-                      className="px-4 py-2  text-blue-600 font-medium cursor-pointer hover:underline"
-                      onClick={() => navigate(`/projects/feed/${feed._id}`)}
-                    >
-                      {feed.FeedName || "-"}
-                    </td>
-                    <td className="px-4 py-2 ">{feed.Platform || "-"}</td>
-                    {/* <td className="px-4 py-2 border-b border-gray-200">
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-2 ">{feed.FeedId || "-"}</td>
+                      <td
+                        className="px-4 py-2  text-blue-600 font-medium cursor-pointer hover:underline"
+                        onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                      >
+                        {feed.FeedName || "-"}
+                      </td>
+                      <td className="px-4 py-2 ">{feed.Platform || "-"}</td>
+                      {/* <td className="px-4 py-2 border-b border-gray-200">
                           {feed.Frequency || "-"}
                         </td> */}
-                    <td className="px-4 py-2 align-top">
-                      <div className="flex flex-col gap-1">
-                        {/* Frequency Badge */}
-                        <span
-                          className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit
-        ${
-          feed.Frequency === "Daily"
-            ? "bg-green-100 text-green-700"
-            : feed.Frequency === "Weekly"
-            ? "bg-blue-100 text-blue-700"
-            : feed.Frequency === "Monthly"
-            ? "bg-purple-100 text-purple-700"
-            : feed.Frequency === "Once-off"
-            ? "bg-orange-100 text-orange-700"
-            : "bg-gray-100 text-gray-600"
-        }`}
-                        >
-                          {feed.Frequency ?? "-"}
-                        </span>
+                      <td className="px-4 py-2 align-top">
+                        <div className="flex flex-col gap-1">
+                          {/* Frequency Badge */}
+                          <span
+                            className={`inline-block px-3 py-1 text-xs rounded-full w-fit
+        ${feed.Frequency === "Daily"
+                                ? "bg-green-100 text-green-700"
+                                : feed.Frequency === "Weekly"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : feed.Frequency === "Monthly"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : feed.Frequency === "Once-off"
+                                      ? "bg-orange-100 text-orange-700"
+                                      : "bg-gray-100 text-gray-600"
+                              }`}
+                          >
+                            {feed.Frequency ?? "No schedule"}
+                          </span>
 
-                        {/* Schedule Badge */}
-                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
-                          {(() => {
-                            const { Frequency, Schedule } = feed;
-                            if (!Schedule) return "No schedule";
+                          {/* Schedule Badge */}
+                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
+                            {(() => {
+                              const { Frequency, Schedule } = feed;
+                              if (!Schedule) return "No schedule";
 
-                            switch (Frequency) {
-                              case "Daily":
-                                // return `Every day at ${Schedule.time || "--:--"}`;
-                                return `Daily`;
-                              case "Weekly":
-                                return `${Schedule.day || "—"} `;
-                              case "Monthly":
-                                const monthName = new Date().toLocaleString(
-                                  "default",
-                                  { month: "long" }
-                                ); // Full month name
-                                const year = new Date().getFullYear(); // Current year
-                                return `${
-                                  Schedule.date || "--"
-                                } ${monthName} ${year}`;
+                              switch (Frequency) {
+                                case "Daily":
+                                  // return `Every day at ${Schedule.time || "--:--"}`;
+                                  return `Daily`;
+                                case "Weekly":
+                                  return `${Schedule.day || "—"} `;
+                                case "Monthly":
+                                  const day = Schedule.date; // e.g., 7
+                                  // Add ordinal suffix
+                                  const getOrdinal = (n) => {
+                                    if (!n) return "";
+                                    const s = ["th", "st", "nd", "rd"];
+                                    const v = n % 100;
+                                    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+                                  };
+                                  return `${getOrdinal(day)} of every month`;
 
-                              case "Once-off":
-                                return Schedule.datetime
-                                  ? new Date(Schedule.datetime).toLocaleString(
+                                case "Once-off":
+                                  return Schedule.datetime
+                                    ? new Date(Schedule.datetime).toLocaleString(
                                       "en-GB",
                                       {
                                         day: "2-digit",
@@ -723,36 +749,36 @@ function Home() {
                                         minute: "2-digit",
                                       }
                                     )
-                                  : "No date";
-                              case "Custom":
-                                return Schedule.custom &&
-                                  Schedule.custom.length > 0
-                                  ? Schedule.custom
+                                    : "No date";
+                                case "Custom":
+                                  return Schedule.custom &&
+                                    Schedule.custom.length > 0
+                                    ? Schedule.custom
                                       .map((c) => `${c.day} ${c.time}`)
                                       .join(", ")
-                                  : "No custom schedule";
-                              default:
-                                return "No schedule";
-                            }
-                          })()}
+                                    : "No custom schedule";
+                                default:
+                                  return "No schedule";
+                              }
+                            })()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 ">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700"
+                            }`}
+                        >
+                          {feed.Status || "-"}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 ">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          feed.Status === "New"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {feed.Status || "-"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center m-4 space-y-4 sm:space-y-0">

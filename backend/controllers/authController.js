@@ -155,14 +155,60 @@ export const registerUser = async (req, res) => {
   }
 };
 
+// export const loginUser = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+    
+
+//     // Populate roleId to get permissions
+//     const user = await User.findOne({ email }).populate("roleId");
+ 
+//     if (!user) {
+//       return res.status(401).json({ errors: { email: "Email not found" } });
+//     }
+
+//     // Check password
+//     const isMatch = await user.matchPassword(password);
+//     if (!isMatch) {
+//       return res.status(401).json({ errors: { password: "Incorrect password" } });
+//     }
+
+
+//     return sendAuthResponse(res, user);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message || "Server error" });
+//   }
+// };
+
+// Logout User
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    const errors = {};
+
+    // 1️⃣ Required validation
+    if (!email) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
+
+    // 2️⃣ Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) errors.email = "Invalid email format";
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ errors });
+    }
+
     // Populate roleId to get permissions
     const user = await User.findOne({ email }).populate("roleId");
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
+    if (!user) {
+      return res.status(401).json({ errors: { email: "Email not found" } });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ errors: { password: "Incorrect password" } });
     }
 
     return sendAuthResponse(res, user);
@@ -171,7 +217,6 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Logout User
 export const logoutUser = (req, res) => {
   res.cookie("jwt", "", {
     httpOnly: true,

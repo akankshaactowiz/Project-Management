@@ -3,6 +3,11 @@ import Select from "react-select";
 import { getData } from "country-list";
 import Modal from "react-modal";
 import toast from "react-hot-toast";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import TextField from "@mui/material/TextField";
 
 Modal.setAppElement("#root");
 
@@ -25,24 +30,37 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
     ProjectCode: "",
     ProjectName: "",
     SOWFile: "", // array
-    // InputFiles: [],
-    InputFiles: [null],
+    // SampleFiles: [],
+    // SampleFiles: [null],
+    SampleFiles: [null], // renamed to match backend schema
     Frequency: "",
     Priority: "",
     ProjectType: "",
     IndustryType: "",
     DeliveryType: "",
     Department: "",
-    PM: "",
-    BDE: "", // added BDE
+    PMId: "",
+    BDEId: "",
     Timeline: "", // new field for target deadline
     Description: "",
   });
+
+  //Validation errors
+  const [errors, setErrors] = useState({});
 
   // universal handler (works for regular inputs and for synthetic select calls)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // clear error for that field
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   // const departmentSelectOptions = departmentOptions.map((d) => ({
@@ -157,7 +175,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
   //       BDEId: form.BDE || null,
   //       DepartmentId: form.Department || null,
   //       SOWFile: form.SOWFile, // schema expects SOWFile
-  //       SampleFiles: form.InputFiles, // schema expects SampleFiles
+  //       SampleFiles: form.SampleFiles, // schema expects SampleFiles
   //       Timeline: form.Timeline,
   //       Description: form.Description,
   //     };
@@ -191,7 +209,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
   const allowedFormats = ["docx", "xls", "xlsx", "pdf"];
   const handleSave = async () => {
     try {
-      
+
 
       const formData = new FormData();
 
@@ -203,15 +221,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
       formData.append("ProjectType", form.ProjectType);
       formData.append("IndustryType", form.IndustryType);
       formData.append("DeliveryType", form.DeliveryType);
-      formData.append("PMId", form.PM || "");
-      formData.append("BDEId", form.BDE || "");
+      formData.append("PMId", form.PMId || "");
+      formData.append("BDEId", form.BDEId || "");
       formData.append("DepartmentId", form.Department || "");
       formData.append("Timeline", form.Timeline || "");
       formData.append("Description", form.Description || "");
 
       // Files
       if (form.SOWFile) formData.append("SOWFile", form.SOWFile);
-      form.InputFiles.forEach((file) => {
+      form.SampleFiles.forEach((file) => {
         if (file) formData.append("SampleFiles", file);
       });
 
@@ -232,14 +250,25 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
       );
 
       const projectData = await res.json();
-      if (!projectData.success) throw new Error(projectData.message || "Failed to create project");
+      // if (!projectData.success) throw new Error(projectData.message || "Failed to create project");
+      if (!res.ok || !projectData.success) {
+        // 🔴 Backend validation error object format should be:
+        // { errors: { ProjectCode: "Required", ProjectName: "Too short", ... } }
+        if (projectData.errors) {
+          setErrors(projectData.errors);
+        } else {
+          toast.error(projectData.message || "Failed to create project");
+        }
+        return;
+      }
+
 
       toast.success("Project created successfully!");
       onSuccess();
       onClose();
     } catch (error) {
       console.error("Error saving project:", error);
-       toast.error(`${error.message || "Something went wrong!"}`);
+      // toast.error(`${error.message || "Something went wrong!"}`);
     }
   };
 
@@ -250,8 +279,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
 
 
   return (
-   
-     <Modal
+
+    <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
       overlayClassName="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
@@ -282,6 +311,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                 required
               />
             </div>
+            {errors.ProjectCode && (
+              <p className="text-red-500 text-sm mt-1">{errors.ProjectCode}</p>
+            )}
           </div>
 
           {/* Project Name */}
@@ -298,11 +330,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               className="w-full border border-gray-300 rounded-r p-2"
               required
             />
+            {errors.ProjectName && (
+              <p className="text-red-500 text-sm mt-1">{errors.ProjectName}</p>
+            )}
           </div>
 
           {/* SOW Document */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">SOW Document <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              SOW Document <span className="text-red-500">*</span>
+            </label>
             <div className="flex w-full rounded-lg border border-gray-500">
               <label
                 htmlFor="sow-file"
@@ -313,7 +350,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <input
                 id="sow-file"
                 type="file"
-                onChange={(e) => setForm({ ...form, SOWFile: e.target.files[0] })}
+                onChange={(e) => {
+                  setForm({ ...form, SOWFile: e.target.files[0] });
+                  if (errors.SOWFile) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.SOWFile;
+                      return newErrors;
+                    });
+                  }
+                }}
                 className="hidden"
                 required
               />
@@ -321,12 +367,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                 {form.SOWFile ? form.SOWFile.name : "No file chosen"}
               </span>
             </div>
+            {errors.SOWFile && (
+              <p className="text-red-500 text-sm mt-1">{errors.SOWFile}</p>
+            )}
           </div>
+
 
           {/* Sample File Attachments (Multiple) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sample Files<span className="text-red-500">*</span></label>
-            {form.InputFiles.map((file, idx) => (
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sample Files <span className="text-red-500">*</span>
+            </label>
+            {form.SampleFiles.map((file, idx) => (
               <div key={idx} className="flex items-center space-x-2 mb-2">
                 <div className="flex flex-1 rounded-lg border border-gray-500">
                   <label
@@ -339,9 +391,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                     id={`input-file-${idx}`}
                     type="file"
                     onChange={(e) => {
-                      const updated = [...form.InputFiles];
+                      const updated = [...form.SampleFiles];
                       updated[idx] = e.target.files[0];
-                      setForm({ ...form, InputFiles: updated });
+                      setForm({ ...form, SampleFiles: updated });
+
+                      // Clear SampleFiles error when at least one file is selected
+                      if (errors.SampleFiles) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.SampleFiles;
+                          return newErrors;
+                        });
+                      }
                     }}
                     className="hidden"
                     required
@@ -356,8 +417,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                   <button
                     type="button"
                     onClick={() => {
-                      const updated = form.InputFiles.filter((_, i) => i !== idx);
-                      setForm({ ...form, InputFiles: updated });
+                      const updated = form.SampleFiles.filter((_, i) => i !== idx);
+                      setForm({ ...form, SampleFiles: updated });
                     }}
                     className="flex-shrink-0 px-3 py-1 bg-gray-500 text-white h-8 w-8 flex items-center justify-center hover:bg-gray-600 transition-colors"
                   >
@@ -366,11 +427,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                 )}
 
                 {/* Add Attachment Button */}
-                {idx === form.InputFiles.length - 1 && (
+                {idx === form.SampleFiles.length - 1 && (
                   <button
                     type="button"
                     onClick={() =>
-                      setForm({ ...form, InputFiles: [...form.InputFiles, null] })
+                      setForm({ ...form, SampleFiles: [...form.SampleFiles, null] })
                     }
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                   >
@@ -379,12 +440,16 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                 )}
               </div>
             ))}
+            {errors.SampleFiles && (
+              <p className="text-red-500 text-sm mt-1">{errors.SampleFiles}</p>
+            )}
           </div>
+
 
           {/* Industry Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Industry Type
+              Industry Type<span className="text-red-500">*</span>
             </label>
             <select
               name="IndustryType"
@@ -407,12 +472,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <option value="Social Media">Social Media</option>
               <option value="Music">Music</option>
             </select>
+            {errors.IndustryType && (
+              <p className="text-red-500 text-sm mt-1">{errors.IndustryType}</p>
+            )}
           </div>
 
           {/* Project Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Project Type
+              Project Type <span className="text-red-500">*</span>
             </label>
             <select
               name="ProjectType"
@@ -426,12 +494,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <option value="API">API</option>
               <option value="Data Service">Data Service</option>
             </select>
+            {errors.ProjectType && (
+              <p className="text-red-500 text-sm mt-1">{errors.ProjectType}</p>
+            )}
           </div>
 
           {/* Delivery Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Delivery Type
+              Delivery Type<span className="text-red-500">*</span>
             </label>
             <select
               name="DeliveryType"
@@ -448,6 +519,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <option value="Adhoc">Adhoc</option>
               <option value="Once-off">Once-off</option>
             </select>
+            {errors.DeliveryType && (
+              <p className="text-red-500 text-sm mt-1">{errors.DeliveryType}</p>
+            )}
           </div>
 
           {/* Frequency */}
@@ -472,14 +546,24 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             {form.Frequency === "OneTime" && (
               <div>
                 <label className="block font-medium mb-1">Target Deadline</label>
-                <input
-                  type="date"
-                  value={form.Timeline || ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, Timeline: e.target.value }))
-                  }
-                  className="w-full bg-gray-100 rounded p-2"
-                />
+               <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DatePicker
+        // label="Target Deadline"
+        value={form.Timeline ? dayjs(form.Timeline) : null}
+        onChange={(newValue) => {
+          // Store as YYYY/MM/DD string
+          const formattedDate = newValue ? newValue.format("YYYY/MM/DD") : null;
+          setForm((prev) => ({ ...prev, Timeline: formattedDate }));
+        }}
+       format="YYYY/MM/DD"// display format in the input
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            className="w-full bg-gray-100 rounded p-2"
+          />
+        )}
+      />
+    </LocalizationProvider>
               </div>
             )}
           </div>
@@ -505,18 +589,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Department */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Department
+              Select Department <span className="text-red-500">*</span>
             </label>
             <Select
               name="Department"
               value={
                 form.Department
                   ? {
-                      value: form.Department,
-                      label: departmentSelectOptions.find(
-                        (opt) => opt.value === form.Department
-                      )?.label,
-                    }
+                    value: form.Department,
+                    label: departmentSelectOptions.find(
+                      (opt) => opt.value === form.Department
+                    )?.label,
+                  }
                   : null
               }
               onChange={(selected) =>
@@ -530,60 +614,52 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               isSearchable
               className="w-full"
             />
+            {errors.Department && (
+              <p className="text-red-500 text-sm mt-1">{errors.Department}</p>
+            )}
           </div>
 
           {/* Project Manager */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Project Manager
-            </label>
+              Project Manager<span className="text-red-500">*</span>
+            </label> 
             <Select
-              name="PM"
-              value={
-                form.PM
-                  ? {
-                      value: form.PM,
-                      label: pmOptions.find((u) => u._id === form.PM)?.name,
-                    }
-                  : null
-              }
-              onChange={(selected) =>
-                handleChange({ target: { name: "PM", value: selected?.value } })
-              }
-              options={pmOptions.map((u) => ({ value: u._id, label: u.name }))}
+              name="PMId"
+              value={form.PMId ? { value: form.PMId, label: pmOptions.find(u => u._id === form.PMId)?.name } : null}
+              onChange={(selected) => handleChange({ target: { name: "PMId", value: selected?.value } })}
+              options={pmOptions.map(u => ({ value: u._id, label: u.name }))}
               placeholder="Select Project Manager"
               isClearable
               isSearchable
-              className="w-full"
             />
+            {errors.PMId && <p className="text-red-500 text-sm mt-1">{errors.PMId}</p>}
           </div>
 
           {/* Business Development Executive */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select BDE
+              Select BDE<span className="text-red-500">*</span>
             </label>
             <Select
-              name="BDE"
-              value={bdeOptions.find((opt) => opt.value === form.BDE) || null}
-              onChange={(selected) =>
-                handleChange({
-                  target: { name: "BDE", value: selected?.value || "" },
-                })
-              }
+              name="BDEId"
+              value={bdeOptions.find(opt => opt.value === form.BDEId) || null}
+              onChange={(selected) => handleChange({ target: { name: "BDEId", value: selected?.value || "" } })}
               options={bdeOptions}
               placeholder="Select BDE"
               isClearable
               isSearchable
-              className="w-full"
             />
+
+            {errors.BDEId && <p className="text-red-500 text-sm mt-1">{errors.BDEId}</p>}
           </div>
+
 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description / Additional Info{" "}
-              <span className="text-red-500">*</span>
+              {/* <span className="text-red-500">*</span> */}
             </label>
             <textarea
               value={form.Description}
@@ -612,10 +688,22 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             <input
               type="text"
               value={feedName}
-              onChange={(e) => setFeedName(e.target.value)}
+              onChange={(e) => {
+                setFeedName(e.target.value);
+                if (errors.FeedName) {
+                  setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.FeedName;
+                    return newErrors;
+                  });
+                }
+              }}
               placeholder="Feed Name"
               className="w-full border border-gray-300 rounded-r p-2"
             />
+            {errors.FeedName && (
+              <p className="text-red-500 text-sm mt-1">{errors.FeedName}</p>
+            )}
           </div>
 
           {/* Domain Name */}
@@ -626,20 +714,41 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             <input
               type="text"
               value={domainName}
-              onChange={(e) => setDomainName(e.target.value)}
+              onChange={(e) => {
+                setDomainName(e.target.value);
+                if (errors.DomainName) {
+                  setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.DomainName;
+                    return newErrors;
+                  });
+                }
+              }}
               placeholder="Domain Name"
               className="w-full border border-gray-300 rounded-r p-2"
             />
+            {errors.DomainName && (
+              <p className="text-red-500 text-sm mt-1">{errors.DomainName}</p>
+            )}
           </div>
 
           {/* Application Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Application Type
+              Application Type<span className="text-red-500">*</span>
             </label>
             <select
               value={applicationType}
-              onChange={(e) => setApplicationType(e.target.value)}
+              onChange={(e) => {
+                setApplicationType(e.target.value);
+                if (errors.ApplicationType) {
+                  setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.ApplicationType;
+                    return newErrors;
+                  });
+                }
+              }}
               className="w-full border border-gray-300 rounded-r p-2"
             >
               <option value="" disabled hidden>
@@ -648,21 +757,36 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <option value="Web">Web</option>
               <option value="Mobile">App</option>
             </select>
+            {errors.ApplicationType && (
+              <p className="text-red-500 text-sm mt-1">{errors.ApplicationType}</p>
+            )}
           </div>
 
           {/* Country */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Country Name
+              Country Name<span className="text-red-500">*</span>
             </label>
             <Select
-              name="country"
+              name="CountryName"
               options={countryOptions}
               value={country}
-              onChange={setCountry}
+              onChange={(selected) => {
+                setCountry(selected);
+                if (errors.CountryName) {
+                  setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.CountryName;
+                    return newErrors;
+                  });
+                }
+              }}
               isSearchable
               placeholder="Select Country"
             />
+            {errors.CountryName && (
+              <p className="text-red-500 text-sm mt-1">{errors.CountryName}</p>
+            )}
           </div>
         </div>
       </div>
@@ -683,6 +807,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
         </button>
       </div>
     </Modal>
-   
+
   );
 }

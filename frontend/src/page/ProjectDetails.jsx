@@ -1,10 +1,12 @@
-import { useEffect, useState, Fragment ,useRef  } from "react";
+import { useEffect, useState, Fragment, useRef } from "react";
 import ReactDOM from "react-dom";
 
-import { useParams, useNavigate} from "react-router-dom";
+
+import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { useAuth } from "../hooks/useAuth";
 import Pagination from "../components/Pagination"
+import Breadcrumb from "../components/Breadcrumb";
 
 export default function ProjectDetails() {
   const { user } = useAuth();
@@ -23,8 +25,8 @@ export default function ProjectDetails() {
   const [openPopoverFeedId, setOpenPopoverFeedId] = useState(null);
 
   const [showFeedPopover, setShowFeedPopover] = useState(false);
-   const popoverRef = useRef(null);
-   const buttonRef = useRef({}); // store refs per feed row
+  const popoverRef = useRef(null);
+  const buttonRef = useRef({}); // store refs per feed row
 
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [form, setForm] = useState({
@@ -36,37 +38,37 @@ export default function ProjectDetails() {
 
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
-  
- useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (
-      popoverRef.current &&
-      !popoverRef.current.contains(event.target) &&
-      buttonRef.current &&
-      !buttonRef.current.contains(event.target)
-    ) {
-      setOpenPopoverFeedId(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setOpenPopoverFeedId(false);
+      }
+    };
+
+    if (showFeedPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openPopoverFeedId]);
+
+
+  const handleToggle = (feedId) => {
+    const button = buttonRef.current[feedId];
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
+    }
+    setOpenPopoverFeedId(openPopoverFeedId === feedId ? null : feedId);
   };
-
-  if (showFeedPopover) {
-    document.addEventListener("mousedown", handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [openPopoverFeedId]);
-
-
- const handleToggle = (feedId) => {
-  const button = buttonRef.current[feedId];
-  if (button) {
-    const rect = button.getBoundingClientRect();
-    setPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
-  }
-  setOpenPopoverFeedId(openPopoverFeedId === feedId ? null : feedId);
-};
 
 
 
@@ -93,7 +95,7 @@ export default function ProjectDetails() {
 
 
   ].filter(Boolean);
-  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Memebers", "DB Status"];
+  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "DB Status"];
 
   // Fetch project + available users
   useEffect(() => {
@@ -180,6 +182,7 @@ export default function ProjectDetails() {
 
   return (
     <>
+      {/* <Breadcrumb projectId={project._id} /> */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-6">
           {/* Heading */}
@@ -269,7 +272,7 @@ export default function ProjectDetails() {
 
                   {/* Status Types */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
-                   >
+                  >
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Status Types
@@ -298,7 +301,7 @@ export default function ProjectDetails() {
 
                   {/* Frequency Options */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition"
-                    >
+                  >
                     <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-2 h-5 bg-blue-500 rounded"></span>
                       Frequency Options
@@ -376,7 +379,7 @@ export default function ProjectDetails() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Search..."
+                          placeholder="Search by Feed..."
                           value={search}
                           onChange={(e) => {
                             setSearch(e.target.value);
@@ -431,176 +434,181 @@ export default function ProjectDetails() {
                     ))}
                   </tbody> */}
                       <tbody>
-  {project?.Feeds && project.Feeds.length > 0 ? (
-    project.Feeds.map((feed, idx) => {
-const getNormalizedMember = (m, defaultRole = "Unknown") => ({
-  _id: m._id,
-  name: m.name || "Unknown",
-  avatar: m.avatar || null,
-  roleName: m.roleName || (m.roleId && m.roleId.name) || defaultRole,
-});
+                        {project?.Feeds && project.Feeds.length > 0 ? (
+                          project.Feeds.map((feed, idx) => {
+                            const getNormalizedMember = (m, defaultRole = "Unknown") => ({
+                              _id: m._id,
+                              name: m.name || "Unknown",
+                              avatar: m.avatar || null,
+                              roleName: m.roleName || (m.roleId && m.roleId.name) || defaultRole,
+                            });
 
-// Project members
-const projectMembers = [
-  ...(project.PMId ? [project.PMId] : []),
-  ...(project.TLId ? [project.TLId] : []),
-  ...(project.PCId ? [project.PCId] : []),
-  ...(project.QAId ? [project.QAId] : []),
-].map((m) => getNormalizedMember(m, "Manager"));
+                            // Project members
+                            const projectMembers = [
+                              ...(project.PMId ? [project.PMId] : []),
+                              ...(project.TLId ? [project.TLId] : []),
+                              ...(project.PCId ? [project.PCId] : []),
+                              ...(project.QAId ? [project.QAId] : []),
+                            ].map((m) => getNormalizedMember(m, "Manager"));
 
-// Feed developers
-const devMembers = (feed.DeveloperIds || []).map((dev) =>
-  getNormalizedMember(dev, "Developer")
-);
+                            // Feed developers
+                            const devMembers = (feed.DeveloperIds || []).map((dev) =>
+                              getNormalizedMember(dev, "Developer")
+                            );
 
-// Combine all
-const combinedMembers = [...devMembers, ...projectMembers];
-const visible = combinedMembers.slice(0, 3);
-const extraCount = combinedMembers.length - visible.length;
+                            // Combine all
+                            const combinedMembers = [...devMembers, ...projectMembers];
+                            const visible = combinedMembers.slice(0, 3);
+                            const extraCount = combinedMembers.length - visible.length;
 
-      return (
-        <tr key={idx} className="">
-          <td className="px-4 py-2">{idx + 1}</td>
-          <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
-          <td
-            className="px-4 py-2 text-blue-600 cursor-pointer whitespace-nowrap"
-            onClick={() => navigate(`/projects/feed/${feed._id}`)}
-          >
-            {feed.FeedName}
-          </td>
-          <td className="px-4 py-2 align-top whitespace-nowrap">
-            <div className="flex flex-col gap-1">
-              <span
-                className={`inline-block px-3 py-1 text-xs rounded-full w-fit ${
-                  feed.Frequency === "Daily"
-                    ? "bg-green-100 text-green-700"
-                    : feed.Frequency === "Weekly"
-                    ? "bg-blue-100 text-blue-700"
-                    : feed.Frequency === "Monthly"
-                    ? "bg-purple-100 text-purple-700"
-                    : feed.Frequency === "Once-off"
-                    ? "bg-orange-100 text-orange-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {feed.Frequency ?? "No schedule"}
-              </span>
+                            return (
+                              <tr key={idx} className="">
+                                <td className="px-4 py-2">{idx + 1}</td>
+                                <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
+                                <td
+                                  className="px-4 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
+                                  onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                                // onClick={() => navigate(`/projects/${feed.projectId}/details/feed/${feed._id}`)}
+                                >
+                                  {feed.FeedName}
+                                </td>
+                                <td className="px-4 py-2 align-top whitespace-nowrap">
+                                  <div className="flex flex-col gap-1">
+                                    <span
+                                      className={`inline-block px-3 py-1 text-xs rounded-full w-fit ${feed.Frequency === "Daily"
+                                          ? "bg-green-100 text-green-700"
+                                          : feed.Frequency === "Weekly"
+                                            ? "bg-blue-100 text-blue-700"
+                                            : feed.Frequency === "Monthly"
+                                              ? "bg-purple-100 text-purple-700"
+                                              : feed.Frequency === "Once-off"
+                                                ? "bg-orange-100 text-orange-700"
+                                                : "bg-gray-100 text-gray-600"
+                                        }`}
+                                    >
+                                      {feed.Frequency ?? "No schedule"}
+                                    </span>
 
-              <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
-                {/* Schedule logic */}
-                {(() => {
-                  const { Frequency, Schedule } = feed;
-                  if (!Schedule) return "No schedule";
-                  switch (Frequency) {
-                    case "Daily":
-                      return "Daily";
-                    case "Weekly":
-                      return `${Schedule.day || "—"}`;
-                    case "Monthly":
-                      const monthName = new Date().toLocaleString("default", { month: "long" });
-                      const year = new Date().getFullYear();
-                      return `${Schedule.date || "--"} ${monthName} ${year}`;
-                    case "Once-off":
-                      return Schedule.datetime
-                        ? new Date(Schedule.datetime).toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
+                                    <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
+                                      {/* Schedule logic */}
+                                      {(() => {
+                                        const { Frequency, Schedule } = feed;
+                                        if (!Schedule) return "No schedule";
+                                        switch (Frequency) {
+                                          case "Daily":
+                                            return "Daily";
+                                          case "Weekly":
+                                            return `${Schedule.day || "—"}`;
+                                          case "Monthly":
+                                            const day = Schedule.date; // e.g., 7
+                                            // Add ordinal suffix
+                                            const getOrdinal = (n) => {
+                                              if (!n) return "";
+                                              const s = ["th", "st", "nd", "rd"];
+                                              const v = n % 100;
+                                              return n + (s[(v - 20) % 10] || s[v] || s[0]);
+                                            };
+                                            return `${getOrdinal(day)} of every month`;
+                                          case "Once-off":
+                                            return Schedule.datetime
+                                              ? new Date(Schedule.datetime).toLocaleString("en-GB", {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                              })
+                                              : "No date";
+                                          case "Custom":
+                                            return Schedule.custom && Schedule.custom.length > 0
+                                              ? Schedule.custom.map((c) => `${c.day} ${c.time}`).join(", ")
+                                              : "No custom schedule";
+                                          default:
+                                            return "No schedule";
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
+                                <td className="px-4 py-2 whitespace-nowrap">
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New" ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
+                                      }`}
+                                  >
+                                    {feed.Status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
+                                <td className="px-4 py-2 whitespace-nowrap">{feed.POC ?? "-"}</td>
+
+                                <td className="px-4 py-2">
+                                  {combinedMembers.length === 0 ? (
+                                    <span className="text-gray-400">-</span>
+                                  ) : (
+                                    <div className="flex items-center -space-x-2 relative">
+                                      {visible.map((m, i) => (
+                                        <div key={i} className="relative group" title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}>
+                                          <img
+                                            src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+                                            alt={m.name}
+                                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
+                                          />
+                                        </div>
+                                      ))}
+
+                                      {extraCount > 0 && (
+                                        <button
+                                          ref={(el) => (buttonRef.current[feed._id] = el)}
+                                          onClick={() => handleToggle(feed._id)}
+                                          className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                                        >
+                                          +{extraCount}
+                                        </button>
+                                      )}
+
+                                      {openPopoverFeedId === feed._id &&
+                                        ReactDOM.createPortal(
+                                          <div
+                                            className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-64 z-50"
+                                            style={{ top: position.top, left: position.left }}
+                                          >
+                                            <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
+                                            <ul className="space-y-2 max-h-48 overflow-y-auto">
+                                              {combinedMembers.map((m, i) => (
+                                                <li key={i} className="flex items-center gap-2">
+                                                  <img
+                                                    src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+                                                    alt={m.name}
+                                                    className="w-6 h-6 rounded-full border"
+                                                  />
+                                                  <span className="text-sm text-gray-700">
+                                                    {m.name} <span className="text-gray-400 text-xs">({m.roleName})</span>
+                                                  </span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>,
+                                          document.body
+                                        )}
+
+                                    </div>
+                                  )}
+                                </td>
+
+                                <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
+                              </tr>
+                            );
                           })
-                        : "No date";
-                    case "Custom":
-                      return Schedule.custom && Schedule.custom.length > 0
-                        ? Schedule.custom.map((c) => `${c.day} ${c.time}`).join(", ")
-                        : "No custom schedule";
-                    default:
-                      return "No schedule";
-                  }
-                })()}
-              </span>
-            </div>
-          </td>
-
-          <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
-          <td className="px-4 py-2 whitespace-nowrap">
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                feed.Status === "New" ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
-              }`}
-            >
-              {feed.Status}
-            </span>
-          </td>
-          <td className="px-4 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
-          <td className="px-4 py-2 whitespace-nowrap">{feed.POC ?? "-"}</td>
-
-          <td className="px-4 py-2">
-            {combinedMembers.length === 0 ? (
-              <span className="text-gray-400">-</span>
-            ) : (
-              <div className="flex items-center -space-x-2 relative">
-                {visible.map((m, i) => (
-                  <div key={i} className="relative group" title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}>
-                    <img
-                      src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
-                      alt={m.name}
-                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
-                    />
-                  </div>
-                ))}
-
-              {extraCount > 0 && (
-  <button
-    ref={(el) => (buttonRef.current[feed._id] = el)}
-    onClick={() => handleToggle(feed._id)}
-    className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
-  >
-    +{extraCount}
-  </button>
-)}
-
- {openPopoverFeedId === feed._id &&
-  ReactDOM.createPortal(
-    <div
-      className="absolute bg-white border rounded-lg shadow-lg p-3 w-64 z-50"
-      style={{ top: position.top, left: position.left }}
-    >
-      <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
-      <ul className="space-y-2 max-h-48 overflow-y-auto">
-        {combinedMembers.map((m, i) => (
-          <li key={i} className="flex items-center gap-2">
-            <img
-              src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
-              alt={m.name}
-              className="w-6 h-6 rounded-full border"
-            />
-            <span className="text-sm text-gray-700">
-              {m.name} <span className="text-gray-400 text-xs">({m.roleName})</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>,
-    document.body
-)}
-
-              </div>
-            )}
-          </td>
-
-          <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td className="px-4 py-6 text-center text-gray-500" colSpan={columns.length}>
-        No Data Found
-      </td>
-    </tr>
-  )}
-</tbody>
+                        ) : (
+                          <tr>
+                            <td className="px-4 py-6 text-center text-gray-500" colSpan={columns.length}>
+                              No Data Found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
 
                     </table>
                   </div>
@@ -723,95 +731,93 @@ const extraCount = combinedMembers.length - visible.length;
                   </span>
                 </p>
 
-              <p className="flex justify-between">
-                <span className="text-gray-500">Assigned To</span>
-  {(() => {
-    // Combine all members from project and feeds
-    const combinedMembers = [
-      project.PMId && { name: project.PMId.name, roleName: "Manager", avatar: project.PMId.avatar },
-      project.TLId && { name: project.TLId.name, roleName: "Team Lead", avatar: project.TLId.avatar },
-      project.QAId && { name: project.QAId.name, roleName: "QA", avatar: project.QAId.avatar },
-      // ...(project.BDEId?.map(bde => ({ name: bde.name, roleName: "BDE", avatar: bde.avatar })) || []),
-      ...(project.Feeds?.flatMap(feed => [
-        ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
-        feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
-       
-      ]) || [])
-    ].filter(Boolean);
+                <p className="flex justify-between">
+                  <span className="text-gray-500">Assigned To</span>
+                  {(() => {
+                    // Combine all members from project and feeds
+                    const combinedMembers = [
+                      project.PMId && { name: project.PMId.name, roleName: "Manager", avatar: project.PMId.avatar },
+                      project.TLId && { name: project.TLId.name, roleName: "Team Lead", avatar: project.TLId.avatar },
+                      project.QAId && { name: project.QAId.name, roleName: "QA", avatar: project.QAId.avatar },
+                      project.PCId && { name: project.PCId.name, roleName: "PC", avatar: project.PCId.avatar },
+                      ...(project.Feeds?.flatMap(feed => [
+                        ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
+                        feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
+                      ]) || [])
+                    ].filter(Boolean);
 
-    const maxVisible = 3; // how many avatars to show
-    const visible = combinedMembers.slice(0, maxVisible);
-    const extraCount = combinedMembers.length - visible.length;
+                    // Remove duplicates by name
+                    const uniqueMembers = combinedMembers.filter(
+                      (member, index, self) =>
+                        index === self.findIndex(m => m.name === member.name)
+                    );
 
-    return combinedMembers.length === 0 ? (
-      <span className="text-gray-400">-</span>
-    ) : (
-      <div className="flex items-center -space-x-2 relative">
-        {visible.map((m, i) => (
-          <div
-            key={i}
-            className="relative group"
-            title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}
-          >
-            <img
-              src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
-              alt={m.name}
-              className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
-            />
-          </div>
-        ))}
+                    const maxVisible = 3; // how many avatars to show
+                    const visible = uniqueMembers.slice(0, maxVisible);
+                    const extraCount = uniqueMembers.length - visible.length;
 
-        {extraCount > 0 && (
-          <button
-            onClick={() => setShowPopover(!showPopover)}
-            className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
-          >
-            +{extraCount}
-          </button>
-        )}
-   {/* Popover */}
-          {showPopover && (
-            <div className="absolute top-10 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 z-50">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                All Assignees
-              </h3>
-              <ul className="space-y-2 max-h-48 overflow-y-auto">
-                {combinedMembers.map((m, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <img
-                      src={
-                        m.avatar ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          m.name || "U"
-                        )}&background=random`
-                      }
-                      alt={m.name}
-                      className="w-6 h-6 rounded-full border"
-                    />
-                    <span className="text-sm text-gray-700">
-                      {m.name}{" "}
-                      <span className="text-gray-400 text-xs">
-                        ({m.roleName})
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {/* <button
-                onClick={() => setShowPopover(false)}
-                className="mt-2 w-full text-xs text-gray-600 hover:text-gray-800"
-              >
-                Close
-              </button> */}
-            </div>
-          )}
-        
-      </div>
-    );
-  })()}
+                    return uniqueMembers.length === 0 ? (
+                      <span className="text-gray-400">-</span>
+                    ) : (
+                      <div className="flex items-center -space-x-2 relative">
+                        {visible.map((m, i) => (
+                          <div
+                            key={i}
+                            className="relative group"
+                            title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}
+                          >
+                            <img
+                              src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
+                              alt={m.name}
+                              className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                            />
+                          </div>
+                        ))}
+
+                        {extraCount > 0 && (
+                          <button
+                            onClick={() => setShowPopover(!showPopover)}
+                            className="w-8 h-8 rounded-full cursor-pointer bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                          >
+                            +{extraCount}
+                          </button>
+                        )}
+
+                        {/* Popover */}
+                        {showPopover && (
+                          <div className="absolute top-10 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-64 z-50">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                              All Assignees
+                            </h3>
+                            <ul className="space-y-2 max-h-48 overflow-y-auto">
+                              {uniqueMembers.map((m, i) => (
+                                <li key={i} className="flex items-center gap-2">
+                                  <img
+                                    src={
+                                      m.avatar ||
+                                      `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`
+                                    }
+                                    alt={m.name}
+                                    className="w-6 h-6 rounded-full border"
+                                  />
+                                  <span className="text-sm text-gray-700">
+                                    {m.name}{" "}
+                                    <span className="text-gray-400 text-xs">
+                                      ({m.roleName})
+                                    </span>
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
 
-</p>
+
+                </p>
 
 
                 <p className="flex justify-between">
@@ -830,10 +836,10 @@ const extraCount = combinedMembers.length - visible.length;
               </h4>
 
               <div className="space-y-2 text-sm">
-                
-                      <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
-                        <a href="" onClick={() => navigate(`/projects/${project._id}/attachments`)}>View</a>
-                      </button>
+
+                <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                  <a href="" onClick={() => navigate(`/projects/${project._id}/attachments`)}>View</a>
+                </button>
               </div>
             </div>
           </div>
