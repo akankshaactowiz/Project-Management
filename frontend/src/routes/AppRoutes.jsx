@@ -24,6 +24,8 @@ import QAReportDetails from "../page/QAReportDetail.jsx"
 import DeveloperView from "../page/DeveloperReport.jsx"
 import ProjectInfo from "../page/ProjectDetails.jsx";
 import ProjectFilesPage from "../page/DocumentMaterialPage.jsx";
+import TeamMembers from "../page/TeamMembers.jsx";
+import TeamProgress from "../page/TeamProgressPage.jsx";
 function AppRoutes() {
 
 
@@ -62,6 +64,9 @@ function AppRoutes() {
           <Route path="/users/:id/details" element={<ProtectedRoute requiredModule="Users" requiredAction="view"><ProjectDetails /></ProtectedRoute>} />
           <Route path="/users/:id/reports" element={<ProtectedRoute requiredModule="Reports" requiredAction="view"><Report /></ProtectedRoute>} />
           <Route path="/users/:id/report" element={<ProtectedRoute requiredModule="Reports" requiredAction="view"><ReportDetail /></ProtectedRoute>} />
+
+          <Route path = "/team" element= {<TeamMembers/>} />
+          <Route path = "/team/team-insights" element= {<TeamProgress/>} />
         </Route>
       </Route>
 
