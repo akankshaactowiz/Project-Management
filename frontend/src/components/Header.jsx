@@ -25,6 +25,7 @@ export default function Header() {
     Reports: <LuFileStack className="w-6 h-6" />,
     QA: <MdOutlineError className="w-6 h-6" />,
     Users: <MdPeople className="w-6 h-6" />,
+    Team : <MdPeople className="w-6 h-6" />,
     Settings: <MdOutlineSettings className="w-6 h-6" />,
     // add more module-icon mappings here
   };

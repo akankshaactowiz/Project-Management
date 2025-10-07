@@ -66,7 +66,7 @@ function AppRoutes() {
           <Route path="/users/:id/report" element={<ProtectedRoute requiredModule="Reports" requiredAction="view"><ReportDetail /></ProtectedRoute>} />
 
           <Route path = "/team" element= {<TeamMembers/>} />
-          <Route path = "/team/team-insights" element= {<TeamProgress/>} />
+          <Route path = "/team/:id/team-insights" element= {<TeamProgress/>} />
         </Route>
       </Route>
 

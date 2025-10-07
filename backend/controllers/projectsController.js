@@ -141,16 +141,29 @@ export const createProject = async (req, res) => {
     console.error("Error creating project:", error);
 
     if (error.code === 11000) {
+      if (error.keyPattern?.ProjectCode) {
+        return res.status(400).json({
+          success: false,
+          message: "A project with this Project Code already exists."
+        });
+      }
+      if (error.keyPattern?.ProjectName) {
+        return res.status(400).json({
+          success: false,
+          message: "A project with this Project Name already exists."
+        });
+      }
       return res.status(400).json({
         success: false,
-        message: "A project with this Project Code already exists."
+        message: "A project with this field already exists."
       });
     }
+
 
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid project data. Please check all fields."
+        message: "A project with this Project Name already exists."
       });
     }
 
@@ -742,20 +755,25 @@ export const getProjects = async (req, res) => {
       {
         $lookup: {
           from: "User-data",
-          localField: "PMId",
-          foreignField: "_id",
-          as: "PMId",
-        },
+          let: { pmId: "$PMId" }, // local field
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$pmId"] } } },
+            { $project: { _id: 0, name: 1 } } // only include _id and name
+          ],
+          as: "PMId"
+        }
       },
       { $unwind: { path: "$PMId", preserveNullAndEmptyArrays: true } },
-
       {
         $lookup: {
           from: "User-data",
-          localField: "BDEId",
-          foreignField: "_id",
-          as: "BDEId",
-        },
+          let: { id: "$BDEId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "BDEId"
+        }
       },
       { $unwind: { path: "$BDEId", preserveNullAndEmptyArrays: true } },
 
@@ -763,50 +781,69 @@ export const getProjects = async (req, res) => {
       {
         $lookup: {
           from: "User-data",
-          localField: "CreatedBy",
-          foreignField: "_id",
-          as: "CreatedBy",
-        },
+          let: { id: "$CreatedBy" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "CreatedBy"
+        }
       },
       { $unwind: { path: "$CreatedBy", preserveNullAndEmptyArrays: true } },
 
+      // 🔹 Lookup for TLId
       {
         $lookup: {
           from: "User-data",
-          localField: "TLId",
-          foreignField: "_id",
-          as: "TLId",
-        },
+          let: { id: "$TLId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "TLId"
+        }
       },
       { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Lookup for BAUPersonId
       {
         $lookup: {
           from: "User-data",
-          localField: "BAUPersonId",
-          foreignField: "_id",
-          as: "BAUPersonId",
-        },
+          let: { id: "$BAUPersonId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "BAUPersonId"
+        }
       },
       { $unwind: { path: "$BAUPersonId", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Lookup for PCId
       {
         $lookup: {
           from: "User-data",
-          localField: "PCId",
-          foreignField: "_id",
-          as: "PCId",
-        },
+          let: { id: "$PCId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "PCId"
+        }
       },
       { $unwind: { path: "$PCId", preserveNullAndEmptyArrays: true } },
 
-      { $unwind: { path: "$TLId", preserveNullAndEmptyArrays: true } },
-
+      // 🔹 Lookup for QAId
       {
         $lookup: {
           from: "User-data",
-          localField: "QAId",
-          foreignField: "_id",
-          as: "QAId",
-        },
+          let: { id: "$QAId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 0, name: 1 } }
+          ],
+          as: "QAId"
+        }
       },
       { $unwind: { path: "$QAId", preserveNullAndEmptyArrays: true } },
 
@@ -867,11 +904,7 @@ export const getProjects = async (req, res) => {
           ],
           as: "Feeds"
         }
-      }
-
-
-
-
+      },
     ];
 
     // 🔹 Execute aggregation
@@ -1090,11 +1123,11 @@ export const getProjects = async (req, res) => {
 export const getProjectCounts = async (req, res) => {
   try {
     const userId = req.user._id; // ObjectId
-const role = req.user.roleId?.name; // e.g. "Sales Head"
-const department = req.user.departmentId?.department; // e.g. "Sales"
+    const role = req.user.roleId?.name; // e.g. "Sales Head"
+    const department = req.user.departmentId?.department; // e.g. "Sales"
 
 
-    console.log("req.user:", req.user);
+    // console.log("req.user:", req.user);
 
     // Convert userId to ObjectId
     // const uid = mongoose.Types.ObjectId.isValid(userId)
@@ -1103,47 +1136,47 @@ const department = req.user.departmentId?.department; // e.g. "Sales"
 
     let filter = {};
 
-const uid = mongoose.Types.ObjectId.isValid(userId)
-  ? new mongoose.Types.ObjectId(userId)
-  : userId; // fallback to string if not ObjectId
+    const uid = mongoose.Types.ObjectId.isValid(userId)
+      ? new mongoose.Types.ObjectId(userId)
+      : userId; // fallback to string if not ObjectId
 
-if (role === "Superadmin" || role === "Sales Head") {
-  filter = {}; // all projects
-} else if (department === "Sales") {
-  if (role === "Sales Manager") {
-    filter = { CreatedBy: uid };
-  } else if (role === "Business Development Executive") {
-    filter = { BDEId: uid };
-  }
-} else {
-  if (role === "Manager") {
-    filter = { PMId: uid };
-  } else if (role === "Team Lead") {
-    filter = { TLId: uid };
-  } else {
-    // everyone else: PC, Developer, QA, BAU
-    filter = {
-      $or: [
-        { PMId: uid },
-        { PCId: uid },
-        { TLId: uid },
-        { DeveloperIds: uid },
-        { QAId: uid },
-        { BAUId: uid },
-        { BDEId: uid },
-      ],
-    };
-  }
-}
+    if (role === "Superadmin" || role === "Sales Head") {
+      filter = {}; // all projects
+    } else if (department === "Sales") {
+      if (role === "Sales Manager") {
+        filter = { CreatedBy: uid };
+      } else if (role === "Business Development Executive") {
+        filter = { BDEId: uid };
+      }
+    } else {
+      if (role === "Manager") {
+        filter = { PMId: uid };
+      } else if (role === "Team Lead") {
+        filter = { TLId: uid };
+      } else {
+        // everyone else: PC, Developer, QA, BAU
+        filter = {
+          $or: [
+            { PMId: uid },
+            { PCId: uid },
+            { TLId: uid },
+            { DeveloperIds: uid },
+            { QAId: uid },
+            { BAUId: uid },
+            { BDEId: uid },
+          ],
+        };
+      }
+    }
 
     // 🔹 DEBUG: Log filter
     console.log("Filter applied:", filter);
-    
+
 
     // Aggregation to calculate counts
     const counts = await Project.aggregate([
       { $match: filter },
-      
+
       {
         $group: {
           _id: null,
@@ -1152,17 +1185,13 @@ if (role === "Superadmin" || role === "Sales Head") {
           adhoc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Adhoc"] }, 1, 0] } },
           onceOff: { $sum: { $cond: [{ $eq: ["$DeliveryType", "Once-off"] }, 1, 0] } },
           poc: { $sum: { $cond: [{ $eq: ["$DeliveryType", "POC"] }, 1, 0] } },
-          rnd: { $sum: { $cond: [{ $eq: ["$DeliveryType", "R&D"] }, 1, 0] } },
           newStatus: { $sum: { $cond: [{ $eq: ["$Status", "New"] }, 1, 0] } },
           underDevelopment: { $sum: { $cond: [{ $eq: ["$Status", "Under Development"] }, 1, 0] } },
           onHold: { $sum: { $cond: [{ $eq: ["$Status", "On-Hold"] }, 1, 0] } },
           devCompleted: { $sum: { $cond: [{ $eq: ["$Status", "Production"] }, 1, 0] } },
           bauStarted: { $sum: { $cond: [{ $eq: ["$Status", "BAU-Started"] }, 1, 0] } },
           closed: { $sum: { $cond: [{ $eq: ["$Status", "Closed"] }, 1, 0] } },
-          // totalFeeds: { $sum: { $size: "$Feeds" } },
-          totalFeeds: {
-        $sum: { $size: { $ifNull: ["$Feeds", []] } }
-      }
+          totalFeeds: { $sum: { $size: { $ifNull: ["$Feeds", []] } } }
         },
       },
     ]);
@@ -1184,8 +1213,8 @@ if (role === "Superadmin" || role === "Sales Head") {
       totalFeeds: 0,
     };
 
-    
-    
+
+
 
     res.status(200).json(result);
   } catch (err) {
@@ -1309,7 +1338,7 @@ export const updateProjectTeam = async (req, res) => {
       //  DeveloperIds 
     } = req.body;
     const userRole = req.user.roleId?.name;
-    console.log("Request Body:", req.body);
+    // console.log("Request Body:", req.body); DEBUGGING
 
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: "Project not found" });

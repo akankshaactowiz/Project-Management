@@ -161,7 +161,7 @@ function FeedUpdate() {
         setBauUsers(usersData.BAU || []);
 
         setFeed({
-          projectId: feedData.projectId?._id || "",
+          projectId: feedData.projectId._id || "",
           FeedId: feedData.FeedId || "",
           DeveloperIds: feedData.DeveloperIds || [],
           QAId: feedData.QAId || null, // <- use null instead of ""
@@ -335,6 +335,7 @@ function FeedUpdate() {
                   value={feed.FeedId || ""}
                   // onChange={handleChange}
                   readOnly
+                  disabled
                   placeholder="Enter Feed Title"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none"
                 />
@@ -346,6 +347,8 @@ function FeedUpdate() {
                 </label>
                 <select
                   name="projectId"
+                  disabled
+                  readOnly
                   value={feed.projectId || ""}
                   onChange={(e) =>
                     setFeed((prev) => ({ ...prev, projectId: e.target.value }))
@@ -360,6 +363,16 @@ function FeedUpdate() {
                     </option>
                   ))}
                 </select>
+                {/* <input
+                  type="text"
+                  name="projectId"
+                  disabled
+                  readOnly
+                  value={feed.projectId || ""}
+                  onChange={handleChange}
+                  placeholder="Enter Feed Title"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                /> */}
               </div>
 
               {/* Feed Title */}
@@ -370,6 +383,8 @@ function FeedUpdate() {
                 <input
                   type="text"
                   name="FeedName"
+                  readOnly
+                  disabled
                   value={feed.FeedName || ""}
                   onChange={handleChange}
                   placeholder="Enter Feed Title"

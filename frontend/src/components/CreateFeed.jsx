@@ -343,6 +343,7 @@ const handleSave = async () => {
                 </option>
                 <option value="Web">Web</option>
                 <option value="Mobile">App</option>
+                <option value="Both">Both (Web & App)</option>
               </select>
               {errors.applicationType && <p className="text-red-500 text-sm mt-1">{errors.applicationType}</p>}
             </div>

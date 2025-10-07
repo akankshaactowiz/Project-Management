@@ -492,7 +492,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
                 Select Project Type
               </option>
               <option value="API">API</option>
-              <option value="Data Service">Data Service</option>
+              <option value="Data as Service">Data as a Service</option>
             </select>
             {errors.ProjectType && (
               <p className="text-red-500 text-sm mt-1">{errors.ProjectType}</p>
@@ -515,7 +515,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               </option>
               <option value="POC">POC</option>
               <option value="BAU">BAU</option>
-              <option value="R&D">R&D</option>
+              {/* <option value="R&D">R&D</option> */}
               <option value="Adhoc">Adhoc</option>
               <option value="Once-off">Once-off</option>
             </select>
@@ -735,7 +735,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Application Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Application Type<span className="text-red-500">*</span>
+              Platform Type<span className="text-red-500">*</span>
             </label>
             <select
               value={applicationType}
@@ -756,6 +756,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               </option>
               <option value="Web">Web</option>
               <option value="Mobile">App</option>
+              <option value="Both (Web & App)">Both (Web & App)</option>
             </select>
             {errors.ApplicationType && (
               <p className="text-red-500 text-sm mt-1">{errors.ApplicationType}</p>

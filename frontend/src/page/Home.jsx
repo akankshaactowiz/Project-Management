@@ -292,13 +292,13 @@ function Home() {
       color: "bg-green-500",
       bg: "bg-green-50",
     },
-    {
-      label: "R&D Projects",
-      value: projectCounts.rnd,
-      icon: FaLightbulb,
-      color: "bg-indigo-500",
-      bg: "bg-indigo-50",
-    },
+    // {
+    //   label: "R&D Projects",
+    //   value: projectCounts.rnd,
+    //   icon: FaLightbulb,
+    //   color: "bg-indigo-500",
+    //   bg: "bg-indigo-50",
+    // },
   ];
 
   const overviewCards = [
@@ -346,7 +346,7 @@ function Home() {
                     onClick={isClickable ? () => navigate("/projects") : undefined}
                   >
                     {/* Icon */}
-                    <div className={`p-2 rounded-full ${item.color} text-white mr-3 flex-shrink-0`}>
+                    <div className={`p-2 rounded-xl ${item.color} text-white mr-3 flex-shrink-0`}>
                       <Icon size={20} />
                     </div>
 
@@ -372,7 +372,7 @@ function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {/* Delivery */}
               <div className="flex items-center p-3 bg-blue-50 rounded-lg space-x-3">
-                <div className="bg-purple-500 text-white p-3 rounded-full">
+                <div className="bg-purple-500  text-white p-3 rounded-lg">
                   <FaTasks size={20} />
                 </div>
                 <div>
@@ -383,7 +383,7 @@ function Home() {
 
               {/* Crawl Start */}
               <div className="flex items-center p-3 bg-blue-50 rounded-lg space-x-3">
-                <div className="bg-blue-400 text-white p-3 rounded-full">
+                <div className="bg-blue-400 text-white p-3 rounded-lg">
                   <FaRocket size={20} />
                 </div>
                 <div>
@@ -394,7 +394,7 @@ function Home() {
 
               {/* Delivered */}
               <div className="flex items-center p-3 bg-yellow-50 rounded-lg space-x-3">
-                <div className="bg-yellow-400 text-white p-3 rounded-full">
+                <div className="bg-yellow-400 text-white p-3 rounded-lg">
                   <FaCheckCircle size={20} />
                 </div>
                 <div>
@@ -412,7 +412,7 @@ function Home() {
                 Escalation
               </h2>
               <div className="flex items-center p-3 bg-red-50 rounded-lg space-x-3">
-                <div className="bg-red-500 text-white p-3 rounded-full">
+                <div className="bg-red-500 text-white p-3 rounded-lg">
                   <FaCube size={20} />
                 </div>
                 <div>
@@ -441,7 +441,7 @@ function Home() {
                   >
                     {/* Icon */}
                     <div
-                      className={`p-2 rounded-full ${type.color} text-white mr-3 flex-shrink-0`}
+                      className={`p-2 rounded-xl ${type.color} text-white mr-3 flex-shrink-0`}
                     >
                       <Icon size={18} />
                     </div>
@@ -477,7 +477,7 @@ function Home() {
                   >
                     {/* Icon */}
                     <div
-                      className={`p-2 rounded-full ${status.color} text-white mr-3 flex-shrink-0`}
+                      className={`p-2 rounded-xl ${status.color} text-white mr-3 flex-shrink-0`}
                     >
                       <Icon size={18} />
                     </div>

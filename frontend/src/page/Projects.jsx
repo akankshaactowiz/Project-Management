@@ -104,7 +104,7 @@ export default function Projects() {
   // ];
 
   // sales tab filters
-  const tabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
+  const tabs = ["All", "BAU", "POC", "Adhoc", "Once-off"];
 
   const statusTabs= [
     "All",
@@ -238,9 +238,9 @@ export default function Projects() {
   }, [isAssignOpen]);
   
 
-  console.log("Selected TL:", selectedTL);
-console.log("Selected PC:", selectedPC);
-console.log("Selected QA:", selectedQA);
+//   console.log("Selected TL:", selectedTL);
+// console.log("Selected PC:", selectedPC);
+// console.log("Selected QA:", selectedQA);
 
   // const handleAssign = () => {
   //   if (!selectedTL || !selectedPC) return alert("Select TL and PC");
@@ -971,7 +971,7 @@ const isAssigned = (project) => {
                                 View Files
                               </button>
                             </td>
-                            <td className="px-3 py-2">{project.ProjectType ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.ProjectType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
                             <td className="px-3 py-2">
                               {/* {new Date(project.CreatedDate).toLocaleDateString() ?? "-"} */}
