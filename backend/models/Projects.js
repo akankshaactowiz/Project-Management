@@ -23,6 +23,7 @@ const projectSchema = new mongoose.Schema({
   IndustryType: {type:String, default: "N/A"},
   DeliveryType: { type: String, default: "N/A" },
   ProjectType: { type: String, default: "N/A" },
+  VolumeCount: { type: String, default: "N/A" },
 
   // --- SALES ---
   // SOWFile: [{ type: String, required: true }],

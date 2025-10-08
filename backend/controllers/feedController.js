@@ -466,19 +466,29 @@ export const getFeeds = async (req, res) => {
       qaid,
     } = req.query;
 
-    const userId = req.user._id;
+    // const userId = req.user._id;
+    const userId = new mongoose.Types.ObjectId(req.user._id);
     const role = req.user.roleId?.name;
+    // const role = new mongoose.Types.ObjectId(req.user.roleId?.name);
     const department = req.user.departmentId?.department;
 
     const parsedPage = parseInt(page, 10) || 1;
     const parsedPageSize = parseInt(pageSize, 10) || 20;
 
+    
+    
+    
+    
+    // Build aggregation pipeline
     // Build role-based filter for feeds
     let roleFilter = {};
     if (role !== "Superadmin") {
       if (department === "Sales") {
+        if( role === "Sales Manager") {
+          roleFilter = { "projectId.CreatedBy": userId };
+        }
         if (role === "Business Development Executive") {
-          roleFilter = { DeveloperIds: userId };
+          roleFilter = { "projectId.BDEId": userId };
         }
         // Sales Manager / Head: can see all Sales projects (optional: add if needed)
       } else {
@@ -492,13 +502,14 @@ export const getFeeds = async (req, res) => {
             { "projectId.QAId": userId },
             { "projectId.BAUId": userId },
             { "projectId.BDEId": userId },
+            { "projectId.CreatedBy": userId },
           ],
         };
       }
     }
-
-    // Build aggregation pipeline
     const pipeline = [
+
+      
       // Lookup project
       {
         $lookup: {
@@ -509,6 +520,8 @@ export const getFeeds = async (req, res) => {
         },
       },
       { $unwind: { path: "$projectId", preserveNullAndEmptyArrays: true } },
+
+      
 
       // Apply role-based filter
       ...(role !== "Superadmin" ? [{ $match: roleFilter }] : []),
@@ -549,6 +562,7 @@ export const getFeeds = async (req, res) => {
       },
       { $unwind: { path: "$projectId.PMId", preserveNullAndEmptyArrays: true } },
 
+      
       // Populate DeveloperIds (only _id and name)
       {
         $lookup: {

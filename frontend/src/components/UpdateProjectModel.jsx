@@ -298,7 +298,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
 
                         {/* Sample Files */}
                         <div>
-                            <label className="block font-medium mb-1">Sample Files</label>
+                            <label className="block font-medium mb-1">Input Files</label>
 
                             {form.InputFiles.map((file, idx) => (
                                 <div key={idx} className="flex gap-2 mb-2 items-center">

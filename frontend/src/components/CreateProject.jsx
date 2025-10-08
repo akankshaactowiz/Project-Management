@@ -376,7 +376,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Sample File Attachments (Multiple) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sample Files <span className="text-red-500">*</span>
+              Input Files <span className="text-red-500">*</span>
             </label>
             {form.SampleFiles.map((file, idx) => (
               <div key={idx} className="flex items-center space-x-2 mb-2">

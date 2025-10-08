@@ -222,6 +222,7 @@ function Home() {
       icon: FaBusinessTime,
       color: "bg-purple-500",
       bg: "bg-purple-50",
+      deliveryType: "BAU",
     },
     {
       label: "Adhoc Projects",
@@ -229,6 +230,7 @@ function Home() {
       icon: FaTasks,
       color: "bg-blue-500",
       bg: "bg-blue-50",
+      deliveryType: "Adhoc",
     },
     {
       label: "Once-Off Projects",
@@ -236,6 +238,7 @@ function Home() {
       icon: FaClock,
       color: "bg-yellow-500",
       bg: "bg-yellow-50",
+      deliveryType: "Once-Off",
     },
     {
       label: "POC Projects",
@@ -243,6 +246,7 @@ function Home() {
       icon: FaFlask,
       color: "bg-green-500",
       bg: "bg-green-50",
+      deliveryType: "POC",
     },
     // {
     //   label: "R&D Projects",
@@ -388,8 +392,8 @@ function Home() {
                 return (
                   <div
                     key={index}
-                    className={`flex items-center p-3 cursor-pointer ${type.bg} hover:shadow-md transition`}
-                    onClick={() => navigate("/projects")}
+                    className={`flex items-center p-3 ${type.bg} cursor-pointer hover:shadow-md transition`}
+                    onClick={() => navigate("/projects", { state: { deliveryType: type.deliveryType } })}
                   >
                     {/* Icon */}
                     <div
@@ -424,8 +428,8 @@ function Home() {
                 return (
                   <div
                     key={index}
-                    className={`flex items-center p-3 cursor-pointer ${status.bg} hover:shadow-md transition`}
-                    onClick={() => navigate("/projects")}
+                    className={`flex items-center p-3 ${status.bg} cursor-pointer hover:shadow-md transition`}
+                    onClick={() => navigate("/projects", { state: { status: status.label } })}
                   >
                     {/* Icon */}
                     <div

@@ -36,11 +36,15 @@ export default function Projects() {
   const navigate = useNavigate();
   // const { fromUpdateModal, projectId: projectIdFromState } = location.state || {};
   // const {  openProjectId, openModal, closeModal } = useModal();
+  const location = useLocation();
+  const deliveryTypeFilter = location.state?.deliveryType;
+  const statusFilter = location.state?.status;
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState(deliveryTypeFilter || "All");
   const [salesActiveStatusTabs, setSalesActiveStatusTabs] = useState("All");
   const [activeSalesTab, setActiveSalesTab] = useState("All");
   const [search, setSearch] = useState("");
+ 
 
   const [filterDate, setFilterDate] = useState("");
 
@@ -50,7 +54,7 @@ export default function Projects() {
   const [totalPages, setTotalPages] = useState(1);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeStatus, setActiveStatus] = useState("All");
+  const [activeStatus, setActiveStatus] = useState(statusFilter || "All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [qaData, setQaData] = useState([]);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -152,11 +156,16 @@ export default function Projects() {
       (perm) => perm.module === "Projects" && perm.actions.includes("assign")
     ) && !(user?.department === "QA" && user?.roleName === "Manager");
 
+
+  
+
   // Fetch projects using filters
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
+
+      
       const params = new URLSearchParams({
         // status: activeStatus !== "All" ? activeStatus : "",
         // tab:
@@ -192,6 +201,8 @@ export default function Projects() {
         setCurrentPage(result.page || 1);
         setTotalPages(Math.ceil(result.total / result.pageSize) || 1);
 
+        console.log("Fetched Projects:", result.data);
+
       //  if (fromUpdateModal && projectIdFromState) {
       //   const project = (result.data || []).find(p => p._id === projectIdFromState);
       //   if (project) openModal(project._id);
@@ -205,6 +216,7 @@ export default function Projects() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchProjects();
   }, [
@@ -220,6 +232,19 @@ export default function Projects() {
     refresh,
   
   ]);
+
+  useEffect(() => {
+  if (deliveryTypeFilter) {
+    setActiveTab(deliveryTypeFilter);
+    setCurrentPage(1);
+  }
+}, [deliveryTypeFilter]);
+  useEffect(() => {
+  if (statusFilter) {
+    setActiveStatus(statusFilter);
+    setCurrentPage(1);
+  }
+}, [statusFilter]);
 
 // ####Use Context hook for open modal
 //   useEffect(() => {
@@ -944,8 +969,8 @@ const isAssigned = (project) => {
                             </div>
                           </td>
                         </tr>
-                      ) : filteredData.length > 0 ? (
-                        filteredData.map((project, idx) => (
+                      ) : data.length > 0 ? (
+                        data.map((project, idx) => (
                           <tr key={project._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
                             <td

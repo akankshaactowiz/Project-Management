@@ -361,7 +361,7 @@ if (summaryMonth === "true") {
 
     // 6️⃣ Response
     res.json({
-      // user,
+      user,
       projects,
       // pagination: {
       //   totalDocs,

@@ -244,7 +244,7 @@ export default function TeamProgressPage() {
     },
   ];
 
-  const tabs = [ "BAU", "POC", "Adhoc", "Once-off"];
+  const tabs = ["BAU", "POC", "Adhoc", "Once-off"];
 
   return (
     <>
@@ -466,21 +466,21 @@ export default function TeamProgressPage() {
                 <label className="text-sm font-medium text-gray-500 mb-1">
                   Delivery Type
                 </label>
-           <select
-  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
-  value={selectedDeliveryType}
-  onChange={(e) => {
-    setSelectedDeliveryType(e.target.value);
-    setCurrentPage(1); // reset pagination
-  }}
->
-  <option value="">All</option>
-  {tabs.map((tab) => (
-    <option key={tab} value={tab}>
-      {tab}
-    </option>
-  ))}
-</select>
+                <select
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
+                  value={selectedDeliveryType}
+                  onChange={(e) => {
+                    setSelectedDeliveryType(e.target.value);
+                    setCurrentPage(1); // reset pagination
+                  }}
+                >
+                  <option value="">All</option>
+                  {tabs.map((tab) => (
+                    <option key={tab} value={tab}>
+                      {tab}
+                    </option>
+                  ))}
+                </select>
               </div>
               {/* Search */}
               <input
@@ -602,16 +602,16 @@ export default function TeamProgressPage() {
                           <div className="flex justify-center">
                             <span
                               className={`px-3 py-1 text-xs font-semibold rounded-sm cursor-pointer ${project.DeliveryType === "BAU"
-                                  ? "bg-green-700 text-white"
-                                  : project.DeliveryType === "POC"
-                                    ? "bg-orange-400 text-white"
-                                    : project.DeliveryType === "R&D"
-                                      ? "bg-pink-300 text-white"
-                                      : project.DeliveryType === "Adhoc"
-                                        ? "bg-yellow-400 text-white"
-                                        : project.DeliveryType === "Once-off"
-                                          ? "bg-pink-100 text-pink-800"
-                                          : "bg-gray-100 text-gray-600"
+                                ? "bg-green-700 text-white"
+                                : project.DeliveryType === "POC"
+                                  ? "bg-orange-400 text-white"
+                                  : project.DeliveryType === "R&D"
+                                    ? "bg-pink-300 text-white"
+                                    : project.DeliveryType === "Adhoc"
+                                      ? "bg-yellow-400 text-white"
+                                      : project.DeliveryType === "Once-off"
+                                        ? "bg-pink-100 text-pink-800"
+                                        : "bg-gray-100 text-gray-600"
                                 }`}
                               onClick={() => setSelectedDeliveryType(project.DeliveryType)}
                             >
@@ -622,18 +622,18 @@ export default function TeamProgressPage() {
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span
                             className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New"
-                                ? "bg-blue-100 text-blue-800"
-                                : project.Status === "Under Development"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : project.Status === "On-Hold"
-                                    ? "bg-gray-200 text-gray-800"
-                                    : project.Status === "Production"
-                                      ? "bg-green-100 text-green-800"
-                                      : project.Status === "BAU-Started"
-                                        ? "bg-indigo-100 text-indigo-800"
-                                        : project.Status === "Closed"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-gray-100 text-gray-800"
+                              ? "bg-blue-100 text-blue-800"
+                              : project.Status === "Under Development"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : project.Status === "On-Hold"
+                                  ? "bg-gray-200 text-gray-800"
+                                  : project.Status === "Production"
+                                    ? "bg-green-100 text-green-800"
+                                    : project.Status === "BAU-Started"
+                                      ? "bg-indigo-100 text-indigo-800"
+                                      : project.Status === "Closed"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
                               }`}
                           >
                             {project.Status ?? "-"}
