@@ -106,7 +106,7 @@ export const getAllUsers = async (req, res) => {
     const totalDocs = await User.countDocuments(query);
 
     const users = await User.find(query)
-      .populate("roleId")
+      .populate("roleId" )
       .populate("departmentId")
       .select("-password")
       .skip(skip)

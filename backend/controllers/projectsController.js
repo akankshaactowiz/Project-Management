@@ -201,7 +201,9 @@ export const updateProject = async (req, res) => {
     // }
 
     // Fetch existing project
-    const project = await Project.findById(id);
+    const project = await Project.findById(id)
+    .populate("PMId", "_id name")   // 🔹 populate PM
+  .populate("BDEId", "_id name");;
     if (ProjectCode) {
       // Remove any existing ACT or ACT- prefix from user input
       const suffix = ProjectCode.replace(/^ACT-?/, '');
@@ -758,7 +760,7 @@ export const getProjects = async (req, res) => {
           let: { pmId: "$PMId" }, // local field
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$pmId"] } } },
-            { $project: { _id: 0, name: 1 } } // only include _id and name
+            { $project: { _id: 1, name: 1 } } // only include _id and name
           ],
           as: "PMId"
         }
@@ -770,7 +772,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$BDEId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "BDEId"
         }
@@ -784,7 +786,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$CreatedBy" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "CreatedBy"
         }
@@ -798,7 +800,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$TLId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "TLId"
         }
@@ -812,7 +814,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$BAUPersonId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "BAUPersonId"
         }
@@ -826,7 +828,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$PCId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "PCId"
         }
@@ -840,7 +842,7 @@ export const getProjects = async (req, res) => {
           let: { id: "$QAId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-            { $project: { _id: 0, name: 1 } }
+            { $project: { _id: 1, name: 1 } }
           ],
           as: "QAId"
         }

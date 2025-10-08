@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate, onSuccess, onError }) {
     const navigate = useNavigate();
-
+console.log("Project in update modal:", project);
     const [domainName, setDomainName] = useState("");
     const [applicationType, setApplicationType] = useState("");
     const [country, setCountry] = useState(null);
@@ -15,6 +15,9 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
     const [departmentOptions, setDepartmentOptions] = useState([]);
     const [pmOptions, setPmOptions] = useState([]);
     const [bdeOptions, setBdeOptions] = useState([]);
+
+    const [selectedPM, setSelectedPM] = useState(null);
+    const [selectedBDE, setSelectedBDE] = useState(null);
 
     const countryOptions = getData().map((c) => ({
         value: c.code,
@@ -190,6 +193,8 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
         : [];
     if (!isOpen) return null;
 
+    
+
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
             <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative">
@@ -254,7 +259,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 </span>
                             </div>
                             <button className="text-sm text-blue-500 hover:underline mt-2"
-                                onClick={() => navigate(`/project/${project._id}/attachments`)}
+                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                 _target="blank">
 
                                 View Previous Version
@@ -299,7 +304,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 </div>
                             ))}
                             <button className="text-sm text-blue-500 hover:underline mt-2 mr-2"
-                                onClick={() => navigate(`/project/${project._id}/attachments`)}
+                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                 _target="blank">
 
                                 View Previous Version
