@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate, onSuccess, onError }) {
     const navigate = useNavigate();
-console.log("Project in update modal:", project);
     const [domainName, setDomainName] = useState("");
     const [applicationType, setApplicationType] = useState("");
     const [country, setCountry] = useState(null);
@@ -18,6 +17,8 @@ console.log("Project in update modal:", project);
 
     const [selectedPM, setSelectedPM] = useState(null);
     const [selectedBDE, setSelectedBDE] = useState(null);
+
+
 
     const countryOptions = getData().map((c) => ({
         value: c.code,
@@ -39,6 +40,18 @@ console.log("Project in update modal:", project);
         Timeline: "",
         Description: "",
     });
+
+
+    const getDisplayFileName = (fileName) => {
+        if (!fileName) return "";
+
+        // Remove any URL path
+        const name = fileName.split("/").pop();
+
+        // Remove leading numbers before the first dash
+        const index = name.indexOf("-");
+        return index !== -1 ? name.slice(index + 1) : name;
+    };
     // Load departments
     useEffect(() => {
         if (!isOpen) return;
@@ -112,6 +125,13 @@ console.log("Project in update modal:", project);
         const codeSuffix = project.ProjectCode
             ?.replace(/[\[\]ACT-]/g, '') || "";
 
+        // Get previous file names from the schema
+        const sowPrevFileName = project.SOWFile?.[0]?.fileName ? getDisplayFileName(project.SOWFile[0].fileName) : null;
+
+        const lastSampleFileName = project.SampleFiles?.length
+            ? getDisplayFileName(project.SampleFiles[project.SampleFiles.length - 1].fileName)
+            : null;
+
         setForm({
             ProjectCode: codeSuffix,
             ProjectName: project.ProjectName || "",
@@ -125,8 +145,12 @@ console.log("Project in update modal:", project);
             BDE: project.BDEId?._id || "",
             Timeline: project.Timeline || "",
             Description: project.Description || "",
-            SOWFile: null,
-            InputFiles: [null],
+            // SOWFile: project.SOWFile || null,
+            // InputFiles: project.SampleFiles || [null],
+            // Store previous SOW as object with name and isPrev flag
+            SOWFile: sowPrevFileName ? { name: sowPrevFileName, isPrev: true } : null,
+            // Map previous SampleFiles similarly
+            InputFiles: lastSampleFileName ? [{ name: lastSampleFileName, isPrev: true }] : [null],
         });
 
         const firstFeed = project.Feeds?.[0] || {};
@@ -193,7 +217,7 @@ console.log("Project in update modal:", project);
         : [];
     if (!isOpen) return null;
 
-    
+
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -251,28 +275,38 @@ console.log("Project in update modal:", project);
                                 <input
                                     id="sow-file-update"
                                     type="file"
+                                    // value={form.SOWFile ? form.SOWFile.name : ""}
                                     onChange={(e) => setForm(prev => ({ ...prev, SOWFile: e.target.files[0] }))}
                                     className="hidden"
                                 />
                                 <span className="flex-grow px-4 py-2 text-gray-500 bg-white rounded-r-md truncate">
-                                    {form.SOWFile ? form.SOWFile.name : 'no file chosen'}
+                                    {form.SOWFile
+                                        ? form.SOWFile.isPrev
+                                            ? `${form.SOWFile.name}`
+                                            : form.SOWFile.name
+                                        : 'no file chosen'}
                                 </span>
+
                             </div>
-                            <button className="text-sm text-blue-500 hover:underline mt-2"
+                            {/* <button className="text-sm text-blue-500 hover:underline mt-2"
                                 onClick={() => navigate(`/projects/${project._id}/attachments`)}
                                 _target="blank">
 
                                 View Previous Version
-                            </button>
+                            </button> */}
                         </div>
 
                         {/* Sample Files */}
                         <div>
                             <label className="block font-medium mb-1">Sample Files</label>
+
                             {form.InputFiles.map((file, idx) => (
                                 <div key={idx} className="flex gap-2 mb-2 items-center">
                                     <div className="flex flex-1 rounded-lg border border-gray-500">
-                                        <label htmlFor={`sample-file-${idx}`} className="px-4 py-2 bg-gray-500 text-white rounded-l-md cursor-pointer">
+                                        <label
+                                            htmlFor={`sample-file-${idx}`}
+                                            className="px-4 w-1/2 py-2 bg-gray-500 text-white rounded-l-md cursor-pointer"
+                                        >
                                             Choose File
                                         </label>
                                         <input
@@ -281,20 +315,36 @@ console.log("Project in update modal:", project);
                                             onChange={(e) => {
                                                 const updated = [...form.InputFiles];
                                                 updated[idx] = e.target.files[0];
-                                                setForm(prev => ({ ...prev, InputFiles: updated }));
+                                                setForm((prev) => ({ ...prev, InputFiles: updated }));
                                             }}
-                                            className="hidden"
+                                            className="w-1/2 hidden"
                                         />
                                         <span className="flex-grow px-4 py-2 text-gray-500 bg-white rounded-r-md truncate">
-                                            {file ? file.name : 'no file chosen'}
+                                            {file ? file.name : "no file chosen"}
                                         </span>
                                     </div>
-                                    {idx > 0 && (
+
+                                    {/* Show +Add only on the first field */}
+                                    {idx === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    InputFiles: [...prev.InputFiles, null],
+                                                }))
+                                            }
+                                            className="flex-shrink-0 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            + Add
+                                        </button>
+                                    ) : (
+                                        // Show ✕ for all other fields
                                         <button
                                             type="button"
                                             onClick={() => {
                                                 const updated = form.InputFiles.filter((_, i) => i !== idx);
-                                                setForm(prev => ({ ...prev, InputFiles: updated }));
+                                                setForm((prev) => ({ ...prev, InputFiles: updated }));
                                             }}
                                             className="flex-shrink-0 px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
                                         >
@@ -303,20 +353,10 @@ console.log("Project in update modal:", project);
                                     )}
                                 </div>
                             ))}
-                            <button className="text-sm text-blue-500 hover:underline mt-2 mr-2"
-                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
-                                _target="blank">
-
-                                View Previous Version
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setForm(prev => ({ ...prev, InputFiles: [...prev.InputFiles, null] }))}
-                                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                            >
-                                + Add Attachment
-                            </button>
                         </div>
+
+
+
 
                         {/* Industry Type */}
                         <div>
@@ -502,7 +542,7 @@ console.log("Project in update modal:", project);
                                 <option value="" disabled hidden>Select type</option>
                                 <option value="Web">Web</option>
                                 <option value="Mobile">App</option>
-                                <option value="Both(Web & App)">Both (Web & App)</option>
+                                <option value="Web&App">Both (Web & App)</option>
                             </select>
                         </div>
                         <div>

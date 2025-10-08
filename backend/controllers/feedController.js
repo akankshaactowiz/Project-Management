@@ -136,7 +136,7 @@ export const createFeed = async (req, res) => {
 //     const page = parseInt(req.query.page) || 1;          // current page (default 1)
 //     const limit = parseInt(req.query.limit) || 10;       // docs per page (default 10)
 //     const search = req.query.search || "";               // search query
-    
+
 //     const skip = (page - 1) * limit;
 
 //     // Build filter for searching (case-insensitive, regex-based)
@@ -144,8 +144,8 @@ export const createFeed = async (req, res) => {
 //       ? { feedName: { $regex: search, $options: "i" } }
 //       : {};
 
- 
- 
+
+
 //     const [data, total] = await Promise.all([
 //       FeedData.find(filter).populate("projectId").populate({
 //         path: "projectId",
@@ -201,7 +201,7 @@ export const createFeed = async (req, res) => {
 //     // QA filter
 //     if (qaid) filter.QAId = qaid;
 
-  
+
 //     // Role-based filtering
 //     const userId = req.user._id;
 //     const role = req.user.roleId?.name; // e.g., "superadmin", "PM", "TL", etc.
@@ -230,7 +230,7 @@ export const createFeed = async (req, res) => {
 //       //   filter.BDEId = userId; // assuming project has BDEIds array
 //       // }
 //     }else if (role === "Business Development Executive") {
-     
+
 //         filter.DeveloperIds = userId; 
 //       }
 //      else {
@@ -463,7 +463,6 @@ export const getFeeds = async (req, res) => {
       pageSize = 10,
       status,
       search,
-      date_range,
       qaid,
     } = req.query;
 
@@ -523,47 +522,55 @@ export const getFeeds = async (req, res) => {
       // Apply search filter
       ...(search
         ? [
-            {
-              $match: {
-                $or: [
-                  { FeedName: { $regex: search, $options: "i" } },
-                  { FeedId: { $regex: search, $options: "i" } },
-                  { Frequency: { $regex: search, $options: "i" } },
-                  { "projectId.ProjectName": { $regex: search, $options: "i" } },
-                  { "projectId.ProjectCode": { $regex: search, $options: "i" } },
-                ],
-              },
+          {
+            $match: {
+              $or: [
+                { FeedName: { $regex: search, $options: "i" } },
+                { FeedId: { $regex: search, $options: "i" } },
+                { Frequency: { $regex: search, $options: "i" } },
+                { "projectId.ProjectName": { $regex: search, $options: "i" } },
+                { "projectId.ProjectCode": { $regex: search, $options: "i" } },
+              ],
             },
-          ]
+          },
+        ]
         : []),
 
-      // Populate PMId inside projectId
       {
         $lookup: {
           from: "User-data",
-          localField: "projectId.PMId",
-          foreignField: "_id",
+          let: { pmId: "$projectId.PMId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$pmId"] } } },
+            { $project: { _id: 1, name: 1 } } // only id and name
+          ],
           as: "projectId.PMId",
         },
       },
       { $unwind: { path: "$projectId.PMId", preserveNullAndEmptyArrays: true } },
 
-      // Populate DeveloperIds
+      // Populate DeveloperIds (only _id and name)
       {
         $lookup: {
           from: "User-data",
-          localField: "DeveloperIds",
-          foreignField: "_id",
+          let: { devIds: "$DeveloperIds" },
+          pipeline: [
+            { $match: { $expr: { $in: ["$_id", "$$devIds"] } } },
+            { $project: { _id: 1, name: 1 } } // only id and name
+          ],
           as: "DeveloperIds",
         },
       },
 
-      // Populate createdBy
+      // Populate createdBy (only _id and name)
       {
         $lookup: {
           from: "User-data",
-          localField: "createdBy",
-          foreignField: "_id",
+          let: { createdById: "$createdBy" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$createdById"] } } },
+            { $project: { _id: 1, name: 1 } } // only id and name
+          ],
           as: "createdBy",
         },
       },

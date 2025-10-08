@@ -235,7 +235,7 @@ export const getProjectsByUser =  async (req, res) => {
     const { page = 1, limit = 10, tabs = "All", search = "", filterDate, entries, summaryMonth } = req.query;
     
     // 1️⃣ Fetch the user
-    const user = await User.findById(req.params.id)
+    const user = await User.findById(req.params.id).select('name');
       // .populate("roleId")
       // .populate("departmentId")
       // .select("-password");
@@ -361,14 +361,14 @@ if (summaryMonth === "true") {
 
     // 6️⃣ Response
     res.json({
-      user,
+      // user,
       projects,
-      pagination: {
-        totalDocs,
-        totalPages: Math.ceil(totalDocs / parseInt(limit)),
-        currentPage: parseInt(page),
-        pageSize: parseInt(limit),
-      }
+      // pagination: {
+      //   totalDocs,
+      //   totalPages: Math.ceil(totalDocs / parseInt(limit)),
+      //   currentPage: parseInt(page),
+      //   pageSize: parseInt(limit),
+      // }
     });
   } catch (err) {
     console.error("User projects fetch error:", err);

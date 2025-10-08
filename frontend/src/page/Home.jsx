@@ -58,54 +58,6 @@ function Home() {
 
   const [projectCounts, setProjectCounts] = useState({});
 
-  // Fetch tickets and tasks
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const [ticketsRes, tasksRes] = await Promise.all([
-  //         fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/tickets`),
-  //         fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/tasks`)
-  //       ]);
-
-  //       const ticketsData = await ticketsRes.json();
-  //       const tasksData = await tasksRes.json();
-
-  //       setTickets(ticketsData);
-  //       setTasks(tasksData);
-  //     } catch (err) {
-  //       console.error("Error fetching data:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchData();
-  // }, []);
-
-  const totalTickets = tickets.length;
-  const unresolvedTickets = tickets.filter(
-    (t) => t.status?.toLowerCase() !== "resolved"
-  ).length;
-
-  const totalTasks = tasks.length;
-  const assignedByMe = tasks.filter((t) => t.assignedBy === user?.name).length;
-  const createdByMe = tasks.filter((t) => t.createdBy === user?.name).length;
-  const completed = tasks.filter(
-    (t) => t.status?.toLowerCase() === "completed"
-  ).length;
-  const inProgress = tasks.filter(
-    (t) => t.status?.toLowerCase() === "in-progress"
-  ).length;
-  const terminated = tasks.filter(
-    (t) => t.status?.toLowerCase() === "terminated"
-  ).length;
-  const totalPending = tasks.filter(
-    (t) => t.status?.toLowerCase() === "pending"
-  ).length;
-  const pastPending = tasks.filter((t) => {
-    if (!t.dueDate) return false;
-    const due = new Date(t.dueDate);
-    return t.status?.toLowerCase() === "pending" && due < new Date();
-  }).length;
 
   const columns = [
     "No.",
@@ -149,7 +101,7 @@ function Home() {
         { credentials: "include" }
       );
       const data = await res.json();
-      console.log("Fetched counts:", data);
+      // console.log("Fetched counts:", data);
       setProjectCounts(data);
     } catch (err) {
       console.error("Failed to fetch project counts:", err);
@@ -428,7 +380,7 @@ function Home() {
           {/* Column 1: Project Types */}
           <div className="bg-white shadow-md rounded-lg p-4 w-full">
             <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mb-4">
-              Project's Delivery Status Overview
+              Project's Delivery Overview
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {typeCards.map((type, index) => {

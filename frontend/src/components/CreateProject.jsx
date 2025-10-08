@@ -756,7 +756,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               </option>
               <option value="Web">Web</option>
               <option value="Mobile">App</option>
-              <option value="Both (Web & App)">Both (Web & App)</option>
+              <option value="Web&App">Both (Web & App)</option>
             </select>
             {errors.ApplicationType && (
               <p className="text-red-500 text-sm mt-1">{errors.ApplicationType}</p>

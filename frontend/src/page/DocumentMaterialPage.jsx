@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 export default function ProjectFilesPage() {
   const { id } = useParams();
@@ -7,13 +7,23 @@ export default function ProjectFilesPage() {
   const [loading, setLoading] = useState(true);
 
   // Helper to display clean file name
-  const getDisplayFileName = (fileName) => {
-    if (!fileName) return "";
-    const name = fileName.split("/").pop(); // remove URL path
-    const parts = name.split("-");
-    return parts.length > 3 ? parts.slice(3).join("-").trim() : name;
-  };
+  // const getDisplayFileName = (fileName) => {
+  //   if (!fileName) return "";
+  //   const name = fileName.split("/").pop(); // remove URL path
+  //   const parts = name.split("-");
+  //   return parts.length > 3 ? parts.slice(3).join("-").trim() : name;
+  // };
 
+const getDisplayFileName = (fileName) => {
+  if (!fileName) return "";
+  
+  // Remove any URL path
+  const name = fileName.split("/").pop();
+  
+  // Remove leading numbers before the first dash
+  const index = name.indexOf("-");
+  return index !== -1 ? name.slice(index + 1) : name;
+};
   const BACKEND_URL = `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}`;
 
   useEffect(() => {

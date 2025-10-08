@@ -61,8 +61,6 @@ app.use("/api/reports", protect, reportRoute)
 
 
 
-
-
 app.listen(PORT, "0.0.0.0", (err) => {
   if (err) {
     console.error("❌ Failed to start server:", err);

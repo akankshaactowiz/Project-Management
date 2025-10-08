@@ -203,7 +203,7 @@ export const updateProject = async (req, res) => {
     // Fetch existing project
     const project = await Project.findById(id)
     .populate("PMId", "_id name")   // 🔹 populate PM
-  .populate("BDEId", "_id name");;
+    .populate("BDEId", "_id name");;
     if (ProjectCode) {
       // Remove any existing ACT or ACT- prefix from user input
       const suffix = ProjectCode.replace(/^ACT-?/, '');

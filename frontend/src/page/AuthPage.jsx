@@ -132,9 +132,9 @@ const handleSubmit = async (e) => {
   }
 };
 
-  if (checkingAuth) {
-    return <div>Loading...</div>;
-  } 
+  // if (checkingAuth) {
+  //   return <div>Loading...</div>;
+  // } 
 
   return (
     <div className="flex flex-col md:flex-row w-full min-h-screen items-stretch justify-center bg-white">

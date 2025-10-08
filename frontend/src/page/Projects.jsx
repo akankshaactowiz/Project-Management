@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, Fragment } from "react";
+import { useLocation, } from "react-router-dom";
 import Modal from "react-modal";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
@@ -24,13 +25,17 @@ import Model from "../components/CreateProject";
 import AssignQAModal from "../components/AssignToQa";
 import FeedModel from "../components/CreateFeed";
 import UpdateProjectModal from "../components/UpdateProjectModel";
+import { useModal } from "../context/modalContext";
 
 // import { set } from "mongoose";
 
 
 // import QaActionsModal from "../components/QAActionModel";
 export default function Projects() {
+  //  const location = useLocation();
   const navigate = useNavigate();
+  // const { fromUpdateModal, projectId: projectIdFromState } = location.state || {};
+  // const {  openProjectId, openModal, closeModal } = useModal();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("All");
   const [salesActiveStatusTabs, setSalesActiveStatusTabs] = useState("All");
@@ -87,6 +92,8 @@ export default function Projects() {
   const [bauPersonOptions, setBauPersonOptions] = useState([]);
   const [developerOptions, setDeveloperOptions] = useState([]);
   const devOptionsRS = developerOptions.map((dev) => ({ value: dev._id, label: dev.name }));
+
+
   // const tabs = [
   //   "All Deliveries",
   //   "Today",
@@ -177,13 +184,18 @@ export default function Projects() {
           credentials: "include",
         }
       );
+      
       const result = await response.json();
       if (response.ok) {
         setData(result.data || []);
         setPageSize(result.pageSize);
         setCurrentPage(result.page || 1);
         setTotalPages(Math.ceil(result.total / result.pageSize) || 1);
-        // fetchProjects();
+
+      //  if (fromUpdateModal && projectIdFromState) {
+      //   const project = (result.data || []).find(p => p._id === projectIdFromState);
+      //   if (project) openModal(project._id);
+      // }
       } else {
         console.error("Failed to fetch projects:", result.message);
       }
@@ -205,8 +217,37 @@ export default function Projects() {
     currentPage,
     search,
     filterDate,
-    refresh
+    refresh,
+  
   ]);
+
+// ####Use Context hook for open modal
+//   useEffect(() => {
+//   if (openProjectId) {
+//     const project = data.find(p => p._id === openProjectId);
+//     if (project) {
+//       setSelectedProject(project);
+//       setIsUpdateModalOpen(true);
+//     }
+//   }
+// }, [openProjectId, data]);
+
+
+// useEffect(() => {
+//   if (!data.length) return;
+
+//   // Check if navigated back from attachments
+//   if (location.state?.fromUpdateModal && location.state.projectId) {
+//     const project = data.find(p => p._id === location.state.projectId);
+//     if (project) {
+//       setSelectedProject(project);
+//       setIsUpdateModalOpen(true);
+
+//       // Clear state so modal doesn't reopen on future reloads
+//       navigate(location.pathname, { replace: true });
+//     }
+//   }
+// }, [data]);
 
   useEffect(() => {
     if (!isAssignOpen) return;
@@ -529,7 +570,7 @@ export default function Projects() {
   const handleUpdateProject = async (updatedData) => {
     // TODO: Send updatedData to API with project ID (selectedProject._id)
     console.log("Updated Project Data:", updatedData);
-    setIsModalOpen(false);
+    setIsUpdateModalOpen(false);
   };
 
 //   const isAssigned = (project) => {
@@ -596,7 +637,14 @@ const isAssigned = (project) => {
     }
   });
 
+// useEffect(() => {
+//     if (location.state?.fromUpdateModal && selectedProject) {
+//       setIsUpdateModalOpen(true);
 
+//       // Optional: clear the state so modal doesn't reopen on future reloads
+//       navigate(location.pathname, { replace: true });
+//     }
+//   }, [location.state, selectedProject]);
 
 
   let rowCounter = (currentPage - 1) * pageSize + 1;
@@ -985,6 +1033,7 @@ const isAssigned = (project) => {
                                   onClick={() => {
                                     setSelectedProject(project);
                                     setIsUpdateModalOpen(true);
+                                    // openModal(project._id); 
                                   }}
                                 >
                                   <FaEdit size={20} className="text-blue-600 hover:text-blue-800" />
@@ -1009,10 +1058,21 @@ const isAssigned = (project) => {
 
                   <UpdateProjectModal
                     isOpen={isUpdateModalOpen}
-                    onClose={() => setIsUpdateModalOpen(false)}
+                    // onClose={() => setIsUpdateModalOpen(false)}
+                    onClose={() => {
+            setIsUpdateModalOpen(false);
+            // closeModal(); 
+          }}
                     project={selectedProject}
                     onUpdate={handleUpdateProject}
                   />
+                 {/* {isUpdateModalOpen && (
+        <UpdateProjectModal
+          isOpen={isUpdateModalOpen}
+          project={selectedProject}
+          onClose={() => setIsUpdateModalOpen(false)}
+        />
+      )} */}
                 </div>
 
                 <div className="flex justify-between m-4">

@@ -66,7 +66,7 @@ useEffect(() => {
 }, [location.pathname, feedIdParam, feedId]);
 
 
-  console.log("🧭 Layout Debug:", { feedId, projectId, location: location.pathname });
+  // console.log("🧭 Layout Debug:", { feedId, projectId, location: location.pathname });
 
   return (
     <div className="flex flex-col min-h-screen">

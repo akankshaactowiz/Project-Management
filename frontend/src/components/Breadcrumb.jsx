@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+
 function Breadcrumb({ feedName, projectId: propProjectId }) {
   const location = useLocation();
   const { id: feedId } = useParams(); // feed ID from /projects/feed/:id
@@ -61,6 +62,7 @@ function Breadcrumb({ feedName, projectId: propProjectId }) {
           <Link to="/home" className="hover:text-purple-700">
             Home
           </Link>
+     
         </li>
 
         {enhancedPathnames.map((value, index) => {
@@ -70,6 +72,8 @@ function Breadcrumb({ feedName, projectId: propProjectId }) {
           // ✅ Build proper routes
           if (value.toLowerCase() === "projects") {
             to = "/projects";
+          //  to = `/projects?fromUpdateModal=true&projectId=${projectId}`;
+            // to = { pathname: "/projects", state: { fromUpdateModal: true, projectId } };
           } else if (value.toLowerCase() === "details" && projectId) {
             to = `/projects/${projectId}/details`;
           } else if (value.toLowerCase() === "feed" && feedId) {
