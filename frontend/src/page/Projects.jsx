@@ -983,7 +983,7 @@ const isAssigned = (project) => {
                             <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
                             {/* <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td> */}
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2 whitespace-nowrap">
   {/* {project.BDEId && project.BDEId.length > 0
     ? project.BDEId.map(bde => bde.name).join(", ")
     : "-"} */}
@@ -1163,7 +1163,7 @@ const isAssigned = (project) => {
                             <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
-                            <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.BDEId?.name ?? "-"}</td>
                             {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                             <td className="px-3 py-2">
                               {project.DeliveryType ? (
@@ -1219,7 +1219,7 @@ const isAssigned = (project) => {
                                 View Files
                               </button>
                             </td>
-                            <td className="px-3 py-2">{project.ProjectType ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">{project.ProjectType ?? "-"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
                             <td className="px-3 py-2">
                               {project.CreatedDate

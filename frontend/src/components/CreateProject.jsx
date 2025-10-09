@@ -5,6 +5,7 @@ import Modal from "react-modal";
 import toast from "react-hot-toast";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import TextField from "@mui/material/TextField";
@@ -38,6 +39,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
     ProjectType: "",
     IndustryType: "",
     DeliveryType: "",
+    VolumeCount: "",
+    ExpectedDeliveryDate: "",
     Department: "",
     PMId: "",
     BDEId: "",
@@ -221,10 +224,13 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
       formData.append("ProjectType", form.ProjectType);
       formData.append("IndustryType", form.IndustryType);
       formData.append("DeliveryType", form.DeliveryType);
+      formData.append("VolumeCount", form.VolumeCount);
+      formData.append("ExpectedDeliveryDate", form.ExpectedDeliveryDate);
       formData.append("PMId", form.PMId || "");
       formData.append("BDEId", form.BDEId || "");
       formData.append("DepartmentId", form.Department || "");
       formData.append("Timeline", form.Timeline || "");
+
       formData.append("Description", form.Description || "");
 
       // Files
@@ -444,7 +450,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <p className="text-red-500 text-sm mt-1">{errors.SampleFiles}</p>
             )}
           </div>
-
+ 
 
           {/* Industry Type */}
           <div>
@@ -519,10 +525,65 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               <option value="Adhoc">Adhoc</option>
               <option value="Once-off">Once-off</option>
             </select>
+
             {errors.DeliveryType && (
               <p className="text-red-500 text-sm mt-1">{errors.DeliveryType}</p>
             )}
+
+            
+            {(form.DeliveryType === "Adhoc" || form.DeliveryType === "Once-off") && (
+              <div className="mt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date and Time</label>
+               <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DateTimePicker
+      
+    // label="Expected Delivery Date"
+    value={form.ExpectedDeliveryDate ? dayjs(form.ExpectedDeliveryDate) : null}
+    onChange={(newValue) => {
+      const formattedDateTime = newValue ? newValue.format("YYYY/MM/DD HH:mm") : null;
+      setForm((prev) => ({ ...prev, ExpectedDeliveryDate: formattedDateTime }));
+    }}
+    format="YYYY/MM/DD HH:mm"
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        className="w-full bg-gray-100 rounded p-2"
+      />
+    )}
+    slotProps={{
+                    textField: {
+                      placeholder: 'DD/MM/YYYY HH:MM AM/PM',
+                      size: 'small',
+                      // fullWidth: true,
+                      sx: { minHeight: '40px', borderRadius: '5px' }
+                    }
+                  }}
+  />
+    </LocalizationProvider>
+              </div>
+            )}
           </div>
+         
+         {/* Expected Volume count */}
+         <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Expected Volume Count 
+              {/* <span className="text-red-500">*</span> */}
+            </label>
+            <input
+              type="text"
+              name="VolumeCount"
+              value={form.VolumeCount}
+              onChange={handleChange}
+              placeholder="Expected volume count"
+              className="w-full border border-gray-300 rounded-r p-2"
+              required
+            />
+            {/* {errors.ProjectName && (
+              <p className="text-red-500 text-sm mt-1">{errors.ProjectName}</p>
+            )} */}
+          </div>
+
 
           {/* Frequency */}
           <div>
@@ -562,6 +623,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             className="w-full bg-gray-100 rounded p-2"
           />
         )}
+        slotProps={{
+                    textField: {
+                      placeholder: 'DD/MM/YYYY HH:MM AM/PM',
+                      size: 'small',
+                      // fullWidth: true,
+                      sx: { minHeight: '40px', borderRadius: '5px' }
+                    }
+                  }}
       />
     </LocalizationProvider>
               </div>

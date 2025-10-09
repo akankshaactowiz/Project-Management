@@ -3,6 +3,12 @@ import Select from "react-select";
 import { FaTimes } from "react-icons/fa";
 import { getData } from "country-list";
 import { useNavigate } from "react-router-dom";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import TextField from "@mui/material/TextField";
 import toast from "react-hot-toast";
 export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate, onSuccess, onError }) {
     const navigate = useNavigate();
@@ -38,6 +44,8 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
         PM: "",
         BDE: "",
         Timeline: "",
+        VolumeCount: "",
+        ExpectedDeliveryDate: "",
         Description: "",
     });
 
@@ -144,6 +152,8 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
             PM: project.PMId?._id || "",
             BDE: project.BDEId?._id || "",
             Timeline: project.Timeline || "",
+            VolumeCount: project.VolumeCount || "",
+            ExpectedDeliveryDate: project.ExpectedDeliveryDate || "",
             Description: project.Description || "",
             // SOWFile: project.SOWFile || null,
             // InputFiles: project.SampleFiles || [null],
@@ -382,24 +392,6 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                             </select>
                         </div>
 
-                        {/* Delivery Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
-                            <select
-                                name="DeliveryType"
-                                value={form.DeliveryType}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded p-2"
-                            >
-                                <option value="" disabled hidden>Select Delivery Type</option>
-                                <option value="POC">POC</option>
-                                <option value="BAU">BAU</option>
-                                {/* <option value="R&D">R&D</option> */}
-                                <option value="Adhoc">Adhoc</option>
-                            </select>
-                        </div>
-
-
                         {/* Project Type */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Project Type</label>
@@ -416,6 +408,74 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                             </select>
                         </div>
 
+                        {/* Delivery Type */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Type</label>
+                            <select
+                                name="DeliveryType"
+                                value={form.DeliveryType}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded p-2"
+                            >
+                                <option value="" disabled hidden>Select Delivery Type</option>
+                                <option value="POC">POC</option>
+                                <option value="BAU">BAU</option>
+                                {/* <option value="R&D">R&D</option> */}
+                                <option value="Adhoc">Adhoc</option>
+                                <option value="Once-off">Once-off</option>
+                            </select>
+                            {(form.DeliveryType === "Once-off" || form.DeliveryType === "Adhoc") && (
+
+                                <div className="mt-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date and Time</label>
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DateTimePicker
+                                            // label="Expected Delivery Date"
+                                            value={form.ExpectedDeliveryDate ? dayjs(form.ExpectedDeliveryDate) : null}
+                                            onChange={(value) => setForm(prev => ({
+                                                ...prev,
+                                                ExpectedDeliveryDate: value ? value.toISOString() : null
+                                            }))}
+                                            format="YYYY/MM/DD HH:mm"
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    className="w-full bg-gray-100 rounded p-2"
+                                                />
+                                            )}
+                                            slotProps={{
+                                                textField: {
+                                                    placeholder: 'DD/MM/YYYY HH:MM AM/PM',
+                                                    size: 'small',
+                                                    // fullWidth: true,
+                                                    sx: { minHeight: '35px', borderRadius: '5px' }
+                                                }
+                                            }}
+                                        />
+                                    </LocalizationProvider>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Expected Volume count */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Expected Volume Count
+                                {/* <span className="text-red-500">*</span> */}
+                            </label>
+                            <input
+                                type="text"
+                                name="VolumeCount"
+                                value={form.VolumeCount}
+                                onChange={handleChange}
+                                //   placeholder="Expected volume count"
+                                className="w-full border border-gray-300 rounded-r p-2"
+                            //   required
+                            />
+                        </div>
+
+
+
 
                         {/* Frequency */}
                         <div>
@@ -426,7 +486,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2"
                             >
-                                <option value="" disabled>Select Frequency</option>
+                                <option value="" disabled hidden>Select Frequency</option>
                                 <option value="Daily">Daily</option>
                                 <option value="Weekly">Weekly</option>
                                 <option value="Monthly">Monthly</option>
@@ -434,14 +494,46 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 <option value="Adhoc">Adhoc</option>
                             </select>
                             {form.Frequency === "OneTime" && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Target Deadline</label>
-                                    <input
-                                        type="date"
-                                        value={form.Timeline}
-                                        onChange={(e) => setForm(prev => ({ ...prev, Timeline: e.target.value }))}
-                                        className="w-full border border-gray-300 rounded p-2"
-                                    />
+                                // <div>
+                                //     <label className="block text-sm font-medium text-gray-700 mb-1">Target Deadline</label>
+                                //     <input
+                                //         type="date"
+                                //         value={form.Timeline}
+                                //         onChange={(e) => setForm(prev => ({ ...prev, Timeline: e.target.value }))}
+                                //         className="w-full border border-gray-300 rounded p-2"
+                                //     />
+                                // </div>
+
+                                <div className="mt-2">
+                                    <label className="block font-medium mb-1">Target Deadline</label>
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+
+                                            // label="Target Deadline"
+                                            value={form.Timeline ? dayjs(form.Timeline) : null}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    Timeline: value ? value.format("YYYY/MM/DD") : "",
+                                                }))
+                                            }
+                                            format="YYYY/MM/DD"// display format in the input
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    className="w-full bg-gray-100 rounded"
+                                                />
+                                            )}
+                                            slotProps={{
+                                                textField: {
+                                                    placeholder: 'DD/MM/YYYY HH:MM AM/PM',
+                                                    size: 'small',
+                                                    // fullWidth: true,
+                                                    sx: { minHeight: '35px', borderRadius: '5px' }
+                                                }
+                                            }}
+                                        />
+                                    </LocalizationProvider>
                                 </div>
                             )}
                         </div>

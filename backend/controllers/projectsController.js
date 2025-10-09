@@ -27,6 +27,7 @@ export const createProject = async (req, res) => {
       DeliveryType,
       VolumeCount,
       Timeline,
+      ExpectedDeliveryDate,
       Description,
       DomainName,
       ApplicationType,
@@ -88,7 +89,36 @@ export const createProject = async (req, res) => {
     }
 
     // Prepend ACT prefix
-    const finalProjectCode = `[ACT-${ProjectCode}]`;
+    // const finalProjectCode = `[ACT-${ProjectCode}]`;
+
+    // Get last project number
+    // const lastProject = await Project.findOne({}).sort({ _id: -1 });
+    // let seq = 1;
+
+    // if (lastProject) {
+    //   const lastNumber = parseInt(lastProject.ProjectCode.split('-')[1]);
+    //   seq = lastNumber + 1;
+    // }
+
+    // const finalProjectCode = `ACT-${seq.toString().padStart(4, '0')}`;
+
+    // 1️⃣ Get the last created project
+    const lastProject = await Project.findOne({})
+      .sort({ CreatedDate: -1 }) // latest project
+      .select("ProjectCode")
+      .lean();
+
+    // 2️⃣ Extract number from last ProjectCode
+    let nextNumber = 1;
+    if (lastProject?.ProjectCode) {
+      const match = lastProject.ProjectCode.match(/\d+$/); // get numeric part
+      if (match) {
+        nextNumber = parseInt(match[0], 10) + 1; // increment by 1
+      }
+    }
+
+    // 3️⃣ Pad with leading zeros
+    const finalProjectCode = `[ACT-${String(nextNumber).padStart(4, "0")}]`;
 
     // 1️⃣ Create Project
     // 1️⃣ Create Project
@@ -107,6 +137,7 @@ export const createProject = async (req, res) => {
       VolumeCount,
       Priority,
       Timeline: Timeline || "",
+      ExpectedDeliveryDate: ExpectedDeliveryDate || "N/A",
       Description: Description || "",
       CreatedBy: createdBy,
       TLId: null,
@@ -204,8 +235,8 @@ export const updateProject = async (req, res) => {
 
     // Fetch existing project
     const project = await Project.findById(id)
-    .populate("PMId", "_id name")   // 🔹 populate PM
-    .populate("BDEId", "_id name");;
+      .populate("PMId", "_id name")   // 🔹 populate PM
+      .populate("BDEId", "_id name");;
     if (ProjectCode) {
       // Remove any existing ACT or ACT- prefix from user input
       const suffix = ProjectCode.replace(/^ACT-?/, '');
@@ -1268,7 +1299,8 @@ export const getProjectById = async (req, res) => {
     }
 
     const project = await Project.findById(id)
-      .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", "name roleId")
+      .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId updateHistory.updatedBy", "name roleId")
+      .populate("updateHistory.newValue", "name")
       .populate({
         path: "PMId TLId PCId QAId BAUPersonId CreatedBy BDEId", // user refs
         select: "name roleId", // fetch name and roleId
@@ -1341,11 +1373,59 @@ export const updateProjectTeam = async (req, res) => {
     const { TLId, PCId, QAId, BAUPersonId,
       //  DeveloperIds 
     } = req.body;
+
+
     const userRole = req.user.roleId?.name;
+    const updatedBy = req.user?._id || null;
+
     // console.log("Request Body:", req.body); DEBUGGING
 
-    const project = await Project.findById(id);
-    if (!project) return res.status(404).json({ message: "Project not found" });
+    // const project = await Project.findById(id);
+    // if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const project = await Project.findById(id)
+      .populate("TLId", "name")
+      .populate("PCId", "name")
+      .populate("QAId", "name")
+      .populate("BAUPersonId", "name");
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const fieldsToCheck = ["TLId", "PCId", "QAId", "BAUPersonId"];
+    const updateHistory = [];
+
+    // ✅ Compare current vs new values for each team field
+    for (const field of fieldsToCheck) {
+      const newValue = req.body[field];
+      const oldValue = project[field]?.toString();
+
+      if (newValue && newValue !== oldValue) {
+        updateHistory.push({
+          field,
+          oldValue: project[field] ? project[field].name || project[field].toString() : "Unassigned",
+          newValue: new mongoose.Types.ObjectId(newValue),
+          updatedBy,
+          updatedAt: new Date(),
+        });
+
+        // Assign new value
+        project[field] = new mongoose.Types.ObjectId(newValue);
+      }
+    }
+
+    // ✅ Save who updated
+    project.UpdatedBy = updatedBy;
+
+    // ✅ Push all changes into project history
+    if (updateHistory.length > 0) {
+      if (!project.updateHistory) project.updateHistory = [];
+      project.updateHistory.push(...updateHistory);
+    }
+
+
+
     // Only Manager can assign TL, PC, QA
     if (userRole === "Manager") {
       if (TLId && mongoose.Types.ObjectId.isValid(TLId)) project.TLId = TLId;
@@ -1373,6 +1453,8 @@ export const updateProjectTeam = async (req, res) => {
     //   project.DeveloperIds = DeveloperIds;
     // }
 
+    project.UpdatedBy = req.user?._id || null;
+
     await project.save();
 
     // Populate for frontend display
@@ -1383,7 +1465,8 @@ export const updateProjectTeam = async (req, res) => {
       .populate("BAUPersonId", "name")
       .populate("PMId", "name")       // <-- populate PM
       .populate("BDEId", "name")      // <-- populate BDE
-      .populate("CreatedBy", "name");
+      .populate("CreatedBy", "name")
+      .populate("UpdatedBy", "name");
     // .populate("DeveloperIds", "name");
 
     res.json({ message: "Project team updated", project: updatedProject });

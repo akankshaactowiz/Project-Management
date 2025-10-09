@@ -1,12 +1,18 @@
 import { useEffect, useState, Fragment, useRef } from "react";
 import ReactDOM from "react-dom";
+import Modal from "react-modal";
+
+// Bind modal to your app element (for accessibility)
+Modal.setAppElement("#root");
 
 
 import { useParams, useNavigate } from "react-router-dom";
+import { FiEye } from "react-icons/fi";
 import Select from "react-select";
 import { useAuth } from "../hooks/useAuth";
 import Pagination from "../components/Pagination"
 import Breadcrumb from "../components/Breadcrumb";
+import dayjs from "dayjs";
 
 export default function ProjectDetails() {
   const { user } = useAuth();
@@ -24,11 +30,19 @@ export default function ProjectDetails() {
   const [showPopover, setShowPopover] = useState(false);
   const [openPopoverFeedId, setOpenPopoverFeedId] = useState(null);
 
+  const [isOpen, setIsOpen] = useState(false);
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => setIsOpen(false);
+
   const [showFeedPopover, setShowFeedPopover] = useState(false);
   const popoverRef = useRef(null);
   const buttonRef = useRef({}); // store refs per feed row
 
+  const feedPopoverRef = useRef(null);
+  const genericPopoverRef = useRef(null);
+
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [history, setHistory] = useState([]);
   const [form, setForm] = useState({
     TLId: "",
     DeveloperIds: [],
@@ -39,26 +53,58 @@ export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
 
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (
+  //       popoverRef.current &&
+  //       !popoverRef.current.contains(event.target) &&
+  //       buttonRef.current &&
+  //       !buttonRef.current.contains(event.target)
+  //     ) {
+  //       setOpenPopoverFeedId(false);
+  //     }
+  //   };
+
+  //   if (showFeedPopover) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   }
+
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, [openPopoverFeedId]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close feed popovers
       if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target) &&
+        openPopoverFeedId !== null &&
+        feedPopoverRef.current &&
+        !feedPopoverRef.current.contains(event.target) &&
         buttonRef.current &&
-        !buttonRef.current.contains(event.target)
+        !Object.values(buttonRef.current).some(btn => btn.contains(event.target))
       ) {
-        setOpenPopoverFeedId(false);
+        setOpenPopoverFeedId(null);
+      }
+
+      // Close generic popover
+      if (
+        showPopover &&
+        genericPopoverRef.current &&
+        !genericPopoverRef.current.contains(event.target)
+      ) {
+        setShowPopover(false);
       }
     };
 
-    if (showFeedPopover) {
+    if (openPopoverFeedId !== null || showPopover) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openPopoverFeedId]);
+  }, [openPopoverFeedId, showPopover]);
 
 
   const handleToggle = (feedId) => {
@@ -73,19 +119,21 @@ export default function ProjectDetails() {
 
 
   // ✅ Close popover on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setShowPopover(false);
-      }
-    }
-    if (showPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showPopover]);
+  // useEffect(() => {
+  //   function handleClickOutside(event) {
+  //     if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+  //       setShowPopover(false);
+  //     }
+  //   }
+  //   if (showPopover) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   } else {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   }
+  //   return () => document.removeEventListener("mousedown", handleClickOutside);
+  // }, [showPopover]);
+
+
   const handleShowAll = (members) => {
     setSelectedMembers(members);
   };
@@ -119,6 +167,8 @@ export default function ProjectDetails() {
           QAPersonIds: data.QAPersonIds?.map((d) => d._id) || [],
         });
 
+        setHistory(data.project?.updateHistory || []);
+
         // Fetch users for TL + Developers
         const userRes = await fetch(
           `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/tl-dev`,
@@ -138,11 +188,11 @@ export default function ProjectDetails() {
 
   // Inside your component, after fetching `project` data
   const totalFeeds = project?.Feeds?.length || 0;
-  const activeFeeds = project?.Feeds?.filter(f => f.Status === "Active").length || 0;
+  const activeFeeds = project?.Feeds?.filter(f => f.Status === "Under Development").length || 0;
   const closedFeeds = project?.Feeds?.filter(f => f.Status === "Closed").length || 0;
 
-  const BAUStarted = project?.Feeds?.filter(f => f.DeliveryType === "BAU" && f.Status === "Started").length || 0;
-  const BAUNotStarted = project?.Feeds?.filter(f => f.DeliveryType === "BAU" && f.Status === "Not Started").length || 0;
+  const BAUStarted = project?.Feeds?.filter(f => f.BAUStatus === "BAU-Started").length || 0;
+  const BAUNotStarted = project?.Feeds?.filter(f => f.BAUStatus === "BAU-Not Yet Started").length || 0;
   const OnHold = project?.Feeds?.filter(f => f.Status === "On Hold").length || 0;
 
   const DailyCount = project?.Feeds?.filter(f => f.Frequency === "Daily").length || 0;
@@ -177,6 +227,56 @@ export default function ProjectDetails() {
       console.error(err);
     }
   };
+
+
+  // const historySample = [
+  //   {
+  //     user: "Sunil Velueri",
+  //     avatar: "https://i.pravatar.cc/40?img=1",
+  //     action: "Created the Project ",
+  //     // from: "Awaiting client approval",
+  //     // to: "Closed",
+  //     date: "September 29, 2025 9:19 PM",
+  //   },
+  //   {
+  //     user: "Krushil Gajjar",
+  //     avatar: "https://i.pravatar.cc/40?img=1",
+  //     action: "added Project Coordinator and Team Lead",
+  //     from: "Pruthak Acharya, Harsh K Patel",
+  //     to: "Pruthak Acharya",
+  //     date: "October 3, 2025 7:36 PM",
+  //   },
+  //   // {
+  //   //   user: "Rohit Tiwari",
+  //   //   avatar: "https://i.pravatar.cc/40?img=2",
+  //   //   action: "changed the Project Status",
+  //   //   from: "Production",
+  //   //   to: "Awaiting client approval",
+  //   //   date: "December 4, 2024 4:44 PM",
+  //   // },
+  // ];
+
+const formatISTDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+
+  // Convert to IST manually
+  const istDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+  // Extract parts
+  const year = istDate.getFullYear();
+  const month = String(istDate.getMonth() + 1).padStart(2, "0");
+  const day = String(istDate.getDate()).padStart(2, "0");
+
+  let hours = istDate.getHours();
+  const minutes = String(istDate.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // convert 0 to 12 for 12-hour format
+
+  return `${year}/${month}/${day} ${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+};
+
+
 
   if (!project) return <p>Loading...</p>;
 
@@ -246,7 +346,7 @@ export default function ProjectDetails() {
                       <p className="flex justify-between text-gray-600">
                         <span>Active Feeds</span>
                         <span className="font-semibold text-green-600">
-                          {totalFeeds}
+                          {activeFeeds}
                         </span>
                       </p>
                       <p className="flex justify-between text-gray-600">
@@ -279,13 +379,13 @@ export default function ProjectDetails() {
                     </h4>
                     <div className="space-y-2 text-sm">
                       <p className="flex justify-between text-gray-600">
-                        <span>BAU - Started</span>
+                        <span>BAU-Started</span>
                         <span className="font-semibold text-green-600">
                           {BAUStarted}
                         </span>
                       </p>
                       <p className="flex justify-between text-gray-600">
-                        <span>BAU - Not Started</span>
+                        <span>BAU - Not Yet Started</span>
                         <span className="font-semibold text-yellow-600">
                           {BAUNotStarted}
                         </span>
@@ -310,19 +410,19 @@ export default function ProjectDetails() {
                       <p className="flex justify-between text-gray-600">
                         <span>Daily</span>
                         <span className="font-semibold text-blue-600">
-                          {project?.DailyCount || 0}
+                          {DailyCount || 0}
                         </span>
                       </p>
                       <p className="flex justify-between text-gray-600">
                         <span>Weekly</span>
                         <span className="font-semibold text-indigo-600">
-                          {project?.WeeklyCount || 0}
+                          {WeeklyCount || 0}
                         </span>
                       </p>
                       <p className="flex justify-between text-gray-600">
                         <span>Monthly</span>
                         <span className="font-semibold text-purple-600">
-                          {project?.MonthlyCount || 0}
+                          {MonthlyCount || 0}
                         </span>
                       </p>
                     </div>
@@ -341,12 +441,13 @@ export default function ProjectDetails() {
                     <div>
                       <p className="text-gray-500">Assigned Date</p>
                       <p className="font-semibold text-gray-800">
-                        {new Date(project.CreatedDate).toLocaleDateString() ??
-                          "-"}
+                        {project?.CreatedDate
+                          ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
+                          : "-"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Due Date</p>
+                      <p className="text-gray-500">Overdue Date</p>
                       <p className="font-semibold text-gray-800">
                         {project?.DueDate || "-"}
                       </p>
@@ -476,14 +577,14 @@ export default function ProjectDetails() {
                                   <div className="flex flex-col gap-1">
                                     <span
                                       className={`inline-block px-3 py-1 text-xs rounded-full w-fit ${feed.Frequency === "Daily"
-                                          ? "bg-green-100 text-green-700"
-                                          : feed.Frequency === "Weekly"
-                                            ? "bg-blue-100 text-blue-700"
-                                            : feed.Frequency === "Monthly"
-                                              ? "bg-purple-100 text-purple-700"
-                                              : feed.Frequency === "Once-off"
-                                                ? "bg-orange-100 text-orange-700"
-                                                : "bg-gray-100 text-gray-600"
+                                        ? "bg-green-100 text-green-700"
+                                        : feed.Frequency === "Weekly"
+                                          ? "bg-blue-100 text-blue-700"
+                                          : feed.Frequency === "Monthly"
+                                            ? "bg-purple-100 text-purple-700"
+                                            : feed.Frequency === "Once-off"
+                                              ? "bg-orange-100 text-orange-700"
+                                              : "bg-gray-100 text-gray-600"
                                         }`}
                                     >
                                       {feed.Frequency ?? "No schedule"}
@@ -553,7 +654,9 @@ export default function ProjectDetails() {
                                           <img
                                             src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
                                             alt={m.name}
-                                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
+                                            className="w-8 h-8 rounded-full shadow-sm cursor-pointer hover:scale-105 transition"
+                                            ref={(el) => (buttonRef.current[feed._id] = el)}
+                                          onClick={() => handleToggle(feed._id)}
                                           />
                                         </div>
                                       ))}
@@ -562,7 +665,7 @@ export default function ProjectDetails() {
                                         <button
                                           ref={(el) => (buttonRef.current[feed._id] = el)}
                                           onClick={() => handleToggle(feed._id)}
-                                          className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                                          className="cursor-pointer w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center  shadow-sm hover:bg-purple-700 transition"
                                         >
                                           +{extraCount}
                                         </button>
@@ -571,7 +674,8 @@ export default function ProjectDetails() {
                                       {openPopoverFeedId === feed._id &&
                                         ReactDOM.createPortal(
                                           <div
-                                            className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-64 z-50"
+                                            ref={feedPopoverRef}
+                                            className="absolute bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-64 z-50"
                                             style={{ top: position.top, left: position.left }}
                                           >
                                             <h3 className="text-sm font-semibold text-gray-700 mb-2">All Assignees</h3>
@@ -650,7 +754,7 @@ export default function ProjectDetails() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Due Date</p>
+                      <p className="text-gray-500">Overdue Date</p>
                       <p className="font-semibold text-gray-800">
                         {project?.DueDate || "-"}
                       </p>
@@ -698,6 +802,18 @@ export default function ProjectDetails() {
                   </span>
                 </p>
 
+                {/* ✅ Show Expected Delivery Date if available */}
+                {(project?.DeliveryType === "Adhoc" || project?.DeliveryType === "Once-off") &&
+                  project?.ExpectedDeliveryDate && (
+                    <p className="flex justify-between">
+                      <span className="text-gray-500">Expected Delivery Date</span>
+                      <span className="font-semibold text-gray-800">
+                        {project.ExpectedDeliveryDate}
+                      </span>
+                    </p>
+                  )}
+
+
                 <p className="flex justify-between">
                   <span className="text-gray-500">Project Type</span>
                   <span className="font-semibold text-gray-800">
@@ -738,8 +854,8 @@ export default function ProjectDetails() {
                     const combinedMembers = [
                       project.PMId && { name: project.PMId.name, roleName: "Manager", avatar: project.PMId.avatar },
                       project.TLId && { name: project.TLId.name, roleName: "Team Lead", avatar: project.TLId.avatar },
-                      project.QAId && { name: project.QAId.name, roleName: "QA", avatar: project.QAId.avatar },
-                      project.PCId && { name: project.PCId.name, roleName: "PC", avatar: project.PCId.avatar },
+                      project.QAId && { name: project.QAId.name, roleName: "QA Lead", avatar: project.QAId.avatar },
+                      project.PCId && { name: project.PCId.name, roleName: "Project Coordinator", avatar: project.PCId.avatar },
                       ...(project.Feeds?.flatMap(feed => [
                         ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
                         feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
@@ -769,7 +885,8 @@ export default function ProjectDetails() {
                             <img
                               src={m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || "U")}&background=random`}
                               alt={m.name}
-                              className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                              className="w-8 h-8 rounded-full border-white shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                              onClick={() => setShowPopover(!showPopover)}
                             />
                           </div>
                         ))}
@@ -777,7 +894,7 @@ export default function ProjectDetails() {
                         {extraCount > 0 && (
                           <button
                             onClick={() => setShowPopover(!showPopover)}
-                            className="w-8 h-8 rounded-full cursor-pointer bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
+                            className="w-8 h-8 rounded-full cursor-pointer bg-purple-600 text-white text-xs font-medium flex items-center justify-center hover:bg-purple-700 transition"
                           >
                             +{extraCount}
                           </button>
@@ -785,7 +902,7 @@ export default function ProjectDetails() {
 
                         {/* Popover */}
                         {showPopover && (
-                          <div className="absolute top-10 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-64 z-50">
+                          <div ref={genericPopoverRef} className="absolute top-10 right-0 bg-white rounded-lg shadow-lg p-3 w-64 z-50 border border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">
                               All Assignees
                             </h3>
@@ -822,11 +939,86 @@ export default function ProjectDetails() {
 
                 <p className="flex justify-between">
                   <span className="text-gray-500">History</span>
-                  <span className="font-semibold text-gray-700">
-                    {/* {(project?.AssignedTo || []).join(", ") || "-"} */}
-                    {project.history || "-"}
+                  <span className="font-semibold text-left text-gray-700 cursor-pointer">
+                    <FiEye size={24} className="" onClick={openModal} />
                   </span>
                 </p>
+
+                <Modal
+                  isOpen={isOpen}
+                  onRequestClose={() => setIsOpen(false)}
+                  contentLabel="Project History"
+                  className="max-w-2xl mx-auto mt-40 bg-white rounded-lg shadow-lg outline-none p-6 relative"
+                  overlayClassName="fixed inset-0 bg-black/20 bg-opacity-50 flex justify-center items-start z-50"
+                >
+                  <h2 className="text-xl font-semibold mb-4">Project History</h2>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {project && (
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
+                          {project.CreatedBy?.name
+                            ?.split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase() || "?"}
+                        </div>
+
+                        <div className="flex-1">
+                          <p>
+                            <span className="font-semibold">{project.CreatedBy?.name}</span> created
+                            this project and assigned to <span className="font-semibold">{project.PMId?.name || "N/A"}</span> as PM. 
+                          </p>
+                          <p className="text-gray-400 text-sm mt-1">
+                             {formatISTDate(project.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {history.length > 0 ? (
+                      history.map((item, index) => (
+                        <div key={index} className="flex gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                            {item.updatedBy?.name
+                              ?.split(" ")
+                              ?.map((n) => n[0])
+                              ?.join("")
+                              ?.toUpperCase() || "?"}
+                          </div>
+
+                          <div className="flex-1">
+                            <p>
+                              <span className="font-semibold">{item.updatedBy?.name}</span> 
+                              {/* Added{" "} */} Assigned project to <span className="font-semibold">{item.newValue?.name || "N/A"}</span> as {item.field === "PMId" ? "PM" : item.field === "TLId" ? "Team Lead" : item.field === "QAId" ? "QA Lead" : item.field === "PCId" ? "Project Coordinator" : item.field === "BDEId" ? "BDE" : item.field === "BAUPersonId" ? "BAU" : item.field === "DeveloperIds" ? "Developer" : item.field}.
+                              {/* <strong>{item.field}</strong> from{" "}
+                              <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                                {item.oldValue || "—"}
+                              </span>{" "}
+                              to{" "} */}
+                              {/* <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
+                                {item.newValue || "—"}
+                              </span> */}
+                            </p>
+                            <p className="text-gray-400 text-sm mt-1">
+                              {formatISTDate(item.updatedAt)}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) 
+                    : (
+                      <p className="text-gray-400 text-center"></p>
+                    )}
+
+                  </div>
+                </Modal>
               </div>
             </div>
             <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
@@ -837,8 +1029,9 @@ export default function ProjectDetails() {
 
               <div className="space-y-2 text-sm">
 
-                <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
-                  <a href="" onClick={() => navigate(`/projects/${project._id}/attachments`)}>View</a>
+                <button className="cursor-pointer bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+                onClick={() => navigate(`/projects/${project._id}/attachments`)}>
+                  <a href="">View</a>
                 </button>
               </div>
             </div>
