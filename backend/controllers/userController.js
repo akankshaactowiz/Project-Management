@@ -532,37 +532,88 @@ export const getPC = async (req, res) => {
   }
 };
 
-
 export const getTLAndDevelopers = async (req, res) => {
   try {
+    const userId = req.user._id; // Logged-in user
+
+    // Get logged-in user's department
+    const loggedInUser = await User.findById(userId)
+      .populate("departmentId", "department");
+
+    const userDeptId = loggedInUser?.departmentId?._id;
+
     // Populate role + department for filtering
     const users = await User.find()
       .populate("roleId", "name")
       .populate("departmentId", "department");
 
-    // TL = role = "Team Lead"
-    const tlUsers = users.filter((u) => u.roleId?.name === "Team Lead");
+    // TL = role = "Team Lead" AND same department
+    const tlUsers = users.filter(
+      (u) => u.roleId?.name === "Team Lead" && u.departmentId?._id.equals(userDeptId)
+    );
 
-    // PC = role = "Project Coordinator"
-    const pcUsers = users.filter((u) => u.roleId?.name === "Project Coordinator");
+    // PC = role = "Project Coordinator" AND same department
+    const pcUsers = users.filter(
+      (u) => u.roleId?.name === "Project Coordinator" && u.departmentId?._id.equals(userDeptId)
+    );
 
-    // Developers = role = "Developer"
-    const devUsers = users.filter((u) => u.roleId?.name === "Developer");
+    // Developers = role = "Developer" AND same department
+    const devUsers = users.filter(
+      (u) => u.roleId?.name === "Developer" && u.departmentId?._id.equals(userDeptId)
+    );
 
+    // QA Lead (no department filter)
     const qaLead = users.filter((u) => u.roleId?.name === "QA Lead");
 
-    const bauPerson = users.filter((u) => u.roleId?.name === "BAU");
+    // BAU Person (Manager in BAU dept, no user department filter)
+    const bauPerson = users.filter(
+      (u) => u.roleId?.name === "Manager" && u.departmentId?.department === "BAU"
+    );
 
     return res.status(200).json({
       tlUsers: tlUsers.map((u) => ({ _id: u._id, name: u.name })),
       pcUsers: pcUsers.map((u) => ({ _id: u._id, name: u.name })),
-      bauPerson: bauPerson.map((u) => ({ _id: u._id, name: u.name })),
       devUsers: devUsers.map((u) => ({ _id: u._id, name: u.name })),
       qaLead: qaLead.map((u) => ({ _id: u._id, name: u.name })),
-      // BAU: BAU.map((u) => ({ _id: u._id, name: u.name })),
+      bauPerson: bauPerson.map((u) => ({ _id: u._id, name: u.name })),
     });
   } catch (err) {
     console.error("Error fetching TL & Developers:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// export const getTLAndDevelopers = async (req, res) => {
+//   try {
+//     // Populate role + department for filtering
+//     const users = await User.find()
+//       .populate("roleId", "name")
+//       .populate("departmentId", "department");
+
+//     // TL = role = "Team Lead"
+//     const tlUsers = users.filter((u) => u.roleId?.name === "Team Lead");
+
+//     // PC = role = "Project Coordinator"
+//     const pcUsers = users.filter((u) => u.roleId?.name === "Project Coordinator");
+
+//     // Developers = role = "Developer"
+//     const devUsers = users.filter((u) => u.roleId?.name === "Developer");
+
+//     const qaLead = users.filter((u) => u.roleId?.name === "QA Lead");
+
+//     const bauPerson = users.filter((u) => u.roleId?.name === "Manager" && u.departmentId?.department === "BAU");
+
+//     return res.status(200).json({
+//       tlUsers: tlUsers.map((u) => ({ _id: u._id, name: u.name })),
+//       pcUsers: pcUsers.map((u) => ({ _id: u._id, name: u.name })),
+//       bauPerson: bauPerson.map((u) => ({ _id: u._id, name: u.name })),
+//       devUsers: devUsers.map((u) => ({ _id: u._id, name: u.name })),
+//       qaLead: qaLead.map((u) => ({ _id: u._id, name: u.name })),
+//       // BAU: BAU.map((u) => ({ _id: u._id, name: u.name })),
+//     });
+//   } catch (err) {
+//     console.error("Error fetching TL & Developers:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };

@@ -248,7 +248,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Project Code */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Project Code
                             </label>
@@ -261,7 +261,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 className="w-full border border-gray-300 rounded p-2"
                                 required
                             />
-                        </div>
+                        </div> */}
 
                         {/* Project Name */}
                         <div>
@@ -273,6 +273,30 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2"
                             />
+                        </div>
+
+                         {/* Industry Type */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Industry Type</label>
+                            <select
+                                name="IndustryType"
+                                value={form.IndustryType}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded p-2"
+                            >
+                                <option value="" disabled>Select Industry Type</option>
+                                <option value="E-com">E-com</option>
+                                <option value="Food">Food</option>
+                                <option value="Q-com">Q-com</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Travel">Travel</option>
+                                <option value="OTT">OTT</option>
+                                <option value="Real Estate">Real Estate</option>
+                                <option value="Government">Government</option>
+                                <option value="Event">Event</option>
+                                <option value="Social Media">Social Media</option>
+                                <option value="Music">Music</option>
+                            </select>
                         </div>
 
                         {/* SOW File */}
@@ -368,29 +392,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
 
 
 
-                        {/* Industry Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Industry Type</label>
-                            <select
-                                name="IndustryType"
-                                value={form.IndustryType}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded p-2"
-                            >
-                                <option value="" disabled>Select Industry Type</option>
-                                <option value="E-com">E-com</option>
-                                <option value="Food">Food</option>
-                                <option value="Q-com">Q-com</option>
-                                <option value="Sports">Sports</option>
-                                <option value="Travel">Travel</option>
-                                <option value="OTT">OTT</option>
-                                <option value="Real Estate">Real Estate</option>
-                                <option value="Government">Government</option>
-                                <option value="Event">Event</option>
-                                <option value="Social Media">Social Media</option>
-                                <option value="Music">Music</option>
-                            </select>
-                        </div>
+                       
 
                         {/* Project Type */}
                         <div>
@@ -638,7 +640,7 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Country Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
                             <Select
                                 name="country"
                                 options={countryOptions}

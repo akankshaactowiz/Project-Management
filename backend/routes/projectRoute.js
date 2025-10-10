@@ -74,7 +74,7 @@ router.post("/developer-report/:uniqueId/comment", protect, async (req,res)=>{
   const report = project.qaReports.find(r=>r.uniqueId === req.params.uniqueId);
   report.developerComments = report.developerComments || [];
   report.developerComments.push({ comment, userId: req.user.id, date: new Date() });
-  await project.save();
+  // await project.save();
   res.json({ message: "Comment added" });
 });
 

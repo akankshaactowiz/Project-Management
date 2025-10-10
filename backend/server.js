@@ -21,7 +21,8 @@ import deparmentRoute from "./routes/departmentRoute.js";
 import projectRoute from "./routes/projectRoute.js";
 import reportRoute from "./routes/Reports.js";
 import userRoutes from "./routes/userRoutes.js"
-import workRoute from "./routes/workRoute.js"
+import workRoute from "./routes/workRoute.js";
+import projectHistoryRoute from "./routes/projectHistory.js";
 // import { authorize } from "./middlewares/rbacMiddleware.js";
 dotenv.config();
 connectDB();
@@ -58,6 +59,7 @@ app.use("/api/department",deparmentRoute);
 app.use("/api/projects", protect, authorize("Projects", "view"), projectRoute); 
 app.use("/api/work", protect, authorize("Work", "view"), workRoute)
 app.use("/api/reports", protect, reportRoute)
+app.use("/api/history", protect, projectHistoryRoute)
 
 
 

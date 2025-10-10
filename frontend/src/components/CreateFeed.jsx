@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { getData } from "country-list";
-import {toast} from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 import Modal from "react-modal";
 
@@ -58,7 +58,7 @@ function CreateFeed({ onClose, onSuccess }) {
     loadQaManagers();
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     const loadProjectCoordinator = async () => {
       try {
         const res = await fetch(
@@ -134,7 +134,7 @@ function CreateFeed({ onClose, onSuccess }) {
   //       DomainName: domainName,
   //       ApplicationType: applicationType,
   //       CountryName: country?.value,
-        
+
   //       TLId: tlId?.value || null,
   //       // QAId: qaId?.value || null,
   //       // PCId: pcId?.value || null,
@@ -170,69 +170,74 @@ function CreateFeed({ onClose, onSuccess }) {
   //     setLoading(false);
   //   }
   // };
-const handleSave = async () => {
-  try {
-    setLoading(true);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
 
-    // ✅ Frontend validation
-    const newErrors = {};
-    if (!projectId) newErrors.projectId = "Project is required";
-    if (!feedName) newErrors.feedName = "Feed Name is required";
-    if (!domainName) newErrors.domainName = "Domain Name is required";
-    if (!applicationType) newErrors.applicationType = "Platform Type is required";
-    if (!country) newErrors.country = "Country is required";
-    if (!tlId) newErrors.tlId = "Team Lead is required";
-    // if (!devId || devId.length === 0) newErrors.devId = "At least one Developer is required";
-    // if (!bauPerson) newErrors.bauPerson = "BAU Person is required"; // optional
+      // ✅ Frontend validation
+      const newErrors = {};
+      if (!projectId) newErrors.projectId = "Project is required";
+      if (!feedName) newErrors.feedName = "Feed Name is required";
+      if (!domainName) newErrors.domainName = "Domain Name is required";
+      if (!applicationType) newErrors.applicationType = "Platform Type is required";
+      if (!country) newErrors.country = "Country is required";
+      if (!tlId) newErrors.tlId = "Team Lead is required";
+      // if (!devId || devId.length === 0) newErrors.devId = "At least one Developer is required";
+      // if (!bauPerson) newErrors.bauPerson = "BAU Person is required"; // optional
 
-    setErrors(newErrors); // ✅ update errors state
+      setErrors(newErrors); // ✅ update errors state
 
-    // Stop if there are validation errors
-    if (Object.keys(newErrors).length > 0) {
-      setLoading(false);
-      return;
-    }
-
-    // Prepare payload
-    const payload = {
-      projectId,
-      FeedName: feedName,
-      DomainName: domainName,
-      ApplicationType: applicationType,
-      CountryName: country?.value,
-      TLId: tlId?.value || null,
-      DeveloperIds: devId.map((d) => d.value),
-      BAUPersonId: bauPerson || null,
-      ExecutionPersonId: null,
-    };
-
-    const response = await fetch(
-      `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
+      // Stop if there are validation errors
+      if (Object.keys(newErrors).length > 0) {
+        setLoading(false);
+        return;
       }
-    );
 
-    const result = await response.json();
+      // Prepare payload
+      const payload = {
+        projectId,
+        FeedName: feedName,
+        DomainName: domainName,
+        ApplicationType: applicationType,
+        CountryName: country?.value,
+        TLId: tlId?.value || null,
+        DeveloperIds: devId.map((d) => d.value),
+        BAUPersonId: bauPerson || null,
+        ExecutionPersonId: null,
+      };
 
-    if (response.ok) {
-      toast.success("Feed created successfully!");
-      onSuccess?.(result.data);
-      onClose();
-    } else {
-      toast.error(result.message || "Failed to create feed");
+      const response = await fetch(
+        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Feed created successfully!");
+        onSuccess?.(result.data);
+        onClose();
+      } else {
+        toast.error(result.message || "Failed to create feed");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong!");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Something went wrong!");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+
+  const projectOptions = projects.map((proj) => ({
+    value: proj._id,
+    label: `${proj.ProjectCode} ${proj.ProjectName}`,
+  }));
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -250,26 +255,18 @@ const handleSave = async () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Project <span className="text-red-500">*</span>
               </label>
-              <select
-                value={projectId}
-               onChange={(e) => {
-    setProjectId(e.target.value);
-    setErrors((prev) => ({ ...prev, projectId: "" })); // Clear project error
-  }}
-                  
-                
-                className="w-full border border-gray-300 rounded-r p-2"
-              >
-                <option value="" disabled hidden>
-                  Select Project
-                </option>
-                {projects.map((proj) => (
-                  <option key={proj._id} value={proj._id}>
-                     {proj.ProjectCode} {proj.ProjectName}
-                  </option>
-                ))}
-              </select>
-                {errors.projectId && <p className="text-red-500 text-sm mt-1">{errors.projectId}</p>}
+              <Select
+                options={projectOptions}
+                value={projectOptions.find((opt) => opt.value === projectId) || null}
+                onChange={(selectedOption) => {
+                  setProjectId(selectedOption?.value || "");
+                  setErrors((prev) => ({ ...prev, projectId: "" })); // Clear project error
+                }}
+                placeholder="Select Project"
+                isSearchable
+                className="w-full"
+              />
+              {errors.projectId && <p className="text-red-500 text-sm mt-1">{errors.projectId}</p>}
             </div>
 
             {/* Feed ID */}
@@ -295,10 +292,10 @@ const handleSave = async () => {
               <input
                 type="text"
                 value={feedName}
-                 onChange={(e) => {
-    setFeedName(e.target.value);
-    setErrors((prev) => ({ ...prev, feedName: "" })); // Clear feedName error
-  }}
+                onChange={(e) => {
+                  setFeedName(e.target.value);
+                  setErrors((prev) => ({ ...prev, feedName: "" })); // Clear feedName error
+                }}
                 placeholder="Feed Name"
                 className="w-full border border-gray-300 rounded-r p-2"
               />
@@ -313,11 +310,11 @@ const handleSave = async () => {
               <input
                 type="text"
                 value={domainName}
-                
-                 onChange={(e) => {
-    setDomainName(e.target.value);
-    setErrors((prev) => ({ ...prev, domainName: "" })); // Clear feedName error
-  }}
+
+                onChange={(e) => {
+                  setDomainName(e.target.value);
+                  setErrors((prev) => ({ ...prev, domainName: "" })); // Clear feedName error
+                }}
                 placeholder="Domain Name"
                 className="w-full border border-gray-300 rounded-r p-2"
               />
@@ -332,11 +329,11 @@ const handleSave = async () => {
               <select
                 value={applicationType}
                 // onChange={(e) => setApplicationType(e.target.value)}
-                 onChange={(e) => {
-    setApplicationType(e.target.value);
-    setErrors((prev) => ({ ...prev, applicationType: "" })); // Clear feedName error
-  }}
-                className="w-full border border-gray-300 rounded-r p-2 text-gray-400"
+                onChange={(e) => {
+                  setApplicationType(e.target.value);
+                  setErrors((prev) => ({ ...prev, applicationType: "" })); // Clear feedName error
+                }}
+                className="w-full border border-gray-300 rounded-r p-2"
               >
                 <option value="" disabled hidden>
                   Select type
@@ -351,31 +348,31 @@ const handleSave = async () => {
             {/* Country */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Country Name<span className="text-red-500">*</span>
+                Country<span className="text-red-500">*</span>
               </label>
               <Select
-  name="country"
-  options={countryOptions}
-  value={country}
-  onChange={(selectedOption) => {
-    setCountry(selectedOption); // ✅ selected option object
-    setErrors((prev) => ({ ...prev, country: "" }));
-  }}
-  isSearchable
-  placeholder="Select Country"
-/>
-{errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                name="country"
+                options={countryOptions}
+                value={country}
+                onChange={(selectedOption) => {
+                  setCountry(selectedOption); // ✅ selected option object
+                  setErrors((prev) => ({ ...prev, country: "" }));
+                }}
+                isSearchable
+                placeholder="Select Country"
+              />
+              {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
             </div>
           </div>
         </div>
 
         {/* Additional Info */}
-        <div className="mb-6">
-          <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
+        <div className="">
+          {/* <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
             Additional Information
-          </h3>
+          </h3> */}
 
-          
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -394,24 +391,24 @@ const handleSave = async () => {
               />
             </div> */}
 
-           <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Team Lead<span className="text-red-500">*</span>
               </label>
               <Select
-  options={tlOptions.map((u) => ({ value: u._id, label: u.name }))}
-  value={tlId}
-  onChange={(selectedOption) => {
-    setTlId(selectedOption); // ✅ selected option object
-    setErrors((prev) => ({ ...prev, tlId: "" }));
-  }}
-  placeholder="Select Team Lead"
-/>
-{errors.tlId && <p className="text-red-500 text-sm mt-1">{errors.tlId}</p>}
-            </div>
+                options={tlOptions.map((u) => ({ value: u._id, label: u.name }))}
+                value={tlId}
+                onChange={(selectedOption) => {
+                  setTlId(selectedOption); // ✅ selected option object
+                  setErrors((prev) => ({ ...prev, tlId: "" }));
+                }}
+                placeholder="Select Team Lead"
+              />
+              {errors.tlId && <p className="text-red-500 text-sm mt-1">{errors.tlId}</p>}
+            </div> */}
 
             {/* Devs */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Developers
               </label>
@@ -425,7 +422,7 @@ const handleSave = async () => {
                 onChange={setDevId}
                 placeholder="Select Developers..."
               />
-            </div>
+            </div> */}
 
             {/* QA */}
             {/* <div>
@@ -444,7 +441,7 @@ const handleSave = async () => {
             </div> */}
 
             {/* Execution Person */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Execution Person
               </label>
@@ -457,7 +454,7 @@ const handleSave = async () => {
                 // onChange={setTlId}
                 placeholder="Select Execution Person if any"
               />
-            </div>
+            </div> */}
 
             {/* BAU */}
             {/* <div>

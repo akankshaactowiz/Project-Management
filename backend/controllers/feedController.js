@@ -108,13 +108,20 @@ export const createFeed = async (req, res) => {
       TLId,
       DeveloperIds,
       // BAUPersonId,
+      // _updatedBy: req.user?._id || null,
       createdBy: req.user?._id || null,
     });
 
     await newFeed.save();
 
     // 6️⃣ Add feed to project's Feeds array
-    await Project.findByIdAndUpdate(projectId, { $push: { Feeds: newFeed._id } });
+    // await Project.findByIdAndUpdate(projectId, { $push: { Feeds: newFeed._id } });
+
+    // Push to project's Feeds array without triggering pre-save hook
+await Project.updateOne(
+  { _id: projectId },
+  { $push: { Feeds: newFeed._id } }
+);
 
     res.status(201).json({
       success: true,
@@ -926,11 +933,12 @@ export const updateFeedById = async (req, res) => {
         Frequency,
         Schedule,
         DatabaseSettings,
-        QARules: rulesWithUser
+        QARules: rulesWithUser,
+        _updatedBy: req.user?._id || null,
       },
-      { new: true, runValidators: true }
+      // { new: true, runValidators: true }
     )
-
+    await updatedFeed.save(); // ✅ Activity log automatically created
     if (!updatedFeed) return res.status(404).json({ message: 'Feed not found' });
 
     res.status(200).json({ message: 'Feed updated successfully', data: updatedFeed });
@@ -953,6 +961,9 @@ export const updateFeedTeam = async (req, res) => {
     if (!feed) return res.status(404).json({ message: "Feed not found" });
 
     feed.DeveloperIds = DeveloperIds || [];
+    feed._updatedBy = req.user?._id || null; // 🔹 Middleware will log developer changes
+
+    // await feed.save(); // ✅ Activity log automatically created
     await feed.save();
 
     const updatedFeed = await Feed.findById(feed._id).populate("DeveloperIds", "name");

@@ -7,6 +7,7 @@ import Feed from "../models/FeedData.js";
 import { generateFeedId } from "../utils/generateFeedId.js";
 import mongoose from "mongoose";
 import getDateRangeFilter from "../utils/ScheduleFilter.js";
+import Activity from "../models/ProjectHistory.js";
 
 
 
@@ -35,11 +36,11 @@ export const createProject = async (req, res) => {
     } = req.body;
 
     const createdBy = req.user?._id || null;
-
+    const updatedBy = req.user?._id || null;
     const errors = {};
 
     // if (!ProjectCode) return res.status(400).json({ success: false, message: "Project Code is required" });
-    if (!ProjectCode) errors.ProjectCode = "Project Code is required";
+    // if (!ProjectCode) errors.ProjectCode = "Project Code is required";
     if (!ProjectName) errors.ProjectName = "Project Name is required";
     // if (!ProjectName) return res.status(400).json({ success: false, message: "Project Name is required" });
 
@@ -70,7 +71,7 @@ export const createProject = async (req, res) => {
 
     // Assignment
     if (!PMId) errors.PMId = "Project Manager is required";
-    if (!BDEId) errors.BDEId = "Business Development Executive is required";
+    // if (!BDEId) errors.BDEId = "Business Development Executive is required";
     if (!Department) errors.Department = "Department is required";
 
     // Project details
@@ -79,6 +80,15 @@ export const createProject = async (req, res) => {
     if (!ProjectType) errors.ProjectType = "Project Type is required";
     if (!IndustryType) errors.IndustryType = "Industry Type is required";
     if (!DeliveryType) errors.DeliveryType = "Delivery Type is required";
+
+
+    // ✅ VolumeCount validation
+    if (VolumeCount) {
+      const volumePattern = /^\d+(\.\d+)?[A-Za-z]*$/;
+      if (!volumePattern.test(VolumeCount.trim())) {
+        errors.VolumeCount = "Volume Count must start with a number (e.g., 8L, 80M, 100K)";
+      }
+    }
 
     // ✅ If any errors exist, return them all together
     if (Object.keys(errors).length > 0) {
@@ -102,22 +112,20 @@ export const createProject = async (req, res) => {
 
     // const finalProjectCode = `ACT-${seq.toString().padStart(4, '0')}`;
 
-    // 1️⃣ Get the last created project
-    const lastProject = await Project.findOne({})
-      .sort({ CreatedDate: -1 }) // latest project
+    // 1️⃣ Get the last created project safely
+    const lastProject = await Project.findOne()
+      .sort({ _id: -1 }) // sort by creation order
       .select("ProjectCode")
       .lean();
 
-    // 2️⃣ Extract number from last ProjectCode
+    // 2️⃣ Extract and increment number safely
     let nextNumber = 1;
     if (lastProject?.ProjectCode) {
-      const match = lastProject.ProjectCode.match(/\d+$/); // get numeric part
-      if (match) {
-        nextNumber = parseInt(match[0], 10) + 1; // increment by 1
-      }
+      const match = lastProject.ProjectCode.match(/\d+/); // works even with brackets
+      if (match) nextNumber = parseInt(match[0], 10) + 1;
     }
 
-    // 3️⃣ Pad with leading zeros
+    // 3️⃣ Generate new code
     const finalProjectCode = `[ACT-${String(nextNumber).padStart(4, "0")}]`;
 
     // 1️⃣ Create Project
@@ -128,7 +136,7 @@ export const createProject = async (req, res) => {
       SOWFile,
       SampleFiles,
       PMId,
-      BDEId,
+      BDEId:BDEId || createdBy,
       DepartmentId: Department,
       Frequency,
       ProjectType,
@@ -140,11 +148,14 @@ export const createProject = async (req, res) => {
       ExpectedDeliveryDate: ExpectedDeliveryDate || "N/A",
       Description: Description || "",
       CreatedBy: createdBy,
+      _updatedBy: updatedBy,
       TLId: null,
       PCId: null,
       QAId: null,
+      BAUPersonId: null,
+      Feeds: [],
     });
-
+    // await project.save(); 
     // 2️⃣ Create initial Feed linked to project
     const FeedId = generateFeedId();
 
@@ -160,10 +171,16 @@ export const createProject = async (req, res) => {
     });
 
     // 3️⃣ Add feed reference to project
-    project.Feeds.push(initialFeed._id);
-    await project.save(); // ✅ Only saves the updated Feeds array
+    // project.Feeds.push(initialFeed._id);
+    await initialFeed.save();
+    // project._updatedBy = createdBy; //activity middlewre  
+    // await project.save(); 
+    // ✅ Only saves the updated Feeds array
 
-
+await Project.updateOne(
+  { _id: project._id },
+  { $push: { Feeds: initialFeed._id } }
+);
     res.status(201).json({
       success: true,
       data: { project, feed: initialFeed },
@@ -293,6 +310,46 @@ export const updateProject = async (req, res) => {
     // project.SOWFile = updatedSOW;
     // project.SampleFiles = updatedSamples;
 
+    // const changedFields = [];
+
+    // // Compare old and new values for each field
+    // const fieldsToCheck = {
+    //   ProjectName,
+    //   ProjectCode,
+    //   Frequency,
+    //   PMId,
+    //   BDEId,
+    //   Department,
+    //   Priority,
+    //   ProjectType,
+    //   IndustryType,
+    //   DeliveryType,
+    //   Timeline,
+    //   Description,
+    // };
+
+    // for (const [key, newVal] of Object.entries(fieldsToCheck)) {
+    //   const oldVal = project[key];
+    //   if (newVal != null && newVal.toString() !== (oldVal?._id?.toString() || oldVal?.toString())) {
+    //     changedFields.push({
+    //       field: key,
+    //       oldValue: oldVal
+    //         ? typeof oldVal === "object" && oldVal._id
+    //           ? { _id: oldVal._id, refModel: oldVal.constructor.modelName, value: oldVal.name || oldVal.value || "" }
+    //           : { value: oldVal }
+    //         : null,
+    //       newValue: newVal
+    //         ? typeof newVal === "object" && newVal._id
+    //           ? { _id: newVal._id, refModel: newVal.constructor.modelName, value: newVal.name || newVal.value || "" }
+    //           : { value: newVal }
+    //         : null,
+    //     });
+    //   }
+    // }
+
+    // // Update project fields
+    // Object.assign(project, fieldsToCheck);
+    project._updatedBy = req.user?._id || null;
     await project.save();
 
     res.status(200).json({
@@ -1366,116 +1423,233 @@ export const getProjectById = async (req, res) => {
 //   }
 // };
 
-export const updateProjectTeam = async (req, res) => {
+// export const updateProjectTeam = async (req, res) => {
 
+//   try {
+//     const { id } = req.params;
+//     const { TLId, PCId, QAId, BAUPersonId,
+//       //  DeveloperIds 
+//     } = req.body;
+
+
+//     const userRole = req.user.roleId?.name;
+//     const updatedBy = req.user?._id || null;
+
+//     // console.log("Request Body:", req.body); DEBUGGING
+
+//     // const project = await Project.findById(id);
+//     // if (!project) return res.status(404).json({ message: "Project not found" });
+
+//     const project = await Project.findById(id)
+//       .populate("TLId", "name")
+//       .populate("PCId", "name")
+//       .populate("QAId", "name")
+//       .populate("BAUPersonId", "name");
+
+//     if (!project) {
+//       return res.status(404).json({ message: "Project not found" });
+//     }
+
+//     // const fieldsToCheck = ["TLId", "PCId", "QAId", "BAUPersonId"];
+//     // const updateHistory = [];
+
+//     // // ✅ Compare current vs new values for each team field
+//     // for (const field of fieldsToCheck) {
+//     //   const newValue = req.body[field];
+//     //   const oldValue = project[field]?.toString();
+
+//     //   if (newValue && newValue !== oldValue) {
+//     //     updateHistory.push({
+//     //       field,
+//     //       oldValue: project[field] ? project[field].name || project[field].toString() : "Unassigned",
+//     //       newValue: new mongoose.Types.ObjectId(newValue),
+//     //       updatedBy,
+//     //       updatedAt: new Date(),
+//     //     });
+
+//     //     // Assign new value
+//     //     project[field] = new mongoose.Types.ObjectId(newValue);
+//     //   }
+//     // }
+
+//     // ✅ Save who updated
+    
+
+//     // ✅ Push all changes into project history
+//     // if (updateHistory.length > 0) {
+//     //   if (!project.updateHistory) project.updateHistory = [];
+//     //   project.updateHistory.push(...updateHistory);
+//     // }
+
+
+
+//     // Only Manager can assign TL, PC, QA
+//     if (userRole === "Manager") {
+//       if (TLId && mongoose.Types.ObjectId.isValid(TLId)) project.TLId = TLId;
+//       if (PCId && mongoose.Types.ObjectId.isValid(PCId)) project.PCId = PCId;
+//       if (QAId && mongoose.Types.ObjectId.isValid(QAId)) project.QAId = QAId;
+//       if (BAUPersonId && mongoose.Types.ObjectId.isValid(BAUPersonId)) project.BAUPersonId = BAUPersonId;
+//     }
+//     // Initialize missing fields
+//     if (!("TLId" in project)) project.TLId = null;
+//     if (!("PCId" in project)) project.PCId = null;
+//     if (!("QAId" in project)) project.QAId = null;
+//     if (!("BAUPersonId" in project)) project.BAUPersonId = null;
+
+//     // Only Manager can assign TL, PC, QA, BAU
+//     // if (userRole === "Manager") {
+//     //   if (TLId) project.TLId = TLId;
+//     //   if (PCId) project.PCId = PCId;
+//     //   if (QAId) project.QAId = QAId;
+//     //   if (BAUPersonId) project.BAUPersonId = BAUPersonId;
+//     // }
+//     console.log("User Role:", userRole);
+
+//     // TL or PC can update Developers
+//     // if ((userRole === "Team Lead" || userRole === "Project Coordinator") && DeveloperIds) {
+//     //   project.DeveloperIds = DeveloperIds;
+//     // }
+
+//     project._updatedBy = updatedBy;
+
+//     await project.save();
+
+//     // Populate for frontend display
+//     const updatedProject = await Project.findById(project._id)
+//       .populate("TLId", "name")
+//       .populate("PCId", "name")
+//       .populate("QAId", "name")
+//       .populate("BAUPersonId", "name")
+//       .populate("PMId", "name")       // <-- populate PM
+//       .populate("BDEId", "name")      // <-- populate BDE
+//       .populate("CreatedBy", "name")
+//       .populate("UpdatedBy", "name");
+//     // .populate("DeveloperIds", "name");
+
+//     res.json({ message: "Project team updated", project: updatedProject });
+//   } catch (err) {
+//     console.error("Error updating project team:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+export const updateProjectTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { TLId, PCId, QAId, BAUPersonId,
-      //  DeveloperIds 
-    } = req.body;
-
-
+    const { TLId, PCId, QAId, BAUPersonId } = req.body; 
+    // console.log("TLId:", TLId, "PCId:", PCId, "QAId:", QAId, "BAUPersonId:", BAUPersonId);
     const userRole = req.user.roleId?.name;
     const updatedBy = req.user?._id || null;
 
-    // console.log("Request Body:", req.body); DEBUGGING
-
-    // const project = await Project.findById(id);
-    // if (!project) return res.status(404).json({ message: "Project not found" });
-
+    // ✅ Step 1: Fetch project with names
     const project = await Project.findById(id)
       .populate("TLId", "name")
       .populate("PCId", "name")
       .populate("QAId", "name")
       .populate("BAUPersonId", "name");
 
-    if (!project) {
-      return res.status(404).json({ message: "Project not found" });
-    }
+    if (!project) return res.status(404).json({ message: "Project not found" });
 
-    const fieldsToCheck = ["TLId", "PCId", "QAId", "BAUPersonId"];
-    const updateHistory = [];
+    const projectName = project.ProjectName || "Unknown Project";
 
-    // ✅ Compare current vs new values for each team field
+    // ✅ Step 2: Check which fields changed
+    const fieldsToCheck = [
+      { key: "TLId", label: "Team Lead" },
+      { key: "PCId", label: "Project Coordinator" },
+      { key: "QAId", label: "QA" },
+      { key: "BAUPersonId", label: "BAU Person" },
+    ];
+
+    const changes = [];
+
+    if (TLId && TLId !== project.TLId?.toString()) {
+  const tlUser = await User.findById(TLId);
+  changes.push(`Team Lead: ${tlUser.name}`);
+}
+
+if (PCId && PCId !== project.PCId?.toString()) {
+  const pcUser = await User.findById(PCId);
+  changes.push(`Project Coordinator: ${pcUser.name}`);
+}
+
+if (QAId && QAId !== project.QAId?.toString()) {
+  const qaUser = await User.findById(QAId);
+  changes.push(`QA: ${qaUser.name}`);
+}
+
+if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
+  const bauUser = await User.findById(BAUPersonId);
+  changes.push(`BAU: ${bauUser.name}`);
+}
+
     for (const field of fieldsToCheck) {
-      const newValue = req.body[field];
-      const oldValue = project[field]?.toString();
+      const newValue = req.body[field.key];
+      if (!newValue || !mongoose.Types.ObjectId.isValid(newValue)) continue;
 
-      if (newValue && newValue !== oldValue) {
-        updateHistory.push({
-          field,
-          oldValue: project[field] ? project[field].name || project[field].toString() : "Unassigned",
-          newValue: new mongoose.Types.ObjectId(newValue),
-          updatedBy,
-          updatedAt: new Date(),
+      const oldValue = project[field.key]?._id?.toString();
+      const oldName = project[field.key]?.name || null;
+
+      // Only record change if different
+      if (oldValue !== newValue) {
+        const newUser = await mongoose.model("User").findById(newValue, "name");
+
+        let description;
+        if (!oldValue) {
+          // Newly assigned
+          description = `${req.user.name} assigned ${newUser?.name || "Unknown"} (${field.label}) in ${projectName}`;
+        } else {
+          // Re-assigned
+          description = `${req.user.name} updated ${field.label} from ${oldName || "Unassigned"} to ${newUser?.name || "Unknown"} in ${projectName}`;
+        }
+
+        // ✅ Add to activity logs
+        await Activity.create({
+          projectId: project._id,
+          actionType: "Project Updated",
+          description,
+          performedBy: updatedBy,
+          entityType: "project",
+          field: field.key,
+          oldValue: oldName || null,
+          newValue: newUser?.name || null,
         });
 
-        // Assign new value
-        project[field] = new mongoose.Types.ObjectId(newValue);
+        // ✅ Apply change to document
+        project[field.key] = newValue;
+        changes.push(field.key);
       }
     }
 
-    // ✅ Save who updated
-    project.UpdatedBy = updatedBy;
-
-    // ✅ Push all changes into project history
-    if (updateHistory.length > 0) {
-      if (!project.updateHistory) project.updateHistory = [];
-      project.updateHistory.push(...updateHistory);
+    // ✅ Save updatedBy and project if there were changes
+    if (changes.length > 0) {
+      project._updatedBy = updatedBy;
+      await project.save();
     }
 
-
-
-    // Only Manager can assign TL, PC, QA
-    if (userRole === "Manager") {
-      if (TLId && mongoose.Types.ObjectId.isValid(TLId)) project.TLId = TLId;
-      if (PCId && mongoose.Types.ObjectId.isValid(PCId)) project.PCId = PCId;
-      if (QAId && mongoose.Types.ObjectId.isValid(QAId)) project.QAId = QAId;
-      if (BAUPersonId && mongoose.Types.ObjectId.isValid(BAUPersonId)) project.BAUPersonId = BAUPersonId;
-    }
-    // Initialize missing fields
-    if (!("TLId" in project)) project.TLId = null;
-    if (!("PCId" in project)) project.PCId = null;
-    if (!("QAId" in project)) project.QAId = null;
-    if (!("BAUPersonId" in project)) project.BAUPersonId = null;
-
-    // Only Manager can assign TL, PC, QA, BAU
-    if (userRole === "Manager") {
-      if (TLId) project.TLId = TLId;
-      if (PCId) project.PCId = PCId;
-      if (QAId) project.QAId = QAId;
-      if (BAUPersonId) project.BAUPersonId = BAUPersonId;
-    }
-    console.log("User Role:", userRole);
-
-    // TL or PC can update Developers
-    // if ((userRole === "Team Lead" || userRole === "Project Coordinator") && DeveloperIds) {
-    //   project.DeveloperIds = DeveloperIds;
-    // }
-
-    project.UpdatedBy = req.user?._id || null;
-
-    await project.save();
-
-    // Populate for frontend display
+    // ✅ Populate updated values for frontend
     const updatedProject = await Project.findById(project._id)
       .populate("TLId", "name")
       .populate("PCId", "name")
       .populate("QAId", "name")
       .populate("BAUPersonId", "name")
-      .populate("PMId", "name")       // <-- populate PM
-      .populate("BDEId", "name")      // <-- populate BDE
+      .populate("PMId", "name")
+      .populate("BDEId", "name")
       .populate("CreatedBy", "name")
       .populate("UpdatedBy", "name");
-    // .populate("DeveloperIds", "name");
 
-    res.json({ message: "Project team updated", project: updatedProject });
+    res.status(200).json({
+      message:
+        changes.length > 0
+          ? "Project team updated successfully"
+          : "No changes detected",
+      project: updatedProject,
+    });
   } catch (err) {
     console.error("Error updating project team:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 
 export const getAssignedToQAProjects = async (req, res) => {

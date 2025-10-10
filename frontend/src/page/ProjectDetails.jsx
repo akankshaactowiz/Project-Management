@@ -29,11 +29,14 @@ export default function ProjectDetails() {
   const [search, setSearch] = useState("");
   const [showPopover, setShowPopover] = useState(false);
   const [openPopoverFeedId, setOpenPopoverFeedId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
 
+  const [modalProject, setModalProject] = useState(null);
+  const [modalHistory, setModalHistory] = useState([]);
   const [showFeedPopover, setShowFeedPopover] = useState(false);
   const popoverRef = useRef(null);
   const buttonRef = useRef({}); // store refs per feed row
@@ -167,7 +170,9 @@ export default function ProjectDetails() {
           QAPersonIds: data.QAPersonIds?.map((d) => d._id) || [],
         });
 
-        setHistory(data.project?.updateHistory || []);
+
+
+        // setHistory(data.project?.updateHistory || []);
 
         // Fetch users for TL + Developers
         const userRes = await fetch(
@@ -178,6 +183,8 @@ export default function ProjectDetails() {
         setTlOptions(userData.tlUsers);
         setDevOptions(userData.devUsers);
         setQaOptions(userData.qaPerson);
+
+
       } catch (err) {
         console.error(err);
       }
@@ -229,6 +236,25 @@ export default function ProjectDetails() {
   };
 
 
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/history/${id}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch history");
+        const data = await res.json();
+        setModalHistory(data.data || []);   // <-- set normalized array directly
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchHistory();
+  }, [isOpen]);
+
+
   // const historySample = [
   //   {
   //     user: "Sunil Velueri",
@@ -256,25 +282,25 @@ export default function ProjectDetails() {
   //   // },
   // ];
 
-const formatISTDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
+  const formatISTDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
 
-  // Convert to IST manually
-  const istDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    // Convert to IST manually
+    const istDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
-  // Extract parts
-  const year = istDate.getFullYear();
-  const month = String(istDate.getMonth() + 1).padStart(2, "0");
-  const day = String(istDate.getDate()).padStart(2, "0");
+    // Extract parts
+    const year = istDate.getFullYear();
+    const month = String(istDate.getMonth() + 1).padStart(2, "0");
+    const day = String(istDate.getDate()).padStart(2, "0");
 
-  let hours = istDate.getHours();
-  const minutes = String(istDate.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12; // convert 0 to 12 for 12-hour format
+    let hours = istDate.getHours();
+    const minutes = String(istDate.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // convert 0 to 12 for 12-hour format
 
-  return `${year}/${month}/${day} ${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
-};
+    return `${year}/${month}/${day} ${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+  };
 
 
 
@@ -550,6 +576,7 @@ const formatISTDate = (dateString) => {
                               ...(project.TLId ? [project.TLId] : []),
                               ...(project.PCId ? [project.PCId] : []),
                               ...(project.QAId ? [project.QAId] : []),
+                              ...(project.BAUPersonId ? [project.BAUPersonId] : []),
                             ].map((m) => getNormalizedMember(m, "Manager"));
 
                             // Feed developers
@@ -656,7 +683,7 @@ const formatISTDate = (dateString) => {
                                             alt={m.name}
                                             className="w-8 h-8 rounded-full shadow-sm cursor-pointer hover:scale-105 transition"
                                             ref={(el) => (buttonRef.current[feed._id] = el)}
-                                          onClick={() => handleToggle(feed._id)}
+                                            onClick={() => handleToggle(feed._id)}
                                           />
                                         </div>
                                       ))}
@@ -856,6 +883,7 @@ const formatISTDate = (dateString) => {
                       project.TLId && { name: project.TLId.name, roleName: "Team Lead", avatar: project.TLId.avatar },
                       project.QAId && { name: project.QAId.name, roleName: "QA Lead", avatar: project.QAId.avatar },
                       project.PCId && { name: project.PCId.name, roleName: "Project Coordinator", avatar: project.PCId.avatar },
+                      project.BAUPersonId && { name: project.BAUPersonId.name, roleName: "BAU Manager", avatar: project.BAUPersonId.avatar },
                       ...(project.Feeds?.flatMap(feed => [
                         ...(feed.DeveloperIds?.map(dev => ({ name: dev.name, roleName: "Developer", avatar: dev.avatar })) || []),
                         feed.BAUId && { name: feed.BAUId.name, roleName: "BAU", avatar: feed.BAUId.avatar },
@@ -948,7 +976,7 @@ const formatISTDate = (dateString) => {
                   isOpen={isOpen}
                   onRequestClose={() => setIsOpen(false)}
                   contentLabel="Project History"
-                  className="max-w-2xl mx-auto mt-40 bg-white rounded-lg shadow-lg outline-none p-6 relative"
+                  className="max-w-2xl mx-auto mt-20 bg-white rounded-lg shadow-lg outline-none p-6 relative"
                   overlayClassName="fixed inset-0 bg-black/20 bg-opacity-50 flex justify-center items-start z-50"
                 >
                   <h2 className="text-xl font-semibold mb-4">Project History</h2>
@@ -960,61 +988,58 @@ const formatISTDate = (dateString) => {
                   </button>
 
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {project && (
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
-                          {project.CreatedBy?.name
-                            ?.split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase() || "?"}
-                        </div>
+                    {/* {loading && <p>Loading history...</p>} */}
+                    {modalHistory.length > 0 ? (
+                      // Deduplicate feed creation logs by feedId
+                      [...new Map(
+                        modalHistory.map(item => {
+                          const key = item.feedId || item.projectId || item.updatedAt;
+                          return [key + item.actionType, item]; // unique key per entity & action
+                        })
+                      ).values()]
+                        .map((item, index) => (
+                          <div key={index} className="flex gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                              {item.updatedBy?.name
+                                ?.split(" ")
+                                ?.map((n) => n[0])
+                                ?.join("")
+                                ?.toUpperCase() || "?"}
+                            </div>
 
-                        <div className="flex-1">
-                          <p>
-                            <span className="font-semibold">{project.CreatedBy?.name}</span> created
-                            this project and assigned to <span className="font-semibold">{project.PMId?.name || "N/A"}</span> as PM. 
-                          </p>
-                          <p className="text-gray-400 text-sm mt-1">
-                             {formatISTDate(project.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {history.length > 0 ? (
-                      history.map((item, index) => (
-                        <div key={index} className="flex gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                            {item.updatedBy?.name
-                              ?.split(" ")
-                              ?.map((n) => n[0])
-                              ?.join("")
-                              ?.toUpperCase() || "?"}
+                            <div className="flex-1">
+                              <p>
+                                <span className="font-semibold">{item.updatedBy?.name}</span>{" "}
+                                {item.description ? (
+                                  <>
+                                    {item.description}{" "}
+                                    {item.FeedName && <span className="font-semibold">({item.FeedName})</span>}{" "}
+                                    {item.ProjectName && <span className="font-semibold">[{item.ProjectName}]</span>}
+                                  </>
+                                ) : (
+                                  <>
+                                    updated {item.entityType}{" "}
+                                    <span className="font-semibold">{item.field}</span> from{" "}
+                                    <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                                      {item.oldValue || "—"}
+                                    </span>{" "}
+                                    to{" "}
+                                    <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
+                                      {item.newValue || "—"}
+                                    </span>
+                                  </>
+                                )}
+                              </p>
+                              <p className="text-gray-400 text-sm mt-1">
+                                {/* {new Date(item.updatedAt).toLocaleString()}
+                                 */}
+                                 {formatISTDate(item.updatedAt)}
+                              </p>
+                            </div>
                           </div>
-
-                          <div className="flex-1">
-                            <p>
-                              <span className="font-semibold">{item.updatedBy?.name}</span> 
-                              {/* Added{" "} */} Assigned project to <span className="font-semibold">{item.newValue?.name || "N/A"}</span> as {item.field === "PMId" ? "PM" : item.field === "TLId" ? "Team Lead" : item.field === "QAId" ? "QA Lead" : item.field === "PCId" ? "Project Coordinator" : item.field === "BDEId" ? "BDE" : item.field === "BAUPersonId" ? "BAU" : item.field === "DeveloperIds" ? "Developer" : item.field}.
-                              {/* <strong>{item.field}</strong> from{" "}
-                              <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-                                {item.oldValue || "—"}
-                              </span>{" "}
-                              to{" "} */}
-                              {/* <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
-                                {item.newValue || "—"}
-                              </span> */}
-                            </p>
-                            <p className="text-gray-400 text-sm mt-1">
-                              {formatISTDate(item.updatedAt)}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) 
-                    : (
-                      <p className="text-gray-400 text-center"></p>
+                        ))
+                    ) : (
+                      <p className="text-gray-400 text-center">No history found.</p>
                     )}
 
                   </div>
@@ -1030,7 +1055,7 @@ const formatISTDate = (dateString) => {
               <div className="space-y-2 text-sm">
 
                 <button className="cursor-pointer bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-                onClick={() => navigate(`/projects/${project._id}/attachments`)}>
+                  onClick={() => navigate(`/projects/${project._id}/attachments`)}>
                   <a href="">View</a>
                 </button>
               </div>

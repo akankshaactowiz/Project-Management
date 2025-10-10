@@ -9,10 +9,12 @@ import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import TextField from "@mui/material/TextField";
+import { useAuth } from "../hooks/useAuth";
 
 Modal.setAppElement("#root");
 
 export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
+  const { user } = useAuth();
   // --- Option states ---
   const [domainName, setDomainName] = useState("");
   const [feedName, setFeedName] = useState("");
@@ -299,7 +301,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Project Code */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Project Code <span className="text-red-500">*</span>
             </label>
@@ -320,7 +322,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             {errors.ProjectCode && (
               <p className="text-red-500 text-sm mt-1">{errors.ProjectCode}</p>
             )}
-          </div>
+          </div> */}
 
           {/* Project Name */}
           <div>
@@ -338,6 +340,37 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
             />
             {errors.ProjectName && (
               <p className="text-red-500 text-sm mt-1">{errors.ProjectName}</p>
+            )}
+          </div>
+
+           {/* Industry Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Industry Type<span className="text-red-500">*</span>
+            </label>
+            <select
+              name="IndustryType"
+              value={form.IndustryType}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-r p-2"
+            >
+              <option value="" disabled hidden>
+                Select Industry Type
+              </option>
+              <option value="E-com">E-com</option>
+              <option value="Food">Food</option>
+              <option value="Q-com">Q-com</option>
+              <option value="Sports">Sports</option>
+              <option value="Travel">Travel</option>
+              <option value="OTT">OTT</option>
+              <option value="Real Estate">Real Estate</option>
+              <option value="Government">Government</option>
+              <option value="Event">Event</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Music">Music</option>
+            </select>
+            {errors.IndustryType && (
+              <p className="text-red-500 text-sm mt-1">{errors.IndustryType}</p>
             )}
           </div>
 
@@ -452,36 +485,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           </div>
  
 
-          {/* Industry Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Industry Type<span className="text-red-500">*</span>
-            </label>
-            <select
-              name="IndustryType"
-              value={form.IndustryType}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-r p-2"
-            >
-              <option value="" disabled hidden>
-                Select Industry Type
-              </option>
-              <option value="E-com">E-com</option>
-              <option value="Food">Food</option>
-              <option value="Q-com">Q-com</option>
-              <option value="Sports">Sports</option>
-              <option value="Travel">Travel</option>
-              <option value="OTT">OTT</option>
-              <option value="Real Estate">Real Estate</option>
-              <option value="Government">Government</option>
-              <option value="Event">Event</option>
-              <option value="Social Media">Social Media</option>
-              <option value="Music">Music</option>
-            </select>
-            {errors.IndustryType && (
-              <p className="text-red-500 text-sm mt-1">{errors.IndustryType}</p>
-            )}
-          </div>
+        
 
           {/* Project Type */}
           <div>
@@ -579,9 +583,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               className="w-full border border-gray-300 rounded-r p-2"
               required
             />
-            {/* {errors.ProjectName && (
-              <p className="text-red-500 text-sm mt-1">{errors.ProjectName}</p>
-            )} */}
+            {errors.VolumeCount && (
+              <p className="text-red-500 text-sm mt-1">{errors.VolumeCount}</p>
+            )}
           </div>
 
 
@@ -706,9 +710,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           {/* Business Development Executive */}
+          {user?.roleName !== "Business Development Executive" && (  
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select BDE<span className="text-red-500">*</span>
+              Select BDE (Optional)
+              {/* <span className="text-red-500">*</span> */}
             </label>
             <Select
               name="BDEId"
@@ -720,8 +726,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
               isSearchable
             />
 
-            {errors.BDEId && <p className="text-red-500 text-sm mt-1">{errors.BDEId}</p>}
+            {/* {errors.BDEId && <p className="text-red-500 text-sm mt-1">{errors.BDEId}</p>} */}
           </div>
+          )}
 
 
           {/* Description */}
@@ -835,7 +842,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess }) {
           {/* Country */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Country Name<span className="text-red-500">*</span>
+              Country<span className="text-red-500">*</span>
             </label>
             <Select
               name="CountryName"
