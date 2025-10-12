@@ -988,62 +988,71 @@ export default function ProjectDetails() {
                   </button>
 
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {/* {loading && <p>Loading history...</p>} */}
-                    {modalHistory.length > 0 ? (
-                      // Deduplicate feed creation logs by feedId
-                      [...new Map(
-                        modalHistory.map(item => {
-                          const key = item.feedId || item.projectId || item.updatedAt;
-                          return [key + item.actionType, item]; // unique key per entity & action
-                        })
-                      ).values()]
-                        .map((item, index) => (
-                          <div key={index} className="flex gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                              {item.updatedBy?.name
-                                ?.split(" ")
-                                ?.map((n) => n[0])
-                                ?.join("")
-                                ?.toUpperCase() || "?"}
-                            </div>
+  {modalHistory.length > 0 ? (
+    [...new Map(
+      modalHistory.map(item => {
+        const key = item.feedId || item.projectId || item.updatedAt;
+        return [key + item.actionType, item];
+      })
+    ).values()].map((item, index) => {
+      const feed = item.FeedName?.trim();
+      const project = item.ProjectName?.trim();
 
-                            <div className="flex-1">
-                              <p>
-                                <span className="font-semibold">{item.updatedBy?.name}</span>{" "}
-                                {item.description ? (
-                                  <>
-                                    {item.description}{" "}
-                                    {item.FeedName && <span className="font-semibold">({item.FeedName})</span>}{" "}
-                                    {item.ProjectName && <span className="font-semibold">[{item.ProjectName}]</span>}
-                                  </>
-                                ) : (
-                                  <>
-                                    updated {item.entityType}{" "}
-                                    <span className="font-semibold">{item.field}</span> from{" "}
-                                    <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-                                      {item.oldValue || "—"}
-                                    </span>{" "}
-                                    to{" "}
-                                    <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
-                                      {item.newValue || "—"}
-                                    </span>
-                                  </>
-                                )}
-                              </p>
-                              <p className="text-gray-400 text-sm mt-1">
-                                {/* {new Date(item.updatedAt).toLocaleString()}
-                                 */}
-                                 {formatISTDate(item.updatedAt)}
-                              </p>
-                            </div>
-                          </div>
-                        ))
-                    ) : (
-                      <p className="text-gray-400 text-center">No history found.</p>
-                    )}
+      return (
+        <div key={index} className="flex gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+            {item.updatedBy?.name
+              ?.split(" ")
+              ?.map((n) => n[0])
+              ?.join("")
+              ?.toUpperCase() || "?"}
+          </div>
 
-                  </div>
-                </Modal>
+          {/* Activity details */}
+          <div className="flex-1">
+            <p className="text-gray-800">
+              <span className="font-semibold">{item.updatedBy?.name}</span>{" "}
+              {item.actionType === "Feed Created" ? (
+                <>
+                  created feed{" "}
+                  {feed && <span className="font-semibold text-blue-600">“{feed}”</span>}
+                  {project && (
+                    <>
+                      {" "}for project{" "}
+                      <span className="font-semibold text-purple-600">“{project}”</span>
+                    </>
+                  )}
+                </>
+              ) : item.description ? (
+                item.description
+              ) : (
+                <>
+                  updated {item.entityType}{" "}
+                  <span className="font-semibold">{item.field}</span> from{" "}
+                  <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                    {item.oldValue || "—"}
+                  </span>{" "}
+                  to{" "}
+                  <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
+                    {item.newValue || "—"}
+                  </span>
+                </>
+              )}
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              {formatISTDate(item.updatedAt)}
+            </p>
+          </div>
+        </div>
+      );
+    })
+  ) : (
+    <p className="text-gray-400 text-center">No history found.</p>
+  )}
+</div>
+
+                </Modal>  
               </div>
             </div>
             <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">

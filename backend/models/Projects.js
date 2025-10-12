@@ -202,72 +202,72 @@ updateHistory: [
 //     next(err);
 //   }
 // });
-projectSchema.pre("save", async function (next) {
-  try {
-    const Project = this.constructor;
-    const Activity = ActivityHistory;
-if (this._skipActivityLog) return next();
-    if (this.isNew) {
-      // Log Project Creation
-      await Activity.create({
-        projectId: this._id,
-        actionType: "Project Created",
-        description: `Project ${this.ProjectName} created`,
-        performedBy: this._updatedBy || this.CreatedBy
-      });
-      return next();
-    }
+// projectSchema.pre("save", async function (next) {
+//   try {
+//     const Project = this.constructor;
+//     const Activity = ActivityHistory;
+// if (this._skipActivityLog) return next();
+//     if (this.isNew) {
+//       // Log Project Creation
+//       await Activity.create({
+//         projectId: this._id,
+//         actionType: "Project Created",
+//         description: `Project ${this.ProjectName} created`,
+//         performedBy: this._updatedBy || this.CreatedBy
+//       });
+//       return next();
+//     }
 
-    // Log Project Updates
-    const original = await Project.findById(this._id).lean();
-    const changedFields = [];
-    const IGNORED_FIELDS = ["updatedAt", "_updatedBy", "Feeds"];
+//     // Log Project Updates
+//     const original = await Project.findById(this._id).lean();
+//     const changedFields = [];
+//     const IGNORED_FIELDS = ["updatedAt", "_updatedBy", "Feeds"];
 
-    this.modifiedPaths().forEach((path) => {
-      if (IGNORED_FIELDS.includes(path)) return;
+//     this.modifiedPaths().forEach((path) => {
+//       if (IGNORED_FIELDS.includes(path)) return;
 
-      const oldValueRaw = original[path];
-      const newValueRaw = this[path];
+//       const oldValueRaw = original[path];
+//       const newValueRaw = this[path];
 
-      // Skip if nothing changed
-      if (
-        (oldValueRaw === null && newValueRaw === null) ||
-        (oldValueRaw === undefined && newValueRaw === undefined) ||
-        (oldValueRaw?.toString() === newValueRaw?.toString())
-      ) return;
+//       // Skip if nothing changed
+//       if (
+//         (oldValueRaw === null && newValueRaw === null) ||
+//         (oldValueRaw === undefined && newValueRaw === undefined) ||
+//         (oldValueRaw?.toString() === newValueRaw?.toString())
+//       ) return;
 
-      // Skip arrays completely
-      if (Array.isArray(newValueRaw)) return;
+//       // Skip arrays completely
+//       if (Array.isArray(newValueRaw)) return;
 
-      const wrapValue = (val) => {
-        if (!val) return null;
-        if (val._id) return { _id: val._id, refModel: val.constructor.modelName, value: val.name || val.value || val.toString() };
-        return { value: val.toString() };
-      };
+//       const wrapValue = (val) => {
+//         if (!val) return null;
+//         if (val._id) return { _id: val._id, refModel: val.constructor.modelName, value: val.name || val.value || val.toString() };
+//         return { value: val.toString() };
+//       };
 
-      changedFields.push({
-        field: path,
-        oldValue: wrapValue(oldValueRaw),
-        newValue: wrapValue(newValueRaw)
-      });
-    });
+//       changedFields.push({
+//         field: path,
+//         oldValue: wrapValue(oldValueRaw),
+//         newValue: wrapValue(newValueRaw)
+//       });
+//     });
 
-    if (changedFields.length > 0) {
-      await Activity.create({
-        projectId: this._id,
-        actionType: "Project Updated",
-        changedFields,
-        description: `Project ${this.ProjectName} updated`,
-        performedBy: this._updatedBy
-      });
-    }
+//     if (changedFields.length > 0) {
+//       await Activity.create({
+//         projectId: this._id,
+//         actionType: "Project Updated",
+//         changedFields,
+//         description: `Project ${this.ProjectName} updated`,
+//         performedBy: this._updatedBy
+//       });
+//     }
 
-    next();
-  } catch (err) {
-    console.error("Project Activity log error:", err);
-    next(err);
-  }
-});
+//     next();
+//   } catch (err) {
+//     console.error("Project Activity log error:", err);
+//     next(err);
+//   }
+// });
 
 
 

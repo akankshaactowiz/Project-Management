@@ -182,9 +182,9 @@ export default function UpdateProjectModal({ isOpen, onClose, project, onUpdate,
         try {
             const data = new FormData();
 
-            const suffix = form.ProjectCode.replace(/^ACT-?/, '');
-            const fullCode = `ACT-${suffix}`;
-            data.append("ProjectCode", fullCode);
+            // const suffix = form.ProjectCode.replace(/^ACT-?/, '');
+            // const fullCode = `ACT-${suffix}`;
+            // data.append("ProjectCode", fullCode);
             data.append("DepartmentId", form.Department || null);
             data.append("PMId", form.PM || null);
             data.append("BDEId", form.BDE || null);

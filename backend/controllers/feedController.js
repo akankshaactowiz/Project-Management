@@ -4,6 +4,7 @@ import Project from "../models/Projects.js"
 import Feed from "../models/FeedData.js";
 import User from "../models/User.js";
 import { generateFeedId } from "../utils/generateFeedId.js";
+import {logHistory} from "../middlewares/logHistory.js";
 
 // GET /api/table?status=Active&page=2&limit=5&sort=createdAt:desc&search=abc
 
@@ -58,7 +59,7 @@ export const createFeed = async (req, res) => {
     if (!CountryName) missingFields.push("CountryName");
     // if (!BAU) missingFields.push("BAU");
     // if (!POC) missingFields.push("POC");
-    if (!TLId) missingFields.push("TLId");
+    // if (!TLId) missingFields.push("TLId");
     // if (!DeveloperIds || !Array.isArray(DeveloperIds) || DeveloperIds.length === 0)
     //   missingFields.push("DeveloperIds");
     // if (!BAUPersonId) missingFields.push("BAUPersonId");
@@ -80,8 +81,8 @@ export const createFeed = async (req, res) => {
     }
 
     // 3️⃣ Optional: Validate TLId, DeveloperIds, BAUPersonId exist in User collection
-    const tl = await User.findById(TLId);
-    if (!tl) return res.status(404).json({ success: false, message: "TL not found." });
+    // const tl = await User.findById(TLId);
+    // if (!tl) return res.status(404).json({ success: false, message: "TL not found." });
 
     // const devs = await User.find({ _id: { $in: DeveloperIds } });
     // if (devs.length !== DeveloperIds.length)
@@ -105,14 +106,14 @@ export const createFeed = async (req, res) => {
       Platform,
       BAU,
       POC,
-      TLId,
-      DeveloperIds,
+      // TLId,
+      // DeveloperIds,
       // BAUPersonId,
-      // _updatedBy: req.user?._id || null,
+      _updatedBy: req.user?._id || null,
       createdBy: req.user?._id || null,
     });
 
-    await newFeed.save();
+    // await newFeed.save();
 
     // 6️⃣ Add feed to project's Feeds array
     // await Project.findByIdAndUpdate(projectId, { $push: { Feeds: newFeed._id } });
@@ -122,6 +123,15 @@ await Project.updateOne(
   { _id: projectId },
   { $push: { Feeds: newFeed._id } }
 );
+
+// 6️⃣ Log history explicitly (pre-save hook removed to prevent duplicate)
+    await logHistory({
+      modelName: "Feed",
+      newDoc: newFeed,
+      userId: req.user?._id,
+      projectId: projectId,
+      feedId: newFeed._id,
+    });
 
     res.status(201).json({
       success: true,

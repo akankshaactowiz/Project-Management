@@ -156,56 +156,62 @@ const feedSchema = new mongoose.Schema(
 //   }
 // });
 
-feedSchema.pre("save", async function(next) {
-  try {
-    const Activity = ActivityHistory;
+// feedSchema.pre("save", async function(next) {
+//   try {
+//     const Activity = ActivityHistory;
 
-    if (this.isNew) {
-      const project = await Project.findById(this.projectId).lean();
-      await Activity.create({
-        projectId: this.projectId,
-        feedId: this._id,
-        FeedName: this.FeedName,                 // now taken from feed document
-        ProjectName: project?.ProjectName || null, // fetch from Project collection
-        actionType: "Feed Created",
-        description: `Feed ${this.FeedName} created for project ${project?.ProjectName || ""}`,
-        actionType: "Feed Created",
-        // description: `Feed ${this.FeedName} created`,
-        performedBy: this.createdBy
-      });
-    } else {
-      // Log updates
-      const original = await this.constructor.findById(this._id).lean();
-      const changedFields = [];
+//     if (this.isNew) {
+//       const project = await Project.findById(this.projectId).lean();
 
-      this.modifiedPaths().forEach(path => {
-        if (path !== "updatedAt" && path !== "_updatedBy") {
-          const oldValue = original[path];
-          const newValue = this[path];
-          if ((oldValue || newValue) && oldValue?.toString() !== newValue?.toString()) {
-            changedFields.push({ field: path, oldValue, newValue });
-          }
-        }
-      });
 
-      // if (changedFields.length) {
-      //   await Activity.create({
-      //     projectId: this.projectId,
-      //     feedId: this._id,
-      //     actionType: "Feed Updated",
-      //     changedFields,
-      //     description: `Feed ${this.FeedName} updated`,
-      //     performedBy: this._updatedBy
-      //   });
-      // }
-    }
+      
+//       // console.log("DEBUG FeedName:", this.FeedName);
+//       // console.log("DEBUG projectId:", this.projectId);
+//       // console.log("DEBUG project:", project);
+//       await Activity.create({
+//         projectId: this.projectId,
+//         feedId: this._id,
+//         FeedName: this.FeedName,                 // now taken from feed document
+//         ProjectName: project?.ProjectName || null, // fetch from Project collection
+//         actionType: "Feed Created",
+//         description: `Created Feed ${this.FeedName} in ${project?.ProjectName || ""}`,
+//         actionType: "Feed Created",
+//         // description: `Feed ${this.FeedName} created`,
+//         performedBy: this.createdBy
+//       });
+//     } else {
+//       // Log updates
+//       const original = await this.constructor.findById(this._id).lean();
+//       const changedFields = [];
 
-    next();
-  } catch (err) {
-    console.error("Activity log error:", err);
-    next(err);
-  }
-});
+//       this.modifiedPaths().forEach(path => {
+//         if (path !== "updatedAt" && path !== "_updatedBy") {
+//           const oldValue = original[path];
+//           const newValue = this[path];
+//           if ((oldValue || newValue) && oldValue?.toString() !== newValue?.toString()) {
+//             changedFields.push({ field: path, oldValue, newValue });
+//           }
+//         }
+//       });
+
+//       // if (changedFields.length) {
+//       //   await Activity.create({
+//       //     projectId: this.projectId,
+//       //     feedId: this._id,
+//       //     actionType: "Feed Updated",
+//       //     changedFields,
+//       //     description: `Feed ${this.FeedName} updated`,
+//       //     performedBy: this._updatedBy
+//       //   });
+//       // }
+//     }
+
+//     next();
+//   } catch (err) {
+//     console.error("Activity log error:", err);
+//     next(err);
+//   }
+// });
 
 
 export default mongoose.model("Feed", feedSchema, "Feed-data");

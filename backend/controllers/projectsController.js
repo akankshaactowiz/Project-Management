@@ -8,6 +8,7 @@ import { generateFeedId } from "../utils/generateFeedId.js";
 import mongoose from "mongoose";
 import getDateRangeFilter from "../utils/ScheduleFilter.js";
 import Activity from "../models/ProjectHistory.js";
+import {logHistory} from "../middlewares/logHistory.js";
 
 
 
@@ -155,6 +156,14 @@ export const createProject = async (req, res) => {
       BAUPersonId: null,
       Feeds: [],
     });
+
+    // Log Project creation
+    await logHistory({
+      modelName: "Project",
+      newDoc: project,
+      userId: createdBy,
+      projectId: project._id,
+    });
     // await project.save(); 
     // 2️⃣ Create initial Feed linked to project
     const FeedId = generateFeedId();
@@ -172,14 +181,25 @@ export const createProject = async (req, res) => {
 
     // 3️⃣ Add feed reference to project
     // project.Feeds.push(initialFeed._id);
-    await initialFeed.save();
+    // await initialFeed.save();
     // project._updatedBy = createdBy; //activity middlewre  
     // await project.save(); 
     // ✅ Only saves the updated Feeds array
 
+    // Log Feed creation
+    await logHistory({
+      modelName: "Feed",
+      newDoc: initialFeed,
+      userId: createdBy,
+      projectId: project._id,
+      feedId: initialFeed._id,
+    });
+
 await Project.updateOne(
   { _id: project._id },
-  { $push: { Feeds: initialFeed._id } }
+  { $push: { Feeds: initialFeed._id},
+   $set: { _updatedBy: createdBy }
+ }
 );
     res.status(201).json({
       success: true,
@@ -225,143 +245,247 @@ await Project.updateOne(
 };
 
 
+// export const updateProject = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const userId = req.user?._id || null;
+
+//     // Destructure fields from body
+//     let {
+//       ProjectName,
+//       ProjectCode, // user-entered suffix
+//       Frequency,
+//       PMId,
+//       BDEId,
+//       Department,
+//       Priority,
+//       ProjectType,
+//       IndustryType,
+//       DeliveryType,
+//       Timeline,
+//       Description,
+//     } = req.body;
+
+//     // Prepend "ACT" prefix to ProjectCode
+//     // if (ProjectCode) {
+//     //   ProjectCode = `ACT${ProjectCode}`;
+//     // }
+
+//     // Fetch existing project
+//     const project = await Project.findById(id)
+//       // .populate("PMId", "_id name")   // 🔹 populate PM
+//       // .populate("BDEId", "_id name");;
+//     // if (ProjectCode) {
+//     //   // Remove any existing ACT or ACT- prefix from user input
+//     //   const suffix = ProjectCode.replace(/^ACT-?/, '');
+//     //   ProjectCode = `[ACT-${suffix}]`;
+//     // }
+//     // project.ProjectCode = ProjectCode || project.ProjectCode;
+//     if (!project) {
+//       return res.status(404).json({ success: false, message: "Project not found" });
+//     }
+    
+
+//     const oldProject = project.toObject(); // save for diffing
+
+
+//     // Get newly uploaded files (if any)
+//     // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
+//     // const newSOW = req.files?.SOWFile
+//     //   ? req.files.SOWFile.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
+//     //   : [];
+//     // const newSamples = req.files?.SampleFiles
+//     //   ? req.files?.SampleFiles.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
+//     //   : [];
+
+//     // Convert new uploads to objects with metadata
+//     const newSOW = req.files?.SOWFile
+//       ? req.files.SOWFile.map(f => ({
+//         fileName: `/uploads/projects/${f.filename}`,
+//         uploadedBy: req.user._id, // assumes user is attached to req
+//         uploadedAt: new Date()
+//       }))
+//       : [];
+
+//     const newSamples = req.files?.SampleFiles
+//       ? req.files.SampleFiles.map(f => ({
+//         fileName: `/uploads/projects/${f.filename}`,
+//         uploadedBy: req.user._id,
+//         uploadedAt: new Date()
+//       }))
+//       : [];
+
+//     // Merge with existing files
+//     project.SOWFile = [...project.SOWFile, ...newSOW];
+//     project.SampleFiles = [...project.SampleFiles, ...newSamples];
+
+//     // Update fields
+//     project.ProjectName = ProjectName || project.ProjectName;
+//     project.ProjectCode = ProjectCode || project.ProjectCode; // now always has ACT prefix
+//     project.PMId = PMId || project.PMId;
+//     project.BDEId = BDEId || project.BDEId;
+//     project.DepartmentId = Department || project.DepartmentId;
+//     project.Frequency = Frequency || project.Frequency;
+//     project.Priority = Priority || project.Priority;
+//     project.ProjectType = ProjectType || project.ProjectType;
+//     project.IndustryType = IndustryType || project.IndustryType;
+//     project.DeliveryType = DeliveryType || project.DeliveryType;
+//     project.Timeline = Timeline || project.Timeline;
+//     project.Description = Description || project.Description;
+//     // project.SOWFile = updatedSOW;
+//     // project.SampleFiles = updatedSamples;
+
+//     // const changedFields = [];
+
+//     // // Compare old and new values for each field
+//     // const fieldsToCheck = {
+//     //   ProjectName,
+//     //   ProjectCode,
+//     //   Frequency,
+//     //   PMId,
+//     //   BDEId,
+//     //   Department,
+//     //   Priority,
+//     //   ProjectType,
+//     //   IndustryType,
+//     //   DeliveryType,
+//     //   Timeline,
+//     //   Description,
+//     // };
+
+//     // for (const [key, newVal] of Object.entries(fieldsToCheck)) {
+//     //   const oldVal = project[key];
+//     //   if (newVal != null && newVal.toString() !== (oldVal?._id?.toString() || oldVal?.toString())) {
+//     //     changedFields.push({
+//     //       field: key,
+//     //       oldValue: oldVal
+//     //         ? typeof oldVal === "object" && oldVal._id
+//     //           ? { _id: oldVal._id, refModel: oldVal.constructor.modelName, value: oldVal.name || oldVal.value || "" }
+//     //           : { value: oldVal }
+//     //         : null,
+//     //       newValue: newVal
+//     //         ? typeof newVal === "object" && newVal._id
+//     //           ? { _id: newVal._id, refModel: newVal.constructor.modelName, value: newVal.name || newVal.value || "" }
+//     //           : { value: newVal }
+//     //         : null,
+//     //     });
+//     //   }
+//     // }
+
+//     // // Update project fields
+//     // Object.assign(project, fieldsToCheck);
+//     project._updatedBy = req.user?._id || null;
+//     // await project.save();
+//     // Log changes using logHistory
+//     await logHistory({
+//       modelName: "Project",
+//       oldDoc: oldProject,
+//       newDoc: project,
+//       userId,
+//       projectId: project._id,
+//     });
+
+
+//     res.status(200).json({
+//       success: true,
+//       project,
+//       message: "Project updated successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error updating project:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
 export const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?._id || null;
 
-    // Destructure fields from body
-    let {
-      ProjectName,
-      ProjectCode, // user-entered suffix
-      Frequency,
-      PMId,
-      BDEId,
-      Department,
-      Priority,
-      ProjectType,
-      IndustryType,
-      DeliveryType,
-      Timeline,
-      Description,
-    } = req.body;
-
-    // Prepend "ACT" prefix to ProjectCode
-    // if (ProjectCode) {
-    //   ProjectCode = `ACT${ProjectCode}`;
-    // }
-
-    // Fetch existing project
-    const project = await Project.findById(id)
-      .populate("PMId", "_id name")   // 🔹 populate PM
-      .populate("BDEId", "_id name");;
-    if (ProjectCode) {
-      // Remove any existing ACT or ACT- prefix from user input
-      const suffix = ProjectCode.replace(/^ACT-?/, '');
-      ProjectCode = `[ACT-${suffix}]`;
-    }
-    project.ProjectCode = ProjectCode || project.ProjectCode;
-    if (!project) {
+    const project = await Project.findById(id);
+    if (!project)
       return res.status(404).json({ success: false, message: "Project not found" });
-    }
 
-    // Get newly uploaded files (if any)
-    // const BACKEND_URL = process.env.BACKEND_URL || "http://172.28.148.130:5000";
-    // const newSOW = req.files?.SOWFile
-    //   ? req.files.SOWFile.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
-    //   : [];
-    // const newSamples = req.files?.SampleFiles
-    //   ? req.files?.SampleFiles.map(f => `${BACKEND_URL}/${f.path.replace(/\\/g, "/")}`)
-    //   : [];
+    const oldProject = project.toObject(); // snapshot before changes
 
-    // Convert new uploads to objects with metadata
-    const newSOW = req.files?.SOWFile
-      ? req.files.SOWFile.map(f => ({
-        fileName: `/uploads/projects/${f.filename}`,
-        uploadedBy: req.user._id, // assumes user is attached to req
-        uploadedAt: new Date()
-      }))
-      : [];
+    // Handle file uploads
+    const newSOW = req.files?.SOWFile?.map(f => ({
+      fileName: `/uploads/projects/${f.filename}`,
+      uploadedBy: userId,
+      uploadedAt: new Date()
+    })) || [];
 
-    const newSamples = req.files?.SampleFiles
-      ? req.files.SampleFiles.map(f => ({
-        fileName: `/uploads/projects/${f.filename}`,
-        uploadedBy: req.user._id,
-        uploadedAt: new Date()
-      }))
-      : [];
+    const newSamples = req.files?.SampleFiles?.map(f => ({
+      fileName: `/uploads/projects/${f.filename}`,
+      uploadedBy: userId,
+      uploadedAt: new Date()
+    })) || [];
 
-    // Merge with existing files
-    project.SOWFile = [...project.SOWFile, ...newSOW];
-    project.SampleFiles = [...project.SampleFiles, ...newSamples];
+    if (newSOW.length > 0) project.SOWFile = [...project.SOWFile, ...newSOW];
+    if (newSamples.length > 0) project.SampleFiles = [...project.SampleFiles, ...newSamples];
 
-    // Update fields
-    project.ProjectName = ProjectName || project.ProjectName;
-    project.ProjectCode = ProjectCode || project.ProjectCode; // now always has ACT prefix
-    project.PMId = PMId || project.PMId;
-    project.BDEId = BDEId || project.BDEId;
-    project.DepartmentId = Department || project.DepartmentId;
-    project.Frequency = Frequency || project.Frequency;
-    project.Priority = Priority || project.Priority;
-    project.ProjectType = ProjectType || project.ProjectType;
-    project.IndustryType = IndustryType || project.IndustryType;
-    project.DeliveryType = DeliveryType || project.DeliveryType;
-    project.Timeline = Timeline || project.Timeline;
-    project.Description = Description || project.Description;
-    // project.SOWFile = updatedSOW;
-    // project.SampleFiles = updatedSamples;
+    // List of updatable fields from payload
+    const updatableFields = [
+      "ProjectName",
+      "Frequency",
+      "PMId",
+      "BDEId",
+      "DepartmentId",
+      "Priority",
+      "ProjectType",
+      "IndustryType",
+      "DeliveryType",
+      "Timeline",
+      "Description",
+      "FeedName",
+      "DomainName",
+      "ApplicationType",
+      "CountryName"
+    ];
 
-    // const changedFields = [];
+    const changes = [];
 
-    // // Compare old and new values for each field
-    // const fieldsToCheck = {
-    //   ProjectName,
-    //   ProjectCode,
-    //   Frequency,
-    //   PMId,
-    //   BDEId,
-    //   Department,
-    //   Priority,
-    //   ProjectType,
-    //   IndustryType,
-    //   DeliveryType,
-    //   Timeline,
-    //   Description,
-    // };
+    // Update only fields present in req.body
+    updatableFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        const oldVal = oldProject[field];
+        const newVal = req.body[field];
 
-    // for (const [key, newVal] of Object.entries(fieldsToCheck)) {
-    //   const oldVal = project[key];
-    //   if (newVal != null && newVal.toString() !== (oldVal?._id?.toString() || oldVal?.toString())) {
-    //     changedFields.push({
-    //       field: key,
-    //       oldValue: oldVal
-    //         ? typeof oldVal === "object" && oldVal._id
-    //           ? { _id: oldVal._id, refModel: oldVal.constructor.modelName, value: oldVal.name || oldVal.value || "" }
-    //           : { value: oldVal }
-    //         : null,
-    //       newValue: newVal
-    //         ? typeof newVal === "object" && newVal._id
-    //           ? { _id: newVal._id, refModel: newVal.constructor.modelName, value: newVal.name || newVal.value || "" }
-    //           : { value: newVal }
-    //         : null,
-    //     });
-    //   }
-    // }
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          project[field] = newVal;
+          changes.push({ field, oldValue: oldVal, newValue: newVal });
+        }
+      }
+    });
 
-    // // Update project fields
-    // Object.assign(project, fieldsToCheck);
-    project._updatedBy = req.user?._id || null;
+    project._updatedBy = userId;
     await project.save();
+
+    // Log history for all changed fields at once
+    if (changes.length > 0) {
+      await logHistory({
+        modelName: "Project",
+        oldDoc: oldProject,
+        newDoc: project,
+        userId,
+        projectId: project._id
+      });
+    }
 
     res.status(200).json({
       success: true,
       project,
-      message: "Project updated successfully",
+      message: changes.length > 0 ? "Project updated successfully" : "No changes detected"
     });
-  } catch (error) {
-    console.error("Error updating project:", error);
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    console.error("Error updating project:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
 
 
 // export const getProjects = async (req, res) => {
@@ -1624,7 +1748,7 @@ if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
     // ✅ Save updatedBy and project if there were changes
     if (changes.length > 0) {
       project._updatedBy = updatedBy;
-      await project.save();
+      // await project.save();
     }
 
     // ✅ Populate updated values for frontend

@@ -15,6 +15,7 @@ function CreateFeed({ onClose, onSuccess }) {
   const [domainName, setDomainName] = useState("");
   const [applicationType, setApplicationType] = useState("");
   const [country, setCountry] = useState(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const [tlId, setTlId] = useState(null);
   // const [pcId, setPcId] = useState(null);
@@ -181,7 +182,7 @@ function CreateFeed({ onClose, onSuccess }) {
       if (!domainName) newErrors.domainName = "Domain Name is required";
       if (!applicationType) newErrors.applicationType = "Platform Type is required";
       if (!country) newErrors.country = "Country is required";
-      if (!tlId) newErrors.tlId = "Team Lead is required";
+      // if (!tlId) newErrors.tlId = "Team Lead is required";
       // if (!devId || devId.length === 0) newErrors.devId = "At least one Developer is required";
       // if (!bauPerson) newErrors.bauPerson = "BAU Person is required"; // optional
 
@@ -200,10 +201,10 @@ function CreateFeed({ onClose, onSuccess }) {
         DomainName: domainName,
         ApplicationType: applicationType,
         CountryName: country?.value,
-        TLId: tlId?.value || null,
-        DeveloperIds: devId.map((d) => d.value),
-        BAUPersonId: bauPerson || null,
-        ExecutionPersonId: null,
+        // TLId: tlId?.value || null,
+        // DeveloperIds: devId.map((d) => d.value),
+        // BAUPersonId: bauPerson || null,
+        // ExecutionPersonId: null,
       };
 
       const response = await fetch(
@@ -240,10 +241,15 @@ function CreateFeed({ onClose, onSuccess }) {
   }));
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">Add New Feed</h2>
-
+    // <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+    //   <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative">
+    //     <h2 className="text-xl font-bold mb-6 text-gray-800">Add New Feed</h2>
+  <Modal
+      isOpen={isOpen}
+      onRequestClose={onClose}
+      overlayClassName="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
+      className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative"
+    >
         {/* Feed Details */}
         <div className="mb-6">
           <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
@@ -340,7 +346,7 @@ function CreateFeed({ onClose, onSuccess }) {
                 </option>
                 <option value="Web">Web</option>
                 <option value="Mobile">App</option>
-                <option value="Both">Both (Web & App)</option>
+                <option value="Web&App">Both (Web & App)</option>
               </select>
               {errors.applicationType && <p className="text-red-500 text-sm mt-1">{errors.applicationType}</p>}
             </div>
@@ -489,8 +495,9 @@ function CreateFeed({ onClose, onSuccess }) {
             {loading ? "Creating..." : "Create"}
           </button>
         </div>
-      </div>
-    </div>
+        </Modal>
+    //   </div>
+    // </div>
   );
 }
 

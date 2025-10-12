@@ -39,9 +39,10 @@ export const getProjectFullHistory = async (req, res) => {
         newValue: null,
         updatedAt: h.performedAt,
         updatedBy: h.performedBy,
-        description: h.actionType === "Feed Created" ? `created feed` :
-                     h.actionType === "Project Created" ? `created project` :
-                     h.description || h.actionType,
+        // description: h.actionType === "Feed Created" ? `created feed` :
+        //              h.actionType === "Project Created" ? `created project` :
+        //              h.description || h.actionType,
+        description: h.description || h.actionType,
         FeedName: h.FeedName || null,
         ProjectName: h.ProjectName || null
       }];

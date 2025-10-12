@@ -20,6 +20,10 @@ const activityHistorySchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
   feedId: { type: mongoose.Schema.Types.ObjectId, ref: "Feed" },
 
+  // 🆕 Add these lines
+  FeedName: { type: String },
+  ProjectName: { type: String },
+
   actionType: {
     type: String,
     enum: [
@@ -42,6 +46,9 @@ const activityHistorySchema = new mongoose.Schema({
   performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   performedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+// 🔍 Index for faster lookups
+activityHistorySchema.index({ projectId: 1, feedId: 1, actionType: 1 });
 
 const ActivityHistory = mongoose.model("ActivityHistory", activityHistorySchema);
 export default ActivityHistory;
