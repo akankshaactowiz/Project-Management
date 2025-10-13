@@ -57,12 +57,7 @@ export const createFeed = async (req, res) => {
     if (!DomainName) missingFields.push("DomainName");
     if (!ApplicationType) missingFields.push("ApplicationType");
     if (!CountryName) missingFields.push("CountryName");
-    // if (!BAU) missingFields.push("BAU");
-    // if (!POC) missingFields.push("POC");
-    // if (!TLId) missingFields.push("TLId");
-    // if (!DeveloperIds || !Array.isArray(DeveloperIds) || DeveloperIds.length === 0)
-    //   missingFields.push("DeveloperIds");
-    // if (!BAUPersonId) missingFields.push("BAUPersonId");
+  
 
     if (missingFields.length > 0) {
       return res.status(400).json({
@@ -80,17 +75,6 @@ export const createFeed = async (req, res) => {
       });
     }
 
-    // 3️⃣ Optional: Validate TLId, DeveloperIds, BAUPersonId exist in User collection
-    // const tl = await User.findById(TLId);
-    // if (!tl) return res.status(404).json({ success: false, message: "TL not found." });
-
-    // const devs = await User.find({ _id: { $in: DeveloperIds } });
-    // if (devs.length !== DeveloperIds.length)
-    //   return res.status(404).json({ success: false, message: "Some Developers not found." });
-
-    // const bauPerson = await User.findById(BAUPersonId);
-    // if (!bauPerson)
-    //   return res.status(404).json({ success: false, message: "BAU Person not found." });
 
     // 4️⃣ Build Platform string
     const Platform = `${DomainName}|${ApplicationType}|${CountryName}`;
@@ -113,7 +97,7 @@ export const createFeed = async (req, res) => {
       createdBy: req.user?._id || null,
     });
 
-    // await newFeed.save();
+    await newFeed.save();
 
     // 6️⃣ Add feed to project's Feeds array
     // await Project.findByIdAndUpdate(projectId, { $push: { Feeds: newFeed._id } });

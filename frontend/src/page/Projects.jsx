@@ -132,6 +132,9 @@ export default function Projects() {
     "Closed",
   ];
 
+  //Validation errors
+  const [errors, setErrors] = useState({});
+
   // const statusTabs = ["All", "New", "Under Development", "assigned_to_qa", "qa_passed", "qa_failed", "Completed"];
   // const statusTabs = [
   //   { key: "All Projects", label: "All Projects" },
@@ -407,7 +410,7 @@ export default function Projects() {
 
   const handleAssign = async () => {
     if (!selectedProject) return;
-
+    setErrors({}); // clear previous errors
     try {
       let res;
 
@@ -426,6 +429,7 @@ export default function Projects() {
               BAUPersonId: selectedBauPerson,
             }),
           }
+          
         );
       }
 
@@ -446,7 +450,13 @@ export default function Projects() {
 
 
       const data = await res.json();
-      console.log("Updated Data:", data);
+      // console.log("Updated Data:", data);
+
+      if (data.errors) {
+        setErrors(data.errors);
+        // toast.error("Please fill all required fields");
+        return;
+      }
 
       if (!res.ok || !data.project && !data.feed) {
         console.error("Failed to update:", data);
@@ -462,6 +472,8 @@ export default function Projects() {
         );
         toast.success("Project team updated successfully");
       }
+
+
 
       // Optionally update feed state if you have a feed table/list
       if (data.feed) {
@@ -2402,47 +2414,47 @@ export default function Projects() {
                 </p>
               </div>
 
-             {/* Feeds Table */}
-    <div className="overflow-x-auto md:col-span-2">
-      <table className="min-w-full border border-gray-200">
-        <thead className="bg-gray-100 text-gray-700 sticky top-0">
-          <tr>
-            <th className="px-3 py-2 text-left font-semibold">No.</th>
-            <th className="px-3 py-2 text-left font-semibold">Feed ID</th>
-            <th className="px-3 py-2 text-left font-semibold">Feed Name</th>
-            <th className="px-3 py-2 text-left font-semibold">Platform</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedProject.Feeds && selectedProject.Feeds.length > 0 ? (
-            selectedProject.Feeds.map((feed, idx) => (
-              <tr key={feed._id || idx} className="border-t border-gray-200"
-              onClick={() => navigate(`/projects/feed/${feed._id}`)}
-              >
-                <td className="px-4 py-2">{idx + 1}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
-                <td
-                  className="px-4 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
-                  // onClick={() => navigate(`/projects/feed/${feed._id}`)}
-                >
-                  {feed.FeedName}
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                className="px-4 py-6 text-center text-gray-500"
-                colSpan={4} // total number of columns
-              >
-                No Data Found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+              {/* Feeds Table */}
+              <div className="overflow-x-auto md:col-span-2">
+                <table className="min-w-full border border-gray-200">
+                  <thead className="bg-gray-100 text-gray-700 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">No.</th>
+                      <th className="px-3 py-2 text-left font-semibold">Feed ID</th>
+                      <th className="px-3 py-2 text-left font-semibold">Feed Name</th>
+                      <th className="px-3 py-2 text-left font-semibold">Platform</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedProject.Feeds && selectedProject.Feeds.length > 0 ? (
+                      selectedProject.Feeds.map((feed, idx) => (
+                        <tr key={feed._id || idx} className="border-t border-gray-200"
+                          onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                        >
+                          <td className="px-4 py-2">{idx + 1}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
+                          <td
+                            className="px-4 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
+                          // onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                          >
+                            {feed.FeedName}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          className="px-4 py-6 text-center text-gray-500"
+                          colSpan={4} // total number of columns
+                        >
+                          No Data Found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -2454,7 +2466,7 @@ export default function Projects() {
                 {/* TL Select */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Team Lead
+                    Team Lead <span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
@@ -2462,18 +2474,24 @@ export default function Projects() {
                         .map((tl) => ({ value: tl._id, label: tl.name }))
                         .find((opt) => opt.value === selectedTL) || null
                     }
-                    onChange={(selected) => setSelectedTL(selected?.value || "")}
+                    onChange={(selected) => {
+                      setSelectedTL(selected?.value || "");        // keep your existing logic
+                      setErrors((prev) => ({ ...prev, TLId: null })); // clear error dynamically
+                    }}
                     options={tlOptions.map((tl) => ({ value: tl._id, label: tl.name }))}
                     placeholder="Select Team Lead"
                     isSearchable
                     className="text-sm"
                   />
+                  {errors.TLId && (
+                    <p className="text-red-500 text-xs mt-1">{errors.TLId}</p>
+                  )}
                 </div>
 
                 {/* PC Select */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Project Coordinator
+                    Project Coordinator<span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
@@ -2481,18 +2499,23 @@ export default function Projects() {
                         .map((pc) => ({ value: pc._id, label: pc.name }))
                         .find((opt) => opt.value === selectedPC) || null
                     }
-                    onChange={(selected) => setSelectedPC(selected?.value || "")}
+                    onChange={(selected) =>  {setSelectedPC(selected?.value || "");
+                      setErrors((prev) => ({ ...prev, PCId: null }));
+                    }}
                     options={pcOptions.map((pc) => ({ value: pc._id, label: pc.name }))}
                     placeholder="Select Project Coordinator"
                     isSearchable
                     className="text-sm"
                   />
+                  {errors.PCId && (
+                    <p className="text-red-500 text-xs mt-1">{errors.PCId}</p>
+                  )}
                 </div>
 
                 {/* QA Select */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    QA Lead
+                    QA Lead<span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
@@ -2500,18 +2523,23 @@ export default function Projects() {
                         .map((qa) => ({ value: qa._id, label: qa.name }))
                         .find((opt) => opt.value === selectedQA) || null
                     }
-                    onChange={(selected) => setSelectedQA(selected?.value || "")}
+                    onChange={(selected) => {setSelectedQA(selected?.value || "");
+                      setErrors((prev) => ({ ...prev, QAId: null }));
+                    }}
                     options={qaOptions.map((qa) => ({ value: qa._id, label: qa.name }))}
                     placeholder="Select QA Lead"
                     isSearchable
                     className="text-sm"
                   />
+                  {errors.QAId && (
+                    <p className="text-red-500 text-xs mt-1">{errors.QAId}</p>
+                  )}
                 </div>
 
                 {/* QA Select */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    BAU Person
+                    BAU Person<span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={
@@ -2519,12 +2547,17 @@ export default function Projects() {
                         .map((bau) => ({ value: bau._id, label: bau.name }))
                         .find((opt) => opt.value === selectedBauPerson) || null
                     }
-                    onChange={(selected) => setSelectedBauPerson(selected?.value || "")}
+                    onChange={(selected) => {setSelectedBauPerson(selected?.value || "");
+                      setErrors((prev) => ({ ...prev, BAUPersonId: null }));
+                    }}
                     options={bauPersonOptions.map((bau) => ({ value: bau._id, label: bau.name }))}
                     placeholder="Select BAU Person"
                     isSearchable
                     className="text-sm"
                   />
+                  {errors.BAUPersonId && (
+                    <p className="text-red-500 text-xs mt-1">{errors.BAUPersonId}</p>
+                  )}
                 </div>
 
                 {/* <div>
@@ -2587,6 +2620,7 @@ export default function Projects() {
           {/* 🧭 Action Buttons */}
           <div className="flex justify-end gap-3 mt-4">
             <button
+              type="submit"
               className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
               onClick={() => setIsAssignOpen(false)}
             >

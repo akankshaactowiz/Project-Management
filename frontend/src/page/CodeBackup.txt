@@ -1,4 +1,112 @@
+{/* Additional Info */}
+      <div className="">
+        {/* <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
+            Additional Information
+          </h3> */}
 
+
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Coordinator
+              </label>
+              <Select
+                options={pcOptions.map((u) => ({
+                  value: u._id,
+                  label: u.name,
+                }))}
+                value={pcId}
+                onChange={setPcId}
+                placeholder="Select PC"
+              />
+            </div> */}
+
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Team Lead<span className="text-red-500">*</span>
+              </label>
+              <Select
+                options={tlOptions.map((u) => ({ value: u._id, label: u.name }))}
+                value={tlId}
+                onChange={(selectedOption) => {
+                  setTlId(selectedOption); // ✅ selected option object
+                  setErrors((prev) => ({ ...prev, tlId: "" }));
+                }}
+                placeholder="Select Team Lead"
+              />
+              {errors.tlId && <p className="text-red-500 text-sm mt-1">{errors.tlId}</p>}
+            </div> */}
+
+          {/* Devs */}
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Developers
+              </label>
+              <Select
+                isMulti
+                options={devOptions.map((u) => ({
+                  value: u._id,
+                  label: u.name,
+                }))}
+                value={devId}
+                onChange={setDevId}
+                placeholder="Select Developers..."
+              />
+            </div> */}
+
+          {/* QA */}
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                QA Lead
+              </label>
+              <Select
+                options={qaOptions.map((u) => ({
+                  value: u._id,
+                  label: u.name,
+                }))}
+                value={qaId}
+                onChange={setQaId}
+                placeholder="Select QA"
+              />
+            </div> */}
+
+          {/* Execution Person */}
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Execution Person
+              </label>
+              <Select
+                // options={tlOptions.map((u) => ({
+                //   value: u._id,
+                //   label: u.name,
+                // }))}
+                // value={tlId}
+                // onChange={setTlId}
+                placeholder="Select Execution Person if any"
+              />
+            </div> */}
+
+          {/* BAU */}
+          {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                BAU Person
+              </label>
+              <select
+                value={bauPerson}
+                onChange={(e) => setBauPerson(e.target.value)}
+                className="w-full bg-gray-100 rounded p-2"
+              >
+                <option value="">Select Person</option>
+                <option value="Aakanksha Dixit">Aakanksha Dixit</option>
+              </select>
+            </div> */}
+        </div>
+      </div>
+
+
+      
         {/* Table */}
         {user?.roleName === "Sales Head" && (
           <div className="overflow-x-auto max-h-[500px] overflow-y-auto">

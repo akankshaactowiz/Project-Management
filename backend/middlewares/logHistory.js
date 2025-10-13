@@ -42,7 +42,7 @@ export const logHistory = async ({
 
     if (isNew) {
       actionType = `${modelName} Created`;
-      description = `${modelName} ${newDoc?.ProjectName || newDoc?.FeedName || newDoc?._id} created`;
+      description = `created ${modelName} ${newDoc?.ProjectName || newDoc?.FeedName || newDoc?._id}`;
     } else {
       actionType = `${modelName} Updated`;
     }

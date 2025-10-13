@@ -2,6 +2,9 @@ import { useEffect, useState, Fragment, useRef } from "react";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 
+import FeedModel from "../components/CreateFeed";
+
+
 // Bind modal to your app element (for accessibility)
 Modal.setAppElement("#root");
 
@@ -32,6 +35,7 @@ export default function ProjectDetails() {
   const [loading, setLoading] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [feedModalOpen, setFeedModalOpen] = useState(false);
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
 
@@ -43,6 +47,7 @@ export default function ProjectDetails() {
 
   const feedPopoverRef = useRef(null);
   const genericPopoverRef = useRef(null);
+  const [refresh, setRefresh] = useState(false);
 
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [history, setHistory] = useState([]);
@@ -55,6 +60,11 @@ export default function ProjectDetails() {
 
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
+
+
+   const canCreateFeed = user?.permissions?.some(
+    (perm) => perm.module === "Feed" && perm.actions.includes("create")
+  );
 
   // useEffect(() => {
   //   const handleClickOutside = (event) => {
@@ -162,7 +172,7 @@ export default function ProjectDetails() {
           { credentials: "include" }
         );
         const data = await res.json();
-        // console.log(data);
+  
         setProject(data.project);
         setForm({
           TLId: data.TLId?._id || "",
@@ -190,7 +200,7 @@ export default function ProjectDetails() {
       }
     };
     loadData();
-  }, [id, search]);
+  }, [id, search, refresh]);
 
 
   // Inside your component, after fetching `project` data
@@ -489,6 +499,17 @@ export default function ProjectDetails() {
               </div>
             )}
 
+{feedModalOpen && project && (  // <-- wait until project is loaded
+  <FeedModel
+    isOpen={feedModalOpen}
+    onClose={() => setFeedModalOpen(false)}
+    // existingProjectId={project.ProjectId}  // now it exists
+      existingProjectId={project._id}
+    onSuccess={() => setRefresh((prev) => !prev)}
+  />
+)}
+              
+
             {/* FEEDS TAB */}
             {activeTab === "Feeds" && (
               // <div className="flex flex-col">
@@ -523,7 +544,16 @@ export default function ProjectDetails() {
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z" />
                         </svg>
+
                       </div>
+                      {canCreateFeed && (
+              <button
+                className="bg-purple-600 hover:bg-purple-700 cursor-pointer text-white text-sm font-semibold px-4 py-2 rounded transition"
+                onClick={() => setFeedModalOpen(true)}
+              >
+                + Add Feed
+              </button>
+            )}
 
                       {/* Add Feed Button */}
                       {/* <button

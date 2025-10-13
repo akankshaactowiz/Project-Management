@@ -7,9 +7,10 @@ import Modal from "react-modal";
 
 Modal.setAppElement("#root");
 
-function CreateFeed({ onClose, onSuccess }) {
+function CreateFeed({ existingProjectId , onClose, onSuccess, }) {
   const [projects, setProjects] = useState([]);
   const [projectId, setProjectId] = useState("");
+  // const [projectOptions, setProjectOptions] = useState([]);
   // const [feedId, setFeedId] = useState("");
   const [feedName, setFeedName] = useState("");
   const [domainName, setDomainName] = useState("");
@@ -123,6 +124,16 @@ function CreateFeed({ onClose, onSuccess }) {
 
     fetchProjects();
   }, []);
+
+ // Set projectId once after projects are loaded
+useEffect(() => {
+  if (projects.length && existingProjectId) {
+    const match = projects.find((p) => p._id === existingProjectId);
+    console.log(existingProjectId)
+    if (match) setProjectId(match._id);
+  }
+}, [projects, existingProjectId]);
+
 
   // const handleSave = async () => {
   //   try {
@@ -244,39 +255,39 @@ function CreateFeed({ onClose, onSuccess }) {
     // <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
     //   <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative">
     //     <h2 className="text-xl font-bold mb-6 text-gray-800">Add New Feed</h2>
-  <Modal
+    <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
       overlayClassName="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
       className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl shadow-xl relative"
     >
-        {/* Feed Details */}
-        <div className="mb-6">
-          <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
-            Feed Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Project */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project <span className="text-red-500">*</span>
-              </label>
-              <Select
-                options={projectOptions}
-                value={projectOptions.find((opt) => opt.value === projectId) || null}
-                onChange={(selectedOption) => {
-                  setProjectId(selectedOption?.value || "");
-                  setErrors((prev) => ({ ...prev, projectId: "" })); // Clear project error
-                }}
-                placeholder="Select Project"
-                isSearchable
-                className="w-full"
-              />
-              {errors.projectId && <p className="text-red-500 text-sm mt-1">{errors.projectId}</p>}
-            </div>
+      {/* Feed Details */}
+      <div className="mb-6">
+        <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
+          Feed Details
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Project */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Project <span className="text-red-500">*</span>
+            </label>
+            <Select
+              options={projectOptions}
+              value={projectOptions.find((opt) => opt.value === projectId) || null}
+              onChange={(selectedOption) => {
+                setProjectId(selectedOption?.value || "");
+                setErrors((prev) => ({ ...prev, projectId: "" }));
+              }}
+              placeholder="Select Project"
+              isSearchable
+              className="w-full"
+            />
+            {errors.projectId && <p className="text-red-500 text-sm mt-1">{errors.projectId}</p>}
+          </div>
 
-            {/* Feed ID */}
-            {/* <div>
+          {/* Feed ID */}
+          {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Feed ID
               </label>
@@ -290,212 +301,105 @@ function CreateFeed({ onClose, onSuccess }) {
               />
             </div> */}
 
-            {/* Feed Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Feed Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={feedName}
-                onChange={(e) => {
-                  setFeedName(e.target.value);
-                  setErrors((prev) => ({ ...prev, feedName: "" })); // Clear feedName error
-                }}
-                placeholder="Feed Name"
-                className="w-full border border-gray-300 rounded-r p-2"
-              />
-              {errors.feedName && <p className="text-red-500 text-sm mt-1">{errors.feedName}</p>}
-            </div>
+          {/* Feed Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Feed Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={feedName}
+              onChange={(e) => {
+                setFeedName(e.target.value);
+                setErrors((prev) => ({ ...prev, feedName: "" })); // Clear feedName error
+              }}
+              placeholder="Feed Name"
+              className="w-full border border-gray-300 rounded-r p-2"
+            />
+            {errors.feedName && <p className="text-red-500 text-sm mt-1">{errors.feedName}</p>}
+          </div>
 
-            {/* Domain */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Domain Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={domainName}
+          {/* Domain */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Domain Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={domainName}
 
-                onChange={(e) => {
-                  setDomainName(e.target.value);
-                  setErrors((prev) => ({ ...prev, domainName: "" })); // Clear feedName error
-                }}
-                placeholder="Domain Name"
-                className="w-full border border-gray-300 rounded-r p-2"
-              />
-              {errors.domainName && <p className="text-red-500 text-sm mt-1">{errors.domainName}</p>}
-            </div>
+              onChange={(e) => {
+                setDomainName(e.target.value);
+                setErrors((prev) => ({ ...prev, domainName: "" })); // Clear feedName error
+              }}
+              placeholder="Domain Name"
+              className="w-full border border-gray-300 rounded-r p-2"
+            />
+            {errors.domainName && <p className="text-red-500 text-sm mt-1">{errors.domainName}</p>}
+          </div>
 
-            {/* Application Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Platform Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={applicationType}
-                // onChange={(e) => setApplicationType(e.target.value)}
-                onChange={(e) => {
-                  setApplicationType(e.target.value);
-                  setErrors((prev) => ({ ...prev, applicationType: "" })); // Clear feedName error
-                }}
-                className="w-full border border-gray-300 rounded-r p-2"
-              >
-                <option value="" disabled hidden>
-                  Select type
-                </option>
-                <option value="Web">Web</option>
-                <option value="Mobile">App</option>
-                <option value="Web&App">Both (Web & App)</option>
-              </select>
-              {errors.applicationType && <p className="text-red-500 text-sm mt-1">{errors.applicationType}</p>}
-            </div>
+          {/* Application Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Platform Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={applicationType}
+              // onChange={(e) => setApplicationType(e.target.value)}
+              onChange={(e) => {
+                setApplicationType(e.target.value);
+                setErrors((prev) => ({ ...prev, applicationType: "" })); // Clear feedName error
+              }}
+              className="w-full border border-gray-300 rounded-r p-2"
+            >
+              <option value="" disabled hidden>
+                Select type
+              </option>
+              <option value="Web">Web</option>
+              <option value="App">App</option>
+              <option value="Web&App">Both (Web & App)</option>
+            </select>
+            {errors.applicationType && <p className="text-red-500 text-sm mt-1">{errors.applicationType}</p>}
+          </div>
 
-            {/* Country */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Country<span className="text-red-500">*</span>
-              </label>
-              <Select
-                name="country"
-                options={countryOptions}
-                value={country}
-                onChange={(selectedOption) => {
-                  setCountry(selectedOption); // ✅ selected option object
-                  setErrors((prev) => ({ ...prev, country: "" }));
-                }}
-                isSearchable
-                placeholder="Select Country"
-              />
-              {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
-            </div>
+          {/* Country */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Country<span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="country"
+              options={countryOptions}
+              value={country}
+              onChange={(selectedOption) => {
+                setCountry(selectedOption); // ✅ selected option object
+                setErrors((prev) => ({ ...prev, country: "" }));
+              }}
+              isSearchable
+              placeholder="Select Country"
+            />
+            {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
           </div>
         </div>
+      </div>
 
-        {/* Additional Info */}
-        <div className="">
-          {/* <h3 className="mb-4 bg-purple-200 text-purple-700 px-3 py-2 rounded-md text-md font-semibold">
-            Additional Information
-          </h3> */}
-
-
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Coordinator
-              </label>
-              <Select
-                options={pcOptions.map((u) => ({
-                  value: u._id,
-                  label: u.name,
-                }))}
-                value={pcId}
-                onChange={setPcId}
-                placeholder="Select PC"
-              />
-            </div> */}
-
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Team Lead<span className="text-red-500">*</span>
-              </label>
-              <Select
-                options={tlOptions.map((u) => ({ value: u._id, label: u.name }))}
-                value={tlId}
-                onChange={(selectedOption) => {
-                  setTlId(selectedOption); // ✅ selected option object
-                  setErrors((prev) => ({ ...prev, tlId: "" }));
-                }}
-                placeholder="Select Team Lead"
-              />
-              {errors.tlId && <p className="text-red-500 text-sm mt-1">{errors.tlId}</p>}
-            </div> */}
-
-            {/* Devs */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Developers
-              </label>
-              <Select
-                isMulti
-                options={devOptions.map((u) => ({
-                  value: u._id,
-                  label: u.name,
-                }))}
-                value={devId}
-                onChange={setDevId}
-                placeholder="Select Developers..."
-              />
-            </div> */}
-
-            {/* QA */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                QA Lead
-              </label>
-              <Select
-                options={qaOptions.map((u) => ({
-                  value: u._id,
-                  label: u.name,
-                }))}
-                value={qaId}
-                onChange={setQaId}
-                placeholder="Select QA"
-              />
-            </div> */}
-
-            {/* Execution Person */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Execution Person
-              </label>
-              <Select
-                // options={tlOptions.map((u) => ({
-                //   value: u._id,
-                //   label: u.name,
-                // }))}
-                // value={tlId}
-                // onChange={setTlId}
-                placeholder="Select Execution Person if any"
-              />
-            </div> */}
-
-            {/* BAU */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                BAU Person
-              </label>
-              <select
-                value={bauPerson}
-                onChange={(e) => setBauPerson(e.target.value)}
-                className="w-full bg-gray-100 rounded p-2"
-              >
-                <option value="">Select Person</option>
-                <option value="Aakanksha Dixit">Aakanksha Dixit</option>
-              </select>
-            </div> */}
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="px-5 py-2 rounded-lg bg-blue-600 cursor-pointer text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {loading ? "Creating..." : "Create"}
-          </button>
-        </div>
-        </Modal>
+      {/* Buttons */}
+      <div className="flex justify-end gap-3 pt-4">
+        <button
+          onClick={onClose}
+          className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="px-5 py-2 rounded-lg bg-blue-600 cursor-pointer text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          {loading ? "Creating..." : "Create"}
+        </button>
+      </div>
+    </Modal>
     //   </div>
     // </div>
   );

@@ -1,10 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
+import { useAuth } from "../hooks/useAuth";
+
+
 
 const FeedDetails = ({ allUsers }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const {user} = useAuth();
   const [feed, setFeed] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -78,6 +82,10 @@ const FeedDetails = ({ allUsers }) => {
     const charCodeSum = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
     return colors[charCodeSum % colors.length];
   };
+
+  const canEditFeed = user?.permissions?.some(
+    (perm) => perm.module === "Feed" && perm.actions.includes("update")
+  ); 
 
   // Component for Assigned To avatars + popover
 
@@ -191,9 +199,6 @@ const FeedDetails = ({ allUsers }) => {
             </span>{" "}
             <span className="text-gray-700 font-semibold">{feed?.feedName}</span>
           </h3>
-
-
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
               <div className="flex justify-between items-center mb-4">
@@ -201,7 +206,7 @@ const FeedDetails = ({ allUsers }) => {
                   <span className="w-2 h-6 bg-blue-500 rounded"></span>
                   Feed Details
                 </h4>
-
+                {canEditFeed && (
                 <button
                   className="flex items-center gap-2 text-white px-3 py-1 rounded cursor-pointer bg-purple-600 hover:bg-purple-700"
                   onClick={() => navigate(`/projects/feed/${id}/update`)}
@@ -209,6 +214,7 @@ const FeedDetails = ({ allUsers }) => {
                   <FaEdit size={16} />
                   <span>Edit</span>
                 </button>
+              )}
               </div>
 
               <hr className="border-gray-200 mb-4" />
