@@ -2,16 +2,27 @@ export default function PaginationControls({
   currentPage,
   totalPages,
   onPageChange,
-  totalDocs, // 👈 new optional prop
+  totalDocs, 
+  entries = 10,
 }) {
   return (
     <div className="flex items-center justify-end py-2">
       {/* Total records info */}
-      {totalDocs !== undefined && (
-        <div className="text-sm text-gray-600">
-          Showing page {currentPage} of {totalPages} ({totalDocs} records)
+           {totalDocs !== undefined && (
+        <div className="text-sm text-gray-600 m-2">
+          Showing{" "}
+          <span className="font-medium text-gray-800">
+            {(currentPage - 1) * entries + 1}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium text-gray-800">
+            {Math.min(currentPage * entries, totalDocs)}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-gray-800">{totalDocs}</span> entries
         </div>
       )}
+
 
       {/* Page navigation */}
       <div className="flex items-center gap-2">

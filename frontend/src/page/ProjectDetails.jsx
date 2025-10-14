@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import Modal from "react-modal";
 
 import FeedModel from "../components/CreateFeed";
-
+import { FaHistory } from "react-icons/fa";
 
 // Bind modal to your app element (for accessibility)
 Modal.setAppElement("#root");
@@ -341,7 +341,7 @@ export default function ProjectDetails() {
             {/* Tabs */}
             <div className="flex gap-2 mb-4 p-2 bg-gray-50 rounded">
               <button
-                className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "Summary"
+                className={`cursor-pointer px-4 py-2 rounded-md text-sm font-medium ${activeTab === "Summary"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-200 text-gray-700"
                   }`}
@@ -350,7 +350,7 @@ export default function ProjectDetails() {
                 Summary
               </button>
               <button
-                className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "Feeds"
+                className={`cursor-pointer px-4 py-2 rounded-md text-sm font-medium ${activeTab === "Feeds"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-200 text-gray-700"
                   }`}
@@ -997,8 +997,8 @@ export default function ProjectDetails() {
 
                 <p className="flex justify-between">
                   <span className="text-gray-500">History</span>
-                  <span className="font-semibold text-left text-gray-700 cursor-pointer">
-                    <FiEye size={24} className="" onClick={openModal} />
+                  <span className="font-semibold text-left text-gray-700 cursor-pointer hover:text-purple-700">
+                    <FaHistory  size={20} className="" onClick={openModal} title="See History" />
                   </span>
                 </p>
 

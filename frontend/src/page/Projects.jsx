@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, Fragment } from "react";
-import { useLocation, } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Modal from "react-modal";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
@@ -30,7 +30,6 @@ import { useModal } from "../context/modalContext";
 
 // import { set } from "mongoose";
 
-
 // import QaActionsModal from "../components/QAActionModel";
 export default function Projects() {
   //  const location = useLocation();
@@ -46,14 +45,13 @@ export default function Projects() {
   const [activeSalesTab, setActiveSalesTab] = useState("All");
   const [search, setSearch] = useState("");
 
-
-
   const [filterDate, setFilterDate] = useState("");
 
   const [entries, setEntries] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeStatus, setActiveStatus] = useState(statusFilter || "All");
@@ -78,9 +76,6 @@ export default function Projects() {
 
   const [refresh, setRefresh] = useState(false);
 
-
-
-
   // const canCreateProject = user?.permissions?.some(
   //   (perm) => perm.module === "Project" && perm.actions.includes("create")
   // );
@@ -100,8 +95,10 @@ export default function Projects() {
   const [qaOptions, setQaOptions] = useState([]);
   const [bauPersonOptions, setBauPersonOptions] = useState([]);
   const [developerOptions, setDeveloperOptions] = useState([]);
-  const devOptionsRS = developerOptions.map((dev) => ({ value: dev._id, label: dev.name }));
-
+  const devOptionsRS = developerOptions.map((dev) => ({
+    value: dev._id,
+    label: dev.name,
+  }));
 
   // const tabs = [
   //   "All Deliveries",
@@ -146,26 +143,19 @@ export default function Projects() {
   //   { key: "Completed", label: "Completed" },
   // ];
 
-
-
-
-
   const canCreateProject =
     user?.permissions?.some(
       (perm) => perm.module === "Projects" && perm.actions.includes("create")
     ) && !(user?.department === "QA" && user?.roleName === "Manager");
 
-  const canCreateFeed = user?.permissions?.some(
-    (perm) => perm.module === "Feed" && perm.actions.includes("create")
-  );
+  // const canCreateFeed = user?.permissions?.some(
+  //   (perm) => perm.module === "Feed" && perm.actions.includes("create")
+  // );
 
   const canAssignProject =
     user?.permissions?.some(
       (perm) => perm.module === "Projects" && perm.actions.includes("assign")
     ) && !(user?.department === "QA" && user?.roleName === "Manager");
-
-
-
 
   // Fetch projects using filters
 
@@ -173,17 +163,7 @@ export default function Projects() {
     try {
       setLoading(true);
 
-
       const params = new URLSearchParams({
-        // status: activeStatus !== "All" ? activeStatus : "",
-        // tab:
-        //   user.department === "Sales" && activeSalesTab !== "All"
-        //     ? activeSalesTab
-        //     : "", // send tab only for Sales
-        // statusTab:
-        //   user.department === "Sales" && salesActiveStatusTabs !== "All"
-        //     ? salesActiveStatusTabs
-        //     : "",
         status: activeStatus !== "All" ? activeStatus : "",
         tab: activeTab !== "All" ? activeTab : "",
         date_range: activeTab.toLowerCase().replace(" ", "_"),
@@ -191,11 +171,14 @@ export default function Projects() {
         pageSize: entries.toString(),
         search: search || "",
         department: user.department || "",
-        CreatedDate: filterDate ? dayjs(filterDate, "YYYY/MM/DD").format("YYYY/MM/DD") : "",
+        CreatedDate: filterDate
+          ? dayjs(filterDate, "YYYY/MM/DD").format("YYYY/MM/DD")
+          : "",
       });
 
       const response = await fetch(
-        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID
+        `http://${
+          import.meta.env.VITE_BACKEND_NETWORK_ID
         }/api/projects?${params.toString()}`,
         {
           credentials: "include",
@@ -208,6 +191,7 @@ export default function Projects() {
         setPageSize(result.pageSize);
         setCurrentPage(result.page || 1);
         setTotalPages(Math.ceil(result.total / result.pageSize) || 1);
+        setTotalDocs(result.total || 0);
 
         console.log("Fetched Projects:", result.data);
 
@@ -238,7 +222,6 @@ export default function Projects() {
     search,
     filterDate,
     refresh,
-
   ]);
 
   useEffect(() => {
@@ -264,7 +247,6 @@ export default function Projects() {
   //     }
   //   }
   // }, [openProjectId, data]);
-
 
   // useEffect(() => {
   //   if (!data.length) return;
@@ -348,8 +330,6 @@ export default function Projects() {
     })();
   }, [isAssignOpen, selectedProject]);
 
-
-
   //   console.log("Selected TL:", selectedTL);
   // console.log("Selected PC:", selectedPC);
   // console.log("Selected QA:", selectedQA);
@@ -380,7 +360,6 @@ export default function Projects() {
   //         }
   //       );
   //     }
-
 
   //     const data = await res.json();
 
@@ -417,7 +396,9 @@ export default function Projects() {
       // Manager: update TL, PC, QA
       if (user.roleName === "Manager") {
         res = await fetch(
-          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${selectedProject._id}/update-team`,
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${
+            selectedProject._id
+          }/update-team`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -429,14 +410,19 @@ export default function Projects() {
               BAUPersonId: selectedBauPerson,
             }),
           }
-          
         );
       }
 
       // TL / PC: update developers for feed
-      if ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && selectedFeed) {
+      if (
+        (user.roleName === "Team Lead" ||
+          user.roleName === "Project Coordinator") &&
+        selectedFeed
+      ) {
         res = await fetch(
-          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed.value}/update-team`,
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${
+            selectedFeed.value
+          }/update-team`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -448,7 +434,6 @@ export default function Projects() {
         );
       }
 
-
       const data = await res.json();
       // console.log("Updated Data:", data);
 
@@ -458,7 +443,7 @@ export default function Projects() {
         return;
       }
 
-      if (!res.ok || !data.project && !data.feed) {
+      if (!res.ok || (!data.project && !data.feed)) {
         console.error("Failed to update:", data);
         toast.error(data.message || "Failed to update assignment");
         return;
@@ -473,8 +458,6 @@ export default function Projects() {
         toast.success("Project team updated successfully");
       }
 
-
-
       // Optionally update feed state if you have a feed table/list
       if (data.feed) {
         toast.success("Developers assigned successfully");
@@ -482,23 +465,17 @@ export default function Projects() {
       }
 
       setIsAssignOpen(false);
-
     } catch (err) {
       console.error("Error updating assignment:", err);
       toast.error("Failed to update assignment");
     }
   };
 
-
   // useEffect(() => {
   //   if (data.length && tableRef.current) {
   //     $(tableRef.current).DataTable();
   //   }
   // }, [data]);
-
-
-
-
 
   // const handleAssignProject = async () => {
   //   // Call API to assign TL and PC to selectedProject
@@ -553,7 +530,7 @@ export default function Projects() {
       "Attachments",
       "Project Type",
       "Created By",
-      "Created Date"
+      "Created Date",
     ],
     Superadmin: [
       "Frequency",
@@ -621,7 +598,8 @@ export default function Projects() {
       "Action",
     ],
     QA: ["QA Report Count", "QA Rules"],
-    Developer: ["Project Name",
+    Developer: [
+      "Project Name",
       "Feed Name",
       // "Feed ID",
       "Frequency",
@@ -682,20 +660,25 @@ export default function Projects() {
 
     if (user.roleName === "Manager") {
       // Manager: all roles must be assigned
-      return Boolean(project.TLId?._id) &&
+      return (
+        Boolean(project.TLId?._id) &&
         Boolean(project.PCId?._id) &&
         Boolean(project.QAId?._id)
+      );
       //  Boolean(project.BAUPersonId?._id);
-    } else if (user.roleName === "Team Lead" || user.roleName === "Project Coordinator") {
+    } else if (
+      user.roleName === "Team Lead" ||
+      user.roleName === "Project Coordinator"
+    ) {
       // TL/PC: all feeds must have at least one developer
-      return project.Feeds?.length > 0 &&
-        project.Feeds.every(feed => feed.DeveloperIds?.length > 0);
+      return (
+        project.Feeds?.length > 0 &&
+        project.Feeds.every((feed) => feed.DeveloperIds?.length > 0)
+      );
     }
 
     return false;
   };
-
-
 
   const filteredData = data.filter((project) => {
     switch (user?.roleName) {
@@ -707,12 +690,12 @@ export default function Projects() {
         // Show only projects assigned to this BDE
         return true;
       case "Manager":
-        return true
+        return true;
 
       case "Team Lead":
-        return true
+        return true;
       case "Project Coordinator":
-        return true
+        return true;
       default:
         return false;
     }
@@ -727,7 +710,6 @@ export default function Projects() {
   //     }
   //   }, [location.state, selectedProject]);
 
-
   let rowCounter = (currentPage - 1) * pageSize + 1;
 
   return (
@@ -739,7 +721,6 @@ export default function Projects() {
             Projects
           </h2>
         </div>
-
 
         {/* <div className="m-2">
           <h1 className="text-2xl font-semibold text-gray-800">
@@ -794,18 +775,21 @@ export default function Projects() {
           )} */}
         {/* </div> */}
 
-        {feedModalOpen && (
+        {/* {feedModalOpen && (
           <FeedModel
             isOpen={feedModalOpen}
             onClose={() => setFeedModalOpen(false)}
             onSuccess={() => setRefresh((prev) => !prev)}
-
           />
-        )}
+        )} */}
 
         {/* Modal */}
         {isModalOpen && (
-          <Model isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={() => setRefresh((prev) => !prev)} />
+          <Model
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSuccess={() => setRefresh((prev) => !prev)}
+          />
         )}
 
         {/* Status Tabs */}
@@ -842,8 +826,6 @@ export default function Projects() {
             ))}
           </div>
         )} */}
-
-
 
         {/* Controls */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
@@ -921,18 +903,27 @@ export default function Projects() {
 
               {/* Date */}
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-500 mb-1">Date</label>
+                <label className="text-sm font-medium text-gray-500 mb-1">
+                  Date
+                </label>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
                     className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none"
                     value={filterDate ? dayjs(filterDate, "YYYY/MM/DD") : null}
                     format="YYYY/MM/DD"
                     onChange={(newValue) => {
-                      setFilterDate(newValue ? newValue.format("YYYY/MM/DD") : "");
+                      setFilterDate(
+                        newValue ? newValue.format("YYYY/MM/DD") : ""
+                      );
                       setCurrentPage(1);
                     }}
                     slotProps={{
-                      textField: { size: "small", sx: { "& .MuiInputBase-root": { fontSize: "0.875rem" } } },
+                      textField: {
+                        size: "small",
+                        sx: {
+                          "& .MuiInputBase-root": { fontSize: "0.875rem" },
+                        },
+                      },
                     }}
                   />
                 </LocalizationProvider>
@@ -952,7 +943,6 @@ export default function Projects() {
                 Clear
               </button>
             </div>
-
           </div>
 
           {/* Right side: Export + Create Buttons */}
@@ -970,7 +960,9 @@ export default function Projects() {
                 }}
                 defaultValue=""
               >
-                <option value="" disabled hidden>Export</option>
+                <option value="" disabled hidden>
+                  Export
+                </option>
                 <option value="excel">Excel</option>
                 <option value="csv">CSV</option>
                 <option value="json">JSON</option>
@@ -987,14 +979,14 @@ export default function Projects() {
               </button>
             )}
 
-            {canCreateFeed && (
+            {/* {canCreateFeed && (
               <button
                 className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
                 onClick={() => setFeedModalOpen(true)}
               >
                 + Create Feed
               </button>
-            )}
+            )} */}
           </div>
         </div>
         {/* ==========SALES Department Table start========== */}
@@ -1019,7 +1011,10 @@ export default function Projects() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={columns.length} className="text-center p-4 text-gray-500">
+                        <td
+                          colSpan={columns.length}
+                          className="text-center p-4 text-gray-500"
+                        >
                           <div className="flex justify-center items-center">
                             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
                           </div>
@@ -1027,17 +1022,31 @@ export default function Projects() {
                       </tr>
                     ) : data.length > 0 ? (
                       data.map((project, idx) => (
-                        <tr key={project._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
+                        <tr
+                          key={project._id}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="px-3 py-2">
+                            {(currentPage - 1) * pageSize + idx + 1}
+                          </td>
                           <td
                             className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                            onClick={() => navigate(`/projects/${project._id}/details`)}
+                            onClick={() =>
+                              navigate(`/projects/${project._id}/details`)
+                            }
                           >
-                            {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
+                            {project.ProjectCode ?? "-"}{" "}
+                            {project.ProjectName ?? "-"}
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.Feeds?.length ?? 0}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.IndustryType ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.PMId?.name ?? "-"}
+                          </td>
                           {/* <td className="px-3 py-2">{project.BDEId?.name ?? "-"}</td> */}
                           <td className="px-3 py-2 whitespace-nowrap">
                             {/* {project.BDEId && project.BDEId.length > 0
@@ -1050,18 +1059,19 @@ export default function Projects() {
                             {project.DeliveryType ? (
                               <div className="flex justify-center">
                                 <span
-                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
-                                    ? "bg-green-700 text-white"
-                                    : project.DeliveryType === "POC"
+                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${
+                                    project.DeliveryType === "BAU"
+                                      ? "bg-green-700 text-white"
+                                      : project.DeliveryType === "POC"
                                       ? "bg-orange-400 text-white"
                                       : project.DeliveryType === "R&D"
-                                        ? "bg-pink-300 text-white"
-                                        : project.DeliveryType === "Adhoc"
-                                          ? "bg-yellow-400 text-white"
-                                          : project.DeliveryType === "Once-off"
-                                            ? "bg-pink-100 text-pink-800"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
+                                      ? "bg-pink-300 text-white"
+                                      : project.DeliveryType === "Adhoc"
+                                      ? "bg-yellow-400 text-white"
+                                      : project.DeliveryType === "Once-off"
+                                      ? "bg-pink-100 text-pink-800"
+                                      : "bg-gray-100 text-gray-600"
+                                  }`}
                                 >
                                   {project.DeliveryType}
                                 </span>
@@ -1071,19 +1081,25 @@ export default function Projects() {
                             )}
                           </td>
 
-
                           {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
                           <td className="px-3 py-2 whitespace-nowrap">
                             {project.Status ? (
                               <span
-                                className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New" ? "bg-blue-100 text-blue-800" :
-                                  project.Status === "Under Development" ? "bg-yellow-100 text-yellow-800" :
-                                    project.Status === "On-Hold" ? "bg-gray-200 text-gray-800" :
-                                      project.Status === "Production" ? "bg-green-100 text-green-800" :
-                                        project.Status === "BAU-Started" ? "bg-indigo-100 text-indigo-800" :
-                                          project.Status === "Closed" ? "bg-red-100 text-red-800" :
-                                            "bg-gray-100 text-gray-800"
-                                  }`}
+                                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                  project.Status === "New"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : project.Status === "Under Development"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : project.Status === "On-Hold"
+                                    ? "bg-gray-200 text-gray-800"
+                                    : project.Status === "Production"
+                                    ? "bg-green-100 text-green-800"
+                                    : project.Status === "BAU-Started"
+                                    ? "bg-indigo-100 text-indigo-800"
+                                    : project.Status === "Closed"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
                               >
                                 {project.Status}
                               </span>
@@ -1094,30 +1110,40 @@ export default function Projects() {
 
                           <td className="px-3 py-2">
                             <button
-                              onClick={() => navigate(`/projects/${project._id}/attachments`)}
+                              onClick={() =>
+                                navigate(`/projects/${project._id}/attachments`)
+                              }
                               className="text-blue-600 hover:underline cursor-pointer"
                             >
                               View Files
                             </button>
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap">{project.ProjectType ?? "-"}</td>
-                          <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.ProjectType ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.CreatedBy?.name ?? "-"}
+                          </td>
                           <td className="px-3 py-2">
                             {/* {new Date(project.CreatedDate).toLocaleDateString() ?? "-"} */}
                             {project.CreatedDate
                               ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
                               : "-"}
                           </td>
-                          {user?.roleName !== "Business Development Executive" && (
+                          {user?.roleName !==
+                            "Business Development Executive" && (
                             <td className="px-3 py-2">
                               <button
                                 onClick={() => {
                                   setSelectedProject(project);
                                   setIsUpdateModalOpen(true);
-                                  // openModal(project._id); 
+                                  // openModal(project._id);
                                 }}
                               >
-                                <FaEdit size={20} className="text-blue-600 hover:text-blue-800" />
+                                <FaEdit
+                                  size={20}
+                                  className="text-blue-600 hover:text-blue-800"
+                                />
                               </button>
                             </td>
                           )}
@@ -1125,11 +1151,22 @@ export default function Projects() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={columns.length} className="text-center p-8 text-gray-500">
+                        <td
+                          colSpan={columns.length}
+                          className="text-center p-8 text-gray-500"
+                        >
                           <div className="flex flex-col items-center justify-center gap-3">
-                            <img src={Img} alt="No data" className="w-32 h-32 object-contain opacity-80" />
-                            <p className="font-semibold text-lg text-gray-600">No Data Found</p>
-                            <p className="text-sm text-gray-400">Try adding new projects to see them here.</p>
+                            <img
+                              src={Img}
+                              alt="No data"
+                              className="w-32 h-32 object-contain opacity-80"
+                            />
+                            <p className="font-semibold text-lg text-gray-600">
+                              No Data Found
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              Try adding new projects to see them here.
+                            </p>
                           </div>
                         </td>
                       </tr>
@@ -1142,7 +1179,7 @@ export default function Projects() {
                   // onClose={() => setIsUpdateModalOpen(false)}
                   onClose={() => {
                     setIsUpdateModalOpen(false);
-                    // closeModal(); 
+                    // closeModal();
                   }}
                   project={selectedProject}
                   onUpdate={handleUpdateProject}
@@ -1158,7 +1195,9 @@ export default function Projects() {
 
               <div className="flex justify-between m-4">
                 <div className="flex items-center space-x-2 mt-4">
-                  <label htmlFor="entries" className="text-gray-700">Show</label>
+                  <label htmlFor="entries" className="text-gray-700">
+                    Show
+                  </label>
                   <select
                     id="entries"
                     value={entries}
@@ -1168,11 +1207,21 @@ export default function Projects() {
                     }}
                     className="border rounded px-2 py-1"
                   >
-                    {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
                   </select>
                   <span className="text-gray-700">entries</span>
                 </div>
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalDocs={totalDocs}  
+                   entries={entries} 
+                  onPageChange={setCurrentPage}
+                />
               </div>
             </div>
           </>
@@ -1180,8 +1229,9 @@ export default function Projects() {
 
         {/* ==========SALES Department Table End========== */}
 
-
-        {(user?.roleName === "Manager" || user?.roleName === "Team Lead" || user?.roleName === "Project Coordinator") && (
+        {(user?.roleName === "Manager" ||
+          user?.roleName === "Team Lead" ||
+          user?.roleName === "Project Coordinator") && (
           <div className="flex flex-col">
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
@@ -1200,7 +1250,10 @@ export default function Projects() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={columns.length} className="text-center p-4 text-gray-500">
+                      <td
+                        colSpan={columns.length}
+                        className="text-center p-4 text-gray-500"
+                      >
                         <div className="flex justify-center items-center">
                           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
                         </div>
@@ -1208,35 +1261,52 @@ export default function Projects() {
                     </tr>
                   ) : filteredData.length > 0 ? (
                     filteredData.map((project, idx) => (
-                      <tr key={project._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <td className="px-3 py-2">{(currentPage - 1) * pageSize + idx + 1}</td>
+                      <tr
+                        key={project._id}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="px-3 py-2">
+                          {(currentPage - 1) * pageSize + idx + 1}
+                        </td>
                         <td
                           className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                          onClick={() => navigate(`/projects/${project._id}/details`)}
+                          onClick={() =>
+                            navigate(`/projects/${project._id}/details`)
+                          }
                         >
-                          {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
+                          {project.ProjectCode ?? "-"}{" "}
+                          {project.ProjectName ?? "-"}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.BDEId?.name ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.Feeds?.length ?? 0}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.IndustryType ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.PMId?.name ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.BDEId?.name ?? "-"}
+                        </td>
                         {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                         <td className="px-3 py-2">
                           {project.DeliveryType ? (
-                            <div className="flex justify-center">
+                            <div className="flex justify-left">
                               <span
-                                className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
-                                  ? "bg-green-700 text-white"
-                                  : project.DeliveryType === "POC"
+                                className={`px-3 py-1 text-xs font-semibold rounded-sm ${
+                                  project.DeliveryType === "BAU"
+                                    ? "bg-green-700 text-white"
+                                    : project.DeliveryType === "POC"
                                     ? "bg-orange-400 text-white"
                                     : project.DeliveryType === "R&D"
-                                      ? "bg-pink-300 text-white"
-                                      : project.DeliveryType === "Adhoc"
-                                        ? "bg-yellow-400 text-white"
-                                        : project.DeliveryType === "Once-off"
-                                          ? "bg-pink-100 text-pink-800"
-                                          : "bg-gray-100 text-gray-600"
-                                  }`}
+                                    ? "bg-pink-300 text-white"
+                                    : project.DeliveryType === "Adhoc"
+                                    ? "bg-yellow-400 text-white"
+                                    : project.DeliveryType === "Once-off"
+                                    ? "bg-pink-100 text-pink-800"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
                               >
                                 {project.DeliveryType}
                               </span>
@@ -1246,19 +1316,25 @@ export default function Projects() {
                           )}
                         </td>
 
-
                         {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
                         <td className="px-3 py-2 whitespace-nowrap">
                           {project.Status ? (
                             <span
-                              className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New" ? "bg-blue-100 text-blue-800" :
-                                project.Status === "Under Development" ? "bg-yellow-100 text-yellow-800" :
-                                  project.Status === "On-Hold" ? "bg-gray-200 text-gray-800" :
-                                    project.Status === "Production" ? "bg-green-100 text-green-800" :
-                                      project.Status === "BAU-Started" ? "bg-indigo-100 text-indigo-800" :
-                                        project.Status === "Closed" ? "bg-red-100 text-red-800" :
-                                          "bg-gray-100 text-gray-800"
-                                }`}
+                              className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                project.Status === "New"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : project.Status === "Under Development"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : project.Status === "On-Hold"
+                                  ? "bg-gray-200 text-gray-800"
+                                  : project.Status === "Production"
+                                  ? "bg-green-100 text-green-800"
+                                  : project.Status === "BAU-Started"
+                                  ? "bg-indigo-100 text-indigo-800"
+                                  : project.Status === "Closed"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
                             >
                               {project.Status}
                             </span>
@@ -1269,14 +1345,20 @@ export default function Projects() {
 
                         <td className="px-3 py-2">
                           <button
-                            onClick={() => navigate(`/projects/${project._id}/attachments`)}
+                            onClick={() =>
+                              navigate(`/projects/${project._id}/attachments`)
+                            }
                             className="text-blue-600 hover:underline cursor-pointer"
                           >
                             View Files
                           </button>
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.ProjectType ?? "-"}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.ProjectType ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.CreatedBy?.name ?? "-"}
+                        </td>
                         <td className="px-3 py-2">
                           {project.CreatedDate
                             ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
@@ -1336,10 +1418,11 @@ export default function Projects() {
                           <div className="flex items-center space-x-2">
                             {canAssignProject && (
                               <button
-                                className={`px-3 py-1 rounded text-sm text-white ${isAssigned(project)
-                                  ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-blue-600 hover:bg-blue-700"
-                                  }`}
+                                className={`px-3 py-1 rounded text-sm text-white ${
+                                  isAssigned(project)
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700"
+                                }`}
                                 disabled={isAssigned(project)}
                                 onClick={() => {
                                   if (isAssigned(project)) return;
@@ -1350,18 +1433,26 @@ export default function Projects() {
                                     setSelectedTL(project.TLId?._id || "");
                                     setSelectedPC(project.PCId?._id || "");
                                     setSelectedQA(project.QAId?._id || "");
-                                    setSelectedBauPerson(project.BAUPersonId?._id || "");
+                                    setSelectedBauPerson(
+                                      project.BAUPersonId?._id || ""
+                                    );
                                   }
 
                                   if (
                                     (user.roleName === "Team Lead" ||
-                                      user.roleName === "Project Coordinator") &&
+                                      user.roleName ===
+                                        "Project Coordinator") &&
                                     project.Feeds?.length > 0
                                   ) {
-                                    const firstUnassignedFeed = project.Feeds.find(
-                                      (f) => !f.DeveloperIds || f.DeveloperIds.length === 0
+                                    const firstUnassignedFeed =
+                                      project.Feeds.find(
+                                        (f) =>
+                                          !f.DeveloperIds ||
+                                          f.DeveloperIds.length === 0
+                                      );
+                                    setSelectedFeed(
+                                      firstUnassignedFeed || project.Feeds[0]
                                     );
-                                    setSelectedFeed(firstUnassignedFeed || project.Feeds[0]);
                                   }
 
                                   setIsAssignOpen(true);
@@ -1372,22 +1463,46 @@ export default function Projects() {
                             )}
 
                             <button
-                              className={`px-3 py-1 rounded text-sm text-white flex items-center justify-center ${project.TLId || project.PCId || project.QAId
-                                ? "bg-green-600 hover:bg-green-700"
-                                : "bg-gray-400 cursor-not-allowed"
-                                }`}
-                              disabled={!(project.TLId || project.PCId || project.QAId || project.BAUPersonId)}
+                              className={`px-3 py-1 rounded text-sm text-white flex items-center justify-center ${
+                                project.TLId || project.PCId || project.QAId
+                                  ? "bg-green-600 hover:bg-green-700"
+                                  : "bg-gray-400 cursor-not-allowed"
+                              }`}
+                              disabled={
+                                !(
+                                  project.TLId ||
+                                  project.PCId ||
+                                  project.QAId ||
+                                  project.BAUPersonId
+                                )
+                              }
                               onClick={() => {
-                                if (!(project.TLId || project.PCId || project.QAId || project.BAUPersonId)) return;
+                                if (
+                                  !(
+                                    project.TLId ||
+                                    project.PCId ||
+                                    project.QAId ||
+                                    project.BAUPersonId
+                                  )
+                                )
+                                  return;
 
                                 setSelectedProject(project);
 
                                 // Prefill current assignments before opening modal
-                                setSelectedTL(project.TLId?._id || project.TLId || "");
-                                setSelectedPC(project.PCId?._id || project.PCId || "");
-                                setSelectedQA(project.QAId?._id || project.QAId || "");
+                                setSelectedTL(
+                                  project.TLId?._id || project.TLId || ""
+                                );
+                                setSelectedPC(
+                                  project.PCId?._id || project.PCId || ""
+                                );
+                                setSelectedQA(
+                                  project.QAId?._id || project.QAId || ""
+                                );
                                 setSelectedBauPerson(
-                                  project.BAUPersonId?._id || project.BAUPersonId || ""
+                                  project.BAUPersonId?._id ||
+                                    project.BAUPersonId ||
+                                    ""
                                 );
 
                                 setIsAssignOpen(true);
@@ -1401,11 +1516,22 @@ export default function Projects() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={columns.length} className="text-center p-8 text-gray-500">
+                      <td
+                        colSpan={columns.length}
+                        className="text-center p-8 text-gray-500"
+                      >
                         <div className="flex flex-col items-center justify-center gap-3">
-                          <img src={Img} alt="No data" className="w-32 h-32 object-contain opacity-80" />
-                          <p className="font-semibold text-lg text-gray-600">No Data Found</p>
-                          <p className="text-sm text-gray-400">Try adding new projects to see them here.</p>
+                          <img
+                            src={Img}
+                            alt="No data"
+                            className="w-32 h-32 object-contain opacity-80"
+                          />
+                          <p className="font-semibold text-lg text-gray-600">
+                            No Data Found
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            Try adding new projects to see them here.
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -1423,7 +1549,9 @@ export default function Projects() {
 
             <div className="flex justify-between m-4">
               <div className="flex items-center space-x-2 mt-4">
-                <label htmlFor="entries" className="text-gray-700">Show</label>
+                <label htmlFor="entries" className="text-gray-700">
+                  Show
+                </label>
                 <select
                   id="entries"
                   value={entries}
@@ -1433,11 +1561,23 @@ export default function Projects() {
                   }}
                   className="border rounded px-2 py-1"
                 >
-                  {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                  {[10, 25, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
                 </select>
                 <span className="text-gray-700">entries</span>
               </div>
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalDocs={totalDocs}  
+                entries={entries} 
+                // totalDocs={totalDocs}
+                onPageChange={setCurrentPage}
+              />
             </div>
           </div>
         )}
@@ -1460,7 +1600,7 @@ export default function Projects() {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr >
+                    <tr>
                       <td
                         colSpan={columns.length}
                         className="text-center p-8 text-gray-500"
@@ -1485,12 +1625,14 @@ export default function Projects() {
                             <td>{rowCounter++}</td>
 
                             {/* Project Code + Name */}
-                            <td className="px-3 py-2 whitespace-nowrap"
-                            // onClick={() => navigate(`/projects/${project._id}/details`)}
+                            <td
+                              className="px-3 py-2 whitespace-nowrap"
+                              // onClick={() => navigate(`/projects/${project._id}/details`)}
                             >
                               {project.ProjectCode || project.ProjectName
-                                ? `${project.ProjectCode ?? "-"} ${project.ProjectName ?? "-"
-                                }`
+                                ? `${project.ProjectCode ?? "-"} ${
+                                    project.ProjectName ?? "-"
+                                  }`
                                 : "-"}
                             </td>
 
@@ -1501,7 +1643,6 @@ export default function Projects() {
                                 (window.location.href = `/projects/feed/${feed._id}`)
                               }
                             >
-
                               {feed.FeedName ?? "-"}
                               {/* {`${feedIdx + 1 ?? "-"} | ${project.ProjectType ?? "-"
                               } | ${feed.DomainName ?? "-"} | ${feed.ApplicationType ?? "-"
@@ -1521,24 +1662,23 @@ export default function Projects() {
                                 {/* Frequency Badge */}
                                 <span
                                   className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit
-        ${feed.Frequency === "Daily"
-                                      ? "bg-green-100 text-green-700"
-                                      : feed.Frequency === "Weekly"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : feed.Frequency === "Monthly"
-                                          ? "bg-purple-100 text-purple-700"
-                                          : feed.Frequency === "Once-off"
-                                            ? "bg-orange-100 text-orange-700"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
+        ${
+          feed.Frequency === "Daily"
+            ? "bg-green-100 text-green-700"
+            : feed.Frequency === "Weekly"
+            ? "bg-blue-100 text-blue-700"
+            : feed.Frequency === "Monthly"
+            ? "bg-purple-100 text-purple-700"
+            : feed.Frequency === "Once-off"
+            ? "bg-orange-100 text-orange-700"
+            : "bg-gray-100 text-gray-600"
+        }`}
                                 >
                                   {feed.Frequency ?? "-"}
                                 </span>
 
                                 {/* Schedule Badge */}
-                                <span
-                                  className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit"
-                                >
+                                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
                                   {(() => {
                                     const { Frequency, Schedule } = feed;
                                     if (!Schedule) return "No schedule";
@@ -1549,25 +1689,30 @@ export default function Projects() {
                                       case "Weekly":
                                         return `${Schedule.day || "—"} `;
                                       case "Monthly":
-                                        return `${Schedule.date || "--"} ${new Date().toLocaleString(
+                                        return `${
+                                          Schedule.date || "--"
+                                        } ${new Date().toLocaleString(
                                           "default",
                                           { month: "short" }
                                         )} `;
                                       case "Once-off":
                                         return Schedule.datetime
-                                          ? new Date(Schedule.datetime).toLocaleString("en-GB", {
-                                            day: "2-digit",
-                                            month: "short",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })
+                                          ? new Date(
+                                              Schedule.datetime
+                                            ).toLocaleString("en-GB", {
+                                              day: "2-digit",
+                                              month: "short",
+                                              year: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })
                                           : "No date";
                                       case "Custom":
-                                        return Schedule.custom && Schedule.custom.length > 0
+                                        return Schedule.custom &&
+                                          Schedule.custom.length > 0
                                           ? Schedule.custom
-                                            .map((c) => `${c.day} ${c.time}`)
-                                            .join(", ")
+                                              .map((c) => `${c.day} ${c.time}`)
+                                              .join(", ")
                                           : "No custom schedule";
                                       default:
                                         return "No schedule";
@@ -1591,19 +1736,24 @@ export default function Projects() {
                             {/* <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td> */}
                             <td className="px-4 py-2 whitespace-nowrap">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "bg-green-100 text-green-600"
-                                  }`}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  feed.Status === "New"
+                                    ? "bg-blue-100 text-blue-600"
+                                    : "bg-green-100 text-green-600"
+                                }`}
                               >
                                 {feed.Status}
                               </span>
                             </td>
                             {/* BAU */}
-                            <td className="px-3 py-2 whitespace-nowrap">{feed.BAUStatus ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {feed.BAUStatus ?? "-"}
+                            </td>
 
                             {/* POC */}
-                            <td className="px-3 py-2 whitespace-nowrap">{feed.POC ?? "-"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {feed.POC ?? "-"}
+                            </td>
 
                             {/* PM */}
                             <td className="px-3 py-2 whitespace-nowrap">
@@ -1611,7 +1761,9 @@ export default function Projects() {
                             </td>
 
                             {/* PC */}
-                            <td className="px-3 py-2 whitespace-nowrap">{project.PCId?.name ?? "Not Assigned Yet"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {project.PCId?.name ?? "Not Assigned Yet"}
+                            </td>
 
                             {/* TL */}
                             <td className="px-3 py-2 whitespace-nowrap">
@@ -1629,12 +1781,16 @@ export default function Projects() {
                             <td className="px-4 py-2">
                               {feed.DeveloperIds?.length ? (
                                 (() => {
-                                  const developers = feed.DeveloperIds.map((dev) =>
-                                    typeof dev === "object" ? dev : { name: dev, _id: dev }
+                                  const developers = feed.DeveloperIds.map(
+                                    (dev) =>
+                                      typeof dev === "object"
+                                        ? dev
+                                        : { name: dev, _id: dev }
                                   );
 
                                   const visible = developers.slice(0, 3); // show first 3
-                                  const extraCount = developers.length - visible.length;
+                                  const extraCount =
+                                    developers.length - visible.length;
 
                                   return (
                                     <div className="flex items-center -space-x-2">
@@ -1642,7 +1798,9 @@ export default function Projects() {
                                         <div
                                           key={i}
                                           className="relative group"
-                                          title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""}`}
+                                          title={`${m.name || "Unknown"}${
+                                            m.roleName ? " - " + m.roleName : ""
+                                          }`}
                                         >
                                           <img
                                             src={
@@ -1659,7 +1817,9 @@ export default function Projects() {
 
                                       {extraCount > 0 && (
                                         <button
-                                          onClick={() => handleShowAll(developers)}
+                                          onClick={() =>
+                                            handleShowAll(developers)
+                                          }
                                           className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
                                         >
                                           +{extraCount}
@@ -1673,7 +1833,6 @@ export default function Projects() {
                               )}
                             </td>
 
-
                             {/* QA */}
                             <td className="px-3 py-2 whitespace-nowrap">
                               {project.QAId?.name ?? "-"}
@@ -1686,7 +1845,11 @@ export default function Projects() {
                             {/* Attachments */}
                             <td className="px-3 py-2">
                               <button
-                                onClick={() => navigate(`/projects/${project._id}/attachments`)}
+                                onClick={() =>
+                                  navigate(
+                                    `/projects/${project._id}/attachments`
+                                  )
+                                }
                                 className="text-blue-600 hover:underline cursor-pointer"
                               >
                                 View Files
@@ -1719,14 +1882,16 @@ export default function Projects() {
                             </td>
 
                             {/* DB Type */}
-                            <td className="px-3 py-2">{project.DBType ?? "-"}</td>
+                            <td className="px-3 py-2">
+                              {project.DBType ?? "-"}
+                            </td>
 
                             {/* Created Date */}
                             <td className="px-3 py-2">
                               {project.CreatedDate
                                 ? new Date(
-                                  project.CreatedDate
-                                ).toLocaleDateString()
+                                    project.CreatedDate
+                                  ).toLocaleDateString()
                                 : "-"}
                             </td>
 
@@ -1807,10 +1972,6 @@ export default function Projects() {
                                 )}
                               </td> */}
 
-
-
-
-
                             {/* Actions */}
                             {/* <td className="px-3 py-2">
                             <button>
@@ -1825,8 +1986,9 @@ export default function Projects() {
                           <td className="px-3 py-2">{idx + 1}</td> {/* No */}
                           <td className="px-3 py-2">
                             {project.ProjectCode || project.ProjectName
-                              ? `[${project.ProjectCode ?? "-"}] ${project.ProjectName ?? "-"
-                              }`
+                              ? `[${project.ProjectCode ?? "-"}] ${
+                                  project.ProjectName ?? "-"
+                                }`
                               : "-"}
                           </td>{" "}
                           {/* Project Name */}
@@ -1857,7 +2019,7 @@ export default function Projects() {
                                   onClick={() =>
                                     setOpenDropdown((prev) =>
                                       prev?.rowIdx === idx &&
-                                        prev?.col === "SOWFile"
+                                      prev?.col === "SOWFile"
                                         ? null
                                         : { rowIdx: idx, col: "SOWFile" }
                                     )
@@ -1872,23 +2034,25 @@ export default function Projects() {
                                   openDropdown?.col === "SOWFile" && (
                                     <div className="absolute left-0 mt-1 min-w-[180px] max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
                                       <ul className="p-0 m-0 list-none">
-                                        {project.SOWFile.map((file, fileIdx) => (
-                                          <li
-                                            key={fileIdx}
-                                            className="mb-1 last:mb-0"
-                                          >
-                                            <a
-                                              href={file}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              download
-                                              className="block text-blue-600 hover:text-blue-800 hover:underline truncate"
-                                              title={file}
+                                        {project.SOWFile.map(
+                                          (file, fileIdx) => (
+                                            <li
+                                              key={fileIdx}
+                                              className="mb-1 last:mb-0"
                                             >
-                                              Version {fileIdx + 1}
-                                            </a>
-                                          </li>
-                                        ))}
+                                              <a
+                                                href={file}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download
+                                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate"
+                                                title={file}
+                                              >
+                                                Version {fileIdx + 1}
+                                              </a>
+                                            </li>
+                                          )
+                                        )}
                                       </ul>
                                     </div>
                                   )}
@@ -1900,13 +2064,13 @@ export default function Projects() {
                           {/* <td className="px-3 py-2">{project.SampleFiles?.length ? `${project.SampleFiles.length} Files` : "-"}</td>  */}
                           <td className="px-3 py-2 relative">
                             {project.SampleFiles &&
-                              project.SampleFiles.length > 0 ? (
+                            project.SampleFiles.length > 0 ? (
                               <div className="inline-block relative">
                                 <button
                                   onClick={() =>
                                     setOpenDropdown((prev) =>
                                       prev?.rowIdx === idx &&
-                                        prev?.col === "SampleFiles"
+                                      prev?.col === "SampleFiles"
                                         ? null
                                         : { rowIdx: idx, col: "SampleFiles" }
                                     )
@@ -1946,7 +2110,8 @@ export default function Projects() {
                               <span className="text-gray-400">-</span>
                             )}
                           </td>
-                          <td className="px-3 py-2">-</td> {/* Framework type */}
+                          <td className="px-3 py-2">-</td>{" "}
+                          {/* Framework type */}
                           <td className="px-3 py-2">
                             {project.QAReportCount ?? "-"}
                           </td>{" "}
@@ -1969,7 +2134,9 @@ export default function Projects() {
                           {/* DB Type */}
                           <td className="px-3 py-2">
                             {project.CreatedDate
-                              ? new Date(project.CreatedDate).toLocaleDateString()
+                              ? new Date(
+                                  project.CreatedDate
+                                ).toLocaleDateString()
                               : "-"}
                           </td>{" "}
                           {/* Created Date */}
@@ -2012,7 +2179,9 @@ export default function Projects() {
             </div>
             <div className="flex justify-between">
               <div className="flex items-center space-x-2 mt-4">
-                <label htmlFor="entries" className="text-gray-700">Show</label>
+                <label htmlFor="entries" className="text-gray-700">
+                  Show
+                </label>
                 <select
                   id="entries"
                   value={entries}
@@ -2022,17 +2191,38 @@ export default function Projects() {
                   }}
                   className="border rounded px-2 py-1"
                 >
-                  {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                  {[10, 25, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
                 </select>
                 <span className="text-gray-700">entries</span>
               </div>
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              {/* 🔹 Showing info */}
+              {totalDocs !== undefined && (
+                <div className="text-sm text-gray-600">
+                  Showing{" "}
+                  <span className="font-medium text-gray-800">
+                    {(currentPage - 1) * entries + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium text-gray-800">
+                    {Math.min(currentPage * entries, totalDocs)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium text-gray-800">{totalDocs}</span>{" "}
+                  entries
+                </div>
+              )}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           </div>
-
         )}
-
-
 
         {user?.department !== "Sales" &&
           user?.roleName !== "Manager" &&
@@ -2135,8 +2325,8 @@ export default function Projects() {
                       <tr
                         key={row._id || idx}
                         className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
-                      // onClick={() => navigate(`/projects/${row._id}`)}
+                        // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
+                        // onClick={() => navigate(`/projects/${row._id}`)}
                       >
                         <td className="px-3 py-2">
                           {(currentPage - 1) * pageSize + idx + 1}
@@ -2159,18 +2349,19 @@ export default function Projects() {
                           {row.Status ? (
                             <span
                               className={`inline-block px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap
-                               ${row.Status.toLowerCase().includes("failed")
-                                  ? "bg-red-100 text-red-800"
-                                  : row.Status.toLowerCase().includes("passed")
-                                    ? "bg-green-100 text-green-800"
-                                    : row.Status.toLowerCase().includes("qa")
-                                      ? "bg-purple-100 text-purple-800"
-                                      : row.Status.toLowerCase().includes(
-                                        "development"
-                                      )
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-blue-100 text-blue-800"
-                                }`}
+                               ${
+                                 row.Status.toLowerCase().includes("failed")
+                                   ? "bg-red-100 text-red-800"
+                                   : row.Status.toLowerCase().includes("passed")
+                                   ? "bg-green-100 text-green-800"
+                                   : row.Status.toLowerCase().includes("qa")
+                                   ? "bg-purple-100 text-purple-800"
+                                   : row.Status.toLowerCase().includes(
+                                       "development"
+                                     )
+                                   ? "bg-yellow-100 text-yellow-800"
+                                   : "bg-blue-100 text-blue-800"
+                               }`}
                             >
                               {row.Status.split("_")
                                 .map(
@@ -2223,10 +2414,11 @@ export default function Projects() {
                                       setAssignModalOpen(true);
                                     }}
                                     disabled={assigned}
-                                    className={`w-full px-2 py-1 rounded text-sm text-white ${assigned
-                                      ? "bg-gray-400 cursor-not-allowed"
-                                      : "bg-blue-500 hover:bg-blue-600"
-                                      }`}
+                                    className={`w-full px-2 py-1 rounded text-sm text-white ${
+                                      assigned
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-blue-500 hover:bg-blue-600"
+                                    }`}
                                   >
                                     {assigned ? "Assigned" : "Assign to QA"}
                                   </button>
@@ -2249,8 +2441,9 @@ export default function Projects() {
                                         formData.append("fileLink", fileLink);
 
                                       const res = await fetch(
-                                        `http://${import.meta.env
-                                          .VITE_BACKEND_NETWORK_ID
+                                        `http://${
+                                          import.meta.env
+                                            .VITE_BACKEND_NETWORK_ID
                                         }/api/projectss/${projectId}/assign-to-qa`,
                                         {
                                           method: "POST",
@@ -2266,7 +2459,7 @@ export default function Projects() {
                                       } else {
                                         alert(
                                           result.message ||
-                                          "Failed to assign file"
+                                            "Failed to assign file"
                                         );
                                       }
                                     }}
@@ -2358,7 +2551,6 @@ export default function Projects() {
           onPageChange={setCurrentPage}
         /> */}
 
-
         <Modal
           isOpen={isAssignOpen}
           onRequestClose={() => setIsAssignOpen(false)}
@@ -2397,12 +2589,13 @@ export default function Projects() {
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <p className="text-sm text-gray-500">Priority</p>
                 <p
-                  className={`inline-block px-2 py-1 rounded text-sm font-medium ${selectedProject.Priority === "High"
-                    ? "bg-red-100 text-red-700"
-                    : selectedProject.Priority === "Medium"
+                  className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                    selectedProject.Priority === "High"
+                      ? "bg-red-100 text-red-700"
+                      : selectedProject.Priority === "Medium"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-green-100 text-green-700"
-                    }`}
+                  }`}
                 >
                   {selectedProject.Priority || "-"}
                 </p>
@@ -2420,26 +2613,39 @@ export default function Projects() {
                   <thead className="bg-gray-100 text-gray-700 sticky top-0">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold">No.</th>
-                      <th className="px-3 py-2 text-left font-semibold">Feed ID</th>
-                      <th className="px-3 py-2 text-left font-semibold">Feed Name</th>
-                      <th className="px-3 py-2 text-left font-semibold">Platform</th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Feed ID
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Feed Name
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Platform
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedProject.Feeds && selectedProject.Feeds.length > 0 ? (
+                    {selectedProject.Feeds &&
+                    selectedProject.Feeds.length > 0 ? (
                       selectedProject.Feeds.map((feed, idx) => (
-                        <tr key={feed._id || idx} className="border-t border-gray-200"
+                        <tr
+                          key={feed._id || idx}
+                          className="border-t border-gray-200"
                           onClick={() => navigate(`/projects/feed/${feed._id}`)}
                         >
                           <td className="px-4 py-2">{idx + 1}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{feed.FeedId}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {feed.FeedId}
+                          </td>
                           <td
                             className="px-4 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
-                          // onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                            // onClick={() => navigate(`/projects/feed/${feed._id}`)}
                           >
                             {feed.FeedName}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap">{feed.Platform ?? "-"}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {feed.Platform ?? "-"}
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -2475,10 +2681,13 @@ export default function Projects() {
                         .find((opt) => opt.value === selectedTL) || null
                     }
                     onChange={(selected) => {
-                      setSelectedTL(selected?.value || "");        // keep your existing logic
+                      setSelectedTL(selected?.value || ""); // keep your existing logic
                       setErrors((prev) => ({ ...prev, TLId: null })); // clear error dynamically
                     }}
-                    options={tlOptions.map((tl) => ({ value: tl._id, label: tl.name }))}
+                    options={tlOptions.map((tl) => ({
+                      value: tl._id,
+                      label: tl.name,
+                    }))}
                     placeholder="Select Team Lead"
                     isSearchable
                     className="text-sm"
@@ -2499,10 +2708,14 @@ export default function Projects() {
                         .map((pc) => ({ value: pc._id, label: pc.name }))
                         .find((opt) => opt.value === selectedPC) || null
                     }
-                    onChange={(selected) =>  {setSelectedPC(selected?.value || "");
+                    onChange={(selected) => {
+                      setSelectedPC(selected?.value || "");
                       setErrors((prev) => ({ ...prev, PCId: null }));
                     }}
-                    options={pcOptions.map((pc) => ({ value: pc._id, label: pc.name }))}
+                    options={pcOptions.map((pc) => ({
+                      value: pc._id,
+                      label: pc.name,
+                    }))}
                     placeholder="Select Project Coordinator"
                     isSearchable
                     className="text-sm"
@@ -2523,10 +2736,14 @@ export default function Projects() {
                         .map((qa) => ({ value: qa._id, label: qa.name }))
                         .find((opt) => opt.value === selectedQA) || null
                     }
-                    onChange={(selected) => {setSelectedQA(selected?.value || "");
+                    onChange={(selected) => {
+                      setSelectedQA(selected?.value || "");
                       setErrors((prev) => ({ ...prev, QAId: null }));
                     }}
-                    options={qaOptions.map((qa) => ({ value: qa._id, label: qa.name }))}
+                    options={qaOptions.map((qa) => ({
+                      value: qa._id,
+                      label: qa.name,
+                    }))}
                     placeholder="Select QA Lead"
                     isSearchable
                     className="text-sm"
@@ -2547,16 +2764,22 @@ export default function Projects() {
                         .map((bau) => ({ value: bau._id, label: bau.name }))
                         .find((opt) => opt.value === selectedBauPerson) || null
                     }
-                    onChange={(selected) => {setSelectedBauPerson(selected?.value || "");
+                    onChange={(selected) => {
+                      setSelectedBauPerson(selected?.value || "");
                       setErrors((prev) => ({ ...prev, BAUPersonId: null }));
                     }}
-                    options={bauPersonOptions.map((bau) => ({ value: bau._id, label: bau.name }))}
+                    options={bauPersonOptions.map((bau) => ({
+                      value: bau._id,
+                      label: bau.name,
+                    }))}
                     placeholder="Select BAU Person"
                     isSearchable
                     className="text-sm"
                   />
                   {errors.BAUPersonId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.BAUPersonId}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.BAUPersonId}
+                    </p>
                   )}
                 </div>
 
@@ -2579,7 +2802,8 @@ export default function Projects() {
             )}
 
             {/* Developers — only TL or PC */}
-            {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
+            {(user.roleName === "Team Lead" ||
+              user.roleName === "Project Coordinator") && (
               <>
                 <div className="flex-1">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -2610,12 +2834,8 @@ export default function Projects() {
                   />
                 </div>
               </>
-
             )}
-
-
           </div>
-
 
           {/* 🧭 Action Buttons */}
           <div className="flex justify-end gap-3 mt-4">
@@ -2629,7 +2849,6 @@ export default function Projects() {
             <button
               className="cursor-pointer px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
               onClick={handleAssign}
-
             >
               Assign
             </button>

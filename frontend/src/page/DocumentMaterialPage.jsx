@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
+import { FaDownload } from "react-icons/fa";
 export default function ProjectFilesPage() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
@@ -54,21 +55,21 @@ const getDisplayFileName = (fileName) => {
 
   return (
     <div className="p-8 bg-white min-h-screen">
-      <div className="flex items-center justify-between mb-6 mt-4">
+      <div className="flex items-center justify-between mb-6">
         {/* Heading */}
         <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
           Project Attachments
         </h2>
       </div>
-      <h1 className="text-xl font-bold mb-8 text-gray-900">
+      <h1 className="text-md font-bold mb-4 text-gray-900">
         <span className="">{project.ProjectCode}</span> {project.ProjectName}{" "}
         
       </h1>
 
       {/* SOW & Sample Files Container */}
-      <div className="border border-gray-100 p-6 shadow bg-white">
+      <div className="border border-gray-100 p-4 shadow bg-white">
         {/* SOW Files */}
-        <div className="mb-10">
+        <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
             SOW Files
           </h2>
@@ -111,7 +112,7 @@ const getDisplayFileName = (fileName) => {
                       </td>
                       <td className="px-4 py-3 flex gap-2">
                         <button
-                          className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          className="cursor-pointer px-3 py-1 transition"
                           onClick={() => {
                             const fileUrl = `${BACKEND_URL}${file.fileName}`;
                             window.open(
@@ -122,7 +123,7 @@ const getDisplayFileName = (fileName) => {
                             );
                           }}
                         >
-                          View
+                         <FaDownload className="text-green-700"/>
                         </button>
                       </td>
                     </tr>
@@ -178,7 +179,7 @@ const getDisplayFileName = (fileName) => {
                       </td>
                       <td className="px-4 py-3 flex gap-2">
                         <button
-                          className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          className="cursor-pointer px-3 py-1  transition"
                           onClick={() => {
                             const fileUrl = `${BACKEND_URL}${file.fileName}`;
 
@@ -190,7 +191,7 @@ const getDisplayFileName = (fileName) => {
                             );
                           }}
                         >
-                          View
+                          <FaDownload className="text-green-700"/>
                         </button>
                       </td>
                     </tr>

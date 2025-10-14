@@ -129,7 +129,7 @@ const TeamMembers = () => {
     <div className="p-8 bg-white min-h-screen">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-        <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-3">
+        <h2 className="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3">
           Team Members
         </h2>
 
@@ -193,7 +193,7 @@ const TeamMembers = () => {
                 <th className="px-6 py-3 text-left font-semibold">Projects</th>
                 <th className="px-6 py-3 text-left font-semibold">BAU</th>
                 <th className="px-6 py-3 text-left font-semibold">Escalation</th>
-                <th className="px-6 py-3 text-left font-semibold">Actions</th>
+                {/* <th className="px-6 py-3 text-left font-semibold">Actions</th> */}
               </tr>
             </thead>
             <tbody>
@@ -204,7 +204,7 @@ const TeamMembers = () => {
                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
                     <td className="px-6 py-2">{idx + 1}</td>
-                    <td className="px-6 py-2">{member.name}</td>
+                    <td className="px-6 py-2"  onClick={() => navigate(`/team/${member.id}/team-insights`)}><span className= "cursor-pointer text-blue-700 hover:underline">{member.name}</span></td>
                     <td className="px-6 py-2">{member.role}</td>
                     <td className="px-6 py-2">
                       <span className="cursor-pointer inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-md"
@@ -232,15 +232,11 @@ const TeamMembers = () => {
                         {memberProjectCounts[member.id]?.totalCounts?.escalation || 0}
                       </span>
                     </td>
-                    <td className="px-6 py-2 ">
-                      {/* <button
-                        className="cursor-pointer bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-all mr-2"
-                        onClick={() => navigate(`/team/${member.id}/team-insights`)}
-                      >
-                      </button> */}
+                    {/* <td className="px-6 py-2 ">
+                      
                       <FaEye size={20} title="View" className="cursor-pointer text-blue-600 hover:text-blue-800"
                         onClick={() => navigate(`/team/${member.id}/team-insights`)} />
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               ) : (
