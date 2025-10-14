@@ -1006,6 +1006,15 @@ export const getFeedById = async (req, res) => {
         },
       },
 
+      {
+        $lookup: {
+          from: "User-data",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+
       // Populate project PM, TL, PC
       {
         $lookup: {
@@ -1185,7 +1194,10 @@ export const updateFeedTeam = async (req, res) => {
 
     feed.DeveloperIds = DeveloperIds || [];
     feed._updatedBy = req.user?._id || null; // 🔹 Middleware will log developer changes
-
+  
+    if (feed.DeveloperIds.length > 0 ) {
+      feed.Status = "Assign to developer";
+     }
     // await feed.save(); // ✅ Activity log automatically created
     await feed.save();
 

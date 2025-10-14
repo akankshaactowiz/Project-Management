@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import Select from "react-select";
 import { MdEditDocument } from "react-icons/md";
 import { PiExport } from "react-icons/pi";
+import { FaFileExport } from "react-icons/fa";
 
 
 Modal.setAppElement("#root");
@@ -77,6 +78,7 @@ export default function Projects() {
   const [selectedFeed, setSelectedFeed] = useState(null);
 
   const [refresh, setRefresh] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // const canCreateProject = user?.permissions?.some(
   //   (perm) => perm.module === "Project" && perm.actions.includes("create")
@@ -101,6 +103,8 @@ export default function Projects() {
     value: dev._id,
     label: dev.name,
   }));
+
+
 
   // const tabs = [
   //   "All Deliveries",
@@ -179,8 +183,7 @@ export default function Projects() {
       });
 
       const response = await fetch(
-        `http://${
-          import.meta.env.VITE_BACKEND_NETWORK_ID
+        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID
         }/api/projects?${params.toString()}`,
         {
           credentials: "include",
@@ -398,8 +401,7 @@ export default function Projects() {
       // Manager: update TL, PC, QA
       if (user.roleName === "Manager") {
         res = await fetch(
-          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${
-            selectedProject._id
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projects/${selectedProject._id
           }/update-team`,
           {
             method: "PUT",
@@ -422,8 +424,7 @@ export default function Projects() {
         selectedFeed
       ) {
         res = await fetch(
-          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${
-            selectedFeed.value
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed.value
           }/update-team`,
           {
             method: "PUT",
@@ -582,7 +583,7 @@ export default function Projects() {
       "Project Type",
       "Created By",
       "Created Date",
-      "Action",
+      // "Action",
     ],
     "Project Coordinator": [
       "Project",
@@ -597,7 +598,7 @@ export default function Projects() {
       "Project Type",
       "Created By",
       "Created Date",
-      "Action",
+      // "Action",
     ],
     QA: ["QA Report Count", "QA Rules"],
     Developer: [
@@ -963,7 +964,7 @@ export default function Projects() {
                 defaultValue=""
               >
                 <option value="" disabled hidden>
-                 Export
+                  Export
                 </option>
                 <option value="excel">Excel</option>
                 <option value="csv">CSV</option>
@@ -1061,19 +1062,18 @@ export default function Projects() {
                             {project.DeliveryType ? (
                               <div className="flex justify-left">
                                 <span
-                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${
-                                    project.DeliveryType === "BAU"
-                                      ? "bg-green-700 text-white"
-                                      : project.DeliveryType === "POC"
+                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
+                                    ? "bg-green-700 text-white"
+                                    : project.DeliveryType === "POC"
                                       ? "bg-orange-400 text-white"
                                       : project.DeliveryType === "R&D"
-                                      ? "bg-pink-300 text-white"
-                                      : project.DeliveryType === "Adhoc"
-                                      ? "bg-yellow-400 text-white"
-                                      : project.DeliveryType === "Once-off"
-                                      ? "bg-pink-100 text-pink-800"
-                                      : "bg-gray-100 text-gray-600"
-                                  }`}
+                                        ? "bg-pink-300 text-white"
+                                        : project.DeliveryType === "Adhoc"
+                                          ? "bg-yellow-400 text-white"
+                                          : project.DeliveryType === "Once-off"
+                                            ? "bg-pink-100 text-pink-800"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
                                 >
                                   {project.DeliveryType}
                                 </span>
@@ -1087,21 +1087,20 @@ export default function Projects() {
                           <td className="px-3 py-2 whitespace-nowrap">
                             {project.Status ? (
                               <span
-                                className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                  project.Status === "New"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : project.Status === "Under Development"
+                                className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : project.Status === "Under Development"
                                     ? "bg-yellow-100 text-yellow-800"
                                     : project.Status === "On-Hold"
-                                    ? "bg-gray-200 text-gray-800"
-                                    : project.Status === "Production"
-                                    ? "bg-green-100 text-green-800"
-                                    : project.Status === "BAU-Started"
-                                    ? "bg-indigo-100 text-indigo-800"
-                                    : project.Status === "Closed"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}
+                                      ? "bg-gray-200 text-gray-800"
+                                      : project.Status === "Production"
+                                        ? "bg-green-100 text-green-800"
+                                        : project.Status === "BAU-Started"
+                                          ? "bg-indigo-100 text-indigo-800"
+                                          : project.Status === "Closed"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-gray-100 text-gray-800"
+                                  }`}
                               >
                                 {project.Status}
                               </span>
@@ -1134,21 +1133,21 @@ export default function Projects() {
                           </td>
                           {user?.roleName !==
                             "Business Development Executive" && (
-                            <td className="px-3 py-2">
-                              <button
-                                onClick={() => {
-                                  setSelectedProject(project);
-                                  setIsUpdateModalOpen(true);
-                                  // openModal(project._id);
-                                }}
-                              >
-                                <FaEdit
-                                  size={20}
-                                  className="text-blue-600 hover:text-blue-800"
-                                />
-                              </button>
-                            </td>
-                          )}
+                              <td className="px-3 py-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedProject(project);
+                                    setIsUpdateModalOpen(true);
+                                    // openModal(project._id);
+                                  }}
+                                >
+                                  <FaEdit
+                                    size={20}
+                                    className="text-blue-600 hover:text-blue-800"
+                                  />
+                                </button>
+                              </td>
+                            )}
                         </tr>
                       ))
                     ) : (
@@ -1220,8 +1219,8 @@ export default function Projects() {
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  totalDocs={totalDocs}  
-                   entries={entries} 
+                  totalDocs={totalDocs}
+                  entries={entries}
                   onPageChange={setCurrentPage}
                 />
               </div>
@@ -1234,139 +1233,137 @@ export default function Projects() {
         {(user?.roleName === "Manager" ||
           user?.roleName === "Team Lead" ||
           user?.roleName === "Project Coordinator") && (
-          <div className="flex flex-col">
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
-                <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                  <tr>
-                    {columns.map((col) => (
-                      <th
-                        key={col}
-                        className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
+            <div className="flex flex-col">
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
+                  <thead className="bg-gray-100 text-gray-700 sticky top-0">
                     <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="text-center p-4 text-gray-500"
-                      >
-                        <div className="flex justify-center items-center">
-                          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredData.length > 0 ? (
-                    filteredData.map((project, idx) => (
-                      <tr
-                        key={project._id}
-                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-3 py-2">
-                          {(currentPage - 1) * pageSize + idx + 1}
-                        </td>
-                        <td
-                          className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                          onClick={() =>
-                            navigate(`/projects/${project._id}/details`)
-                          }
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className="px-3 py-2 text-left font-semibold whitespace-nowrap"
                         >
-                          {project.ProjectCode ?? "-"}{" "}
-                          {project.ProjectName ?? "-"}
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td
+                          colSpan={columns.length}
+                          className="text-center p-4 text-gray-500"
+                        >
+                          <div className="flex justify-center items-center">
+                            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
+                          </div>
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.Feeds?.length ?? 0}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.IndustryType ?? "-"}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.PMId?.name ?? "-"}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.BDEId?.name ?? "-"}
-                        </td>
-                        {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
-                        <td className="px-3 py-2">
-                          {project.DeliveryType ? (
-                            <div className="flex justify-left">
-                              <span
-                                className={`px-3 py-1 text-xs font-semibold rounded-sm ${
-                                  project.DeliveryType === "BAU"
+                      </tr>
+                    ) : filteredData.length > 0 ? (
+                      filteredData.map((project, idx) => (
+                        <tr
+                          key={project._id}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="px-3 py-2">
+                            {(currentPage - 1) * pageSize + idx + 1}
+                          </td>
+                          <td
+                            className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
+                            onClick={() =>
+                              navigate(`/projects/${project._id}/details`)
+                            }
+                          >
+                            {project.ProjectCode ?? "-"}{" "}
+                            {project.ProjectName ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.Feeds?.length ?? 0}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.IndustryType ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.PMId?.name ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.BDEId?.name ?? "-"}
+                          </td>
+                          {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
+                          <td className="px-3 py-2">
+                            {project.DeliveryType ? (
+                              <div className="flex justify-left">
+                                <span
+                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
                                     ? "bg-green-700 text-white"
                                     : project.DeliveryType === "POC"
-                                    ? "bg-orange-400 text-white"
-                                    : project.DeliveryType === "R&D"
-                                    ? "bg-pink-300 text-white"
-                                    : project.DeliveryType === "Adhoc"
-                                    ? "bg-yellow-400 text-white"
-                                    : project.DeliveryType === "Once-off"
-                                    ? "bg-pink-100 text-pink-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {project.DeliveryType}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
+                                      ? "bg-orange-400 text-white"
+                                      : project.DeliveryType === "R&D"
+                                        ? "bg-pink-300 text-white"
+                                        : project.DeliveryType === "Adhoc"
+                                          ? "bg-yellow-400 text-white"
+                                          : project.DeliveryType === "Once-off"
+                                            ? "bg-pink-100 text-pink-800"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
+                                >
+                                  {project.DeliveryType}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
 
-                        {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.Status ? (
-                            <span
-                              className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                project.Status === "New"
+                          {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.Status ? (
+                              <span
+                                className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New"
                                   ? "bg-blue-100 text-blue-800"
                                   : project.Status === "Under Development"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : project.Status === "On-Hold"
-                                  ? "bg-gray-200 text-gray-800"
-                                  : project.Status === "Production"
-                                  ? "bg-green-100 text-green-800"
-                                  : project.Status === "BAU-Started"
-                                  ? "bg-indigo-100 text-indigo-800"
-                                  : project.Status === "Closed"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {project.Status}
-                            </span>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : project.Status === "On-Hold"
+                                      ? "bg-gray-200 text-gray-800"
+                                      : project.Status === "Production"
+                                        ? "bg-green-100 text-green-800"
+                                        : project.Status === "BAU-Started"
+                                          ? "bg-indigo-100 text-indigo-800"
+                                          : project.Status === "Closed"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-gray-100 text-gray-800"
+                                  }`}
+                              >
+                                {project.Status}
+                              </span>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
 
-                        <td className="px-3 py-2">
-                          <button
-                            onClick={() =>
-                              navigate(`/projects/${project._id}/attachments`)
-                            }
-                            className="text-blue-600 hover:underline cursor-pointer"
-                          >
-                            View Files
-                          </button>
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.ProjectType ?? "-"}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {project.CreatedBy?.name ?? "-"}
-                        </td>
-                        <td className="px-3 py-2">
-                          {project.CreatedDate
-                            ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
-                            : "-"}
-                        </td>
-                        {/* <td className="px-4 py-2 text-right">
+                          <td className="px-3 py-2">
+                            <button
+                              onClick={() =>
+                                navigate(`/projects/${project._id}/attachments`)
+                              }
+                              className="text-blue-600 hover:underline cursor-pointer"
+                            >
+                              View Files
+                            </button>
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.ProjectType ?? "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {project.CreatedBy?.name ?? "-"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {project.CreatedDate
+                              ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
+                              : "-"}
+                          </td>
+                          {/* <td className="px-4 py-2 text-right">
                                 {canAssignProject && (
                                   <button
                                     className={`px-3 py-1 rounded text-sm text-white ${
@@ -1415,153 +1412,125 @@ export default function Projects() {
                                   </button>
                                 )}
                               </td> */}
+                          {user.roleName === "Manager" && (
 
-                        <td className="px-4 py-2">
-  <div className="flex items-center space-x-2">
-    {canAssignProject && !isAssigned(project) && (
-      <button
-        className="px-3 py-1 rounded text-sm text-white bg-blue-600 hover:bg-blue-700"
-        onClick={() => {
-          setSelectedProject(project);
+                            <td className="px-4 py-2">
+                              <div className="flex items-center space-x-2">
+                                {canAssignProject && !isAssigned(project) && (
+                                  <button
+                                    className="px-3 py-1 rounded text-sm text-white bg-blue-600 hover:bg-blue-700"
+                                    onClick={() => {
+                                      setSelectedProject(project);
 
-          if (user.roleName === "Manager") {
-            setSelectedTL(project.TLId?._id || "");
-            setSelectedPC(project.PCId?._id || "");
-            setSelectedQA(project.QAId?._id || "");
-            setSelectedBauPerson(project.BAUPersonId?._id || "");
-          }
+                                      if (user.roleName === "Manager") {
+                                        setSelectedTL(project.TLId?._id || "");
+                                        setSelectedPC(project.PCId?._id || "");
+                                        setSelectedQA(project.QAId?._id || "");
+                                        setSelectedBauPerson(project.BAUPersonId?._id || "");
+                                      }
 
-          if (
-            (user.roleName === "Team Lead" ||
-              user.roleName === "Project Coordinator") &&
-            project.Feeds?.length > 0
-          ) {
-            const firstUnassignedFeed = project.Feeds.find(
-              (f) => !f.DeveloperIds || f.DeveloperIds.length === 0
-            );
-            setSelectedFeed(firstUnassignedFeed || project.Feeds[0]);
-          }
 
-          setIsAssignOpen(true);
-        }}
-      >
-        Assign
-      </button>
-    )}
+                                      setIsAssignOpen(true);
+                                    }}
+                                  >
+                                    Assign
+                                  </button>
+                                )}
 
-    {/* Edit button stays visible if any role is assigned */}
-    <button
-      className={`px-3 py-1 rounded text-sm flex items-center justify-center ${
-        project.TLId || project.PCId || project.QAId
-          ? "text-blue-600 cursor-pointer"
-          : "cursor-not-allowed"
-      }`}
-      disabled={
-        !(
-          project.TLId ||
-          project.PCId ||
-          project.QAId ||
-          project.BAUPersonId
-        )
-      }
-      onClick={() => {
-        if (
-          !(
-            project.TLId ||
-            project.PCId ||
-            project.QAId ||
-            project.BAUPersonId
-          )
-        )
-          return;
+                                {/* ✅ Show "Edit" only if some members are already assigned */}
+                                {(project.TLId || project.PCId || project.QAId || project.BAUPersonId) && (
+                                  <button
+                                    className="px-3 py-1 rounded text-sm flex items-center justify-center text-blue-600 hover:text-blue-800 transition"
+                                    onClick={() => {
+                                      setSelectedProject(project);
 
-        setSelectedProject(project);
+                                      // Prefill current assignments before opening modal
+                                      setSelectedTL(project.TLId?._id || project.TLId || "");
+                                      setSelectedPC(project.PCId?._id || project.PCId || "");
+                                      setSelectedQA(project.QAId?._id || project.QAId || "");
+                                      setSelectedBauPerson(
+                                        project.BAUPersonId?._id || project.BAUPersonId || ""
+                                      );
 
-        // Prefill current assignments before opening modal
-        setSelectedTL(project.TLId?._id || project.TLId || "");
-        setSelectedPC(project.PCId?._id || project.PCId || "");
-        setSelectedQA(project.QAId?._id || project.QAId || "");
-        setSelectedBauPerson(
-          project.BAUPersonId?._id || project.BAUPersonId || ""
-        );
+                                      setIsAssignOpen(true);
+                                    }}
+                                  >
+                                    <FaEdit size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
 
-        setIsAssignOpen(true);
-      }}
-    >
-      <FaEdit size={16} />
-    </button>
-  </div>
-</td>
-
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={columns.length}
+                          className="text-center p-8 text-gray-500"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <img
+                              src={Img}
+                              alt="No data"
+                              className="w-32 h-32 object-contain opacity-80"
+                            />
+                            <p className="font-semibold text-lg text-gray-600">
+                              No Data Found
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              Try adding new projects to see them here.
+                            </p>
+                          </div>
+                        </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="text-center p-8 text-gray-500"
-                      >
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <img
-                            src={Img}
-                            alt="No data"
-                            className="w-32 h-32 object-contain opacity-80"
-                          />
-                          <p className="font-semibold text-lg text-gray-600">
-                            No Data Found
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Try adding new projects to see them here.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
 
-              <UpdateProjectModal
-                isOpen={isUpdateModalOpen}
-                onClose={() => setIsUpdateModalOpen(false)}
-                project={selectedProject}
-                onUpdate={handleUpdateProject}
-              />
-            </div>
-
-            <div className="flex justify-between m-4">
-              <div className="flex items-center space-x-2 mt-4">
-                <label htmlFor="entries" className="text-gray-700">
-                  Show
-                </label>
-                <select
-                  id="entries"
-                  value={entries}
-                  onChange={(e) => {
-                    setEntries(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="border rounded px-2 py-1"
-                >
-                  {[10, 25, 50, 100].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-gray-700">entries</span>
+                <UpdateProjectModal
+                  isOpen={isUpdateModalOpen}
+                  onClose={() => setIsUpdateModalOpen(false)}
+                  project={selectedProject}
+                  onUpdate={handleUpdateProject}
+                />
               </div>
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalDocs={totalDocs}  
-                entries={entries} 
-                // totalDocs={totalDocs}
-                onPageChange={setCurrentPage}
-              />
+              <div className="flex justify-between m-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <label htmlFor="entries" className="text-gray-700">
+                    Show
+                  </label>
+                  <select
+                    id="entries"
+                    value={entries}
+                    onChange={(e) => {
+                      setEntries(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="border rounded px-2 py-1"
+                  >
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-700">entries</span>
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalDocs={totalDocs}
+                  entries={entries}
+                  // totalDocs={totalDocs}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {user?.roleName === "Developer" && (
           <div className="flex flex-col">
@@ -1608,12 +1577,11 @@ export default function Projects() {
                             {/* Project Code + Name */}
                             <td
                               className="px-3 py-2 whitespace-nowrap"
-                              // onClick={() => navigate(`/projects/${project._id}/details`)}
+                            // onClick={() => navigate(`/projects/${project._id}/details`)}
                             >
                               {project.ProjectCode || project.ProjectName
-                                ? `${project.ProjectCode ?? "-"} ${
-                                    project.ProjectName ?? "-"
-                                  }`
+                                ? `${project.ProjectCode ?? "-"} ${project.ProjectName ?? "-"
+                                }`
                                 : "-"}
                             </td>
 
@@ -1643,17 +1611,16 @@ export default function Projects() {
                                 {/* Frequency Badge */}
                                 <span
                                   className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit
-        ${
-          feed.Frequency === "Daily"
-            ? "bg-green-100 text-green-700"
-            : feed.Frequency === "Weekly"
-            ? "bg-blue-100 text-blue-700"
-            : feed.Frequency === "Monthly"
-            ? "bg-purple-100 text-purple-700"
-            : feed.Frequency === "Once-off"
-            ? "bg-orange-100 text-orange-700"
-            : "bg-gray-100 text-gray-600"
-        }`}
+        ${feed.Frequency === "Daily"
+                                      ? "bg-green-100 text-green-700"
+                                      : feed.Frequency === "Weekly"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : feed.Frequency === "Monthly"
+                                          ? "bg-purple-100 text-purple-700"
+                                          : feed.Frequency === "Once-off"
+                                            ? "bg-orange-100 text-orange-700"
+                                            : "bg-gray-100 text-gray-600"
+                                    }`}
                                 >
                                   {feed.Frequency ?? "-"}
                                 </span>
@@ -1670,30 +1637,29 @@ export default function Projects() {
                                       case "Weekly":
                                         return `${Schedule.day || "—"} `;
                                       case "Monthly":
-                                        return `${
-                                          Schedule.date || "--"
-                                        } ${new Date().toLocaleString(
-                                          "default",
-                                          { month: "short" }
-                                        )} `;
+                                        return `${Schedule.date || "--"
+                                          } ${new Date().toLocaleString(
+                                            "default",
+                                            { month: "short" }
+                                          )} `;
                                       case "Once-off":
                                         return Schedule.datetime
                                           ? new Date(
-                                              Schedule.datetime
-                                            ).toLocaleString("en-GB", {
-                                              day: "2-digit",
-                                              month: "short",
-                                              year: "numeric",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })
+                                            Schedule.datetime
+                                          ).toLocaleString("en-GB", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })
                                           : "No date";
                                       case "Custom":
                                         return Schedule.custom &&
                                           Schedule.custom.length > 0
                                           ? Schedule.custom
-                                              .map((c) => `${c.day} ${c.time}`)
-                                              .join(", ")
+                                            .map((c) => `${c.day} ${c.time}`)
+                                            .join(", ")
                                           : "No custom schedule";
                                       default:
                                         return "No schedule";
@@ -1717,11 +1683,10 @@ export default function Projects() {
                             {/* <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td> */}
                             <td className="px-4 py-2 whitespace-nowrap">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  feed.Status === "New"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : "bg-green-100 text-green-600"
-                                }`}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "bg-green-100 text-green-600"
+                                  }`}
                               >
                                 {feed.Status}
                               </span>
@@ -1779,9 +1744,8 @@ export default function Projects() {
                                         <div
                                           key={i}
                                           className="relative group"
-                                          title={`${m.name || "Unknown"}${
-                                            m.roleName ? " - " + m.roleName : ""
-                                          }`}
+                                          title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""
+                                            }`}
                                         >
                                           <img
                                             src={
@@ -1871,8 +1835,8 @@ export default function Projects() {
                             <td className="px-3 py-2">
                               {project.CreatedDate
                                 ? new Date(
-                                    project.CreatedDate
-                                  ).toLocaleDateString()
+                                  project.CreatedDate
+                                ).toLocaleDateString()
                                 : "-"}
                             </td>
 
@@ -1967,9 +1931,8 @@ export default function Projects() {
                           <td className="px-3 py-2">{idx + 1}</td> {/* No */}
                           <td className="px-3 py-2">
                             {project.ProjectCode || project.ProjectName
-                              ? `[${project.ProjectCode ?? "-"}] ${
-                                  project.ProjectName ?? "-"
-                                }`
+                              ? `[${project.ProjectCode ?? "-"}] ${project.ProjectName ?? "-"
+                              }`
                               : "-"}
                           </td>{" "}
                           {/* Project Name */}
@@ -2000,7 +1963,7 @@ export default function Projects() {
                                   onClick={() =>
                                     setOpenDropdown((prev) =>
                                       prev?.rowIdx === idx &&
-                                      prev?.col === "SOWFile"
+                                        prev?.col === "SOWFile"
                                         ? null
                                         : { rowIdx: idx, col: "SOWFile" }
                                     )
@@ -2045,13 +2008,13 @@ export default function Projects() {
                           {/* <td className="px-3 py-2">{project.SampleFiles?.length ? `${project.SampleFiles.length} Files` : "-"}</td>  */}
                           <td className="px-3 py-2 relative">
                             {project.SampleFiles &&
-                            project.SampleFiles.length > 0 ? (
+                              project.SampleFiles.length > 0 ? (
                               <div className="inline-block relative">
                                 <button
                                   onClick={() =>
                                     setOpenDropdown((prev) =>
                                       prev?.rowIdx === idx &&
-                                      prev?.col === "SampleFiles"
+                                        prev?.col === "SampleFiles"
                                         ? null
                                         : { rowIdx: idx, col: "SampleFiles" }
                                     )
@@ -2116,8 +2079,8 @@ export default function Projects() {
                           <td className="px-3 py-2">
                             {project.CreatedDate
                               ? new Date(
-                                  project.CreatedDate
-                                ).toLocaleDateString()
+                                project.CreatedDate
+                              ).toLocaleDateString()
                               : "-"}
                           </td>{" "}
                           {/* Created Date */}
@@ -2306,8 +2269,8 @@ export default function Projects() {
                       <tr
                         key={row._id || idx}
                         className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                        // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
-                        // onClick={() => navigate(`/projects/${row._id}`)}
+                      // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
+                      // onClick={() => navigate(`/projects/${row._id}`)}
                       >
                         <td className="px-3 py-2">
                           {(currentPage - 1) * pageSize + idx + 1}
@@ -2330,19 +2293,18 @@ export default function Projects() {
                           {row.Status ? (
                             <span
                               className={`inline-block px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap
-                               ${
-                                 row.Status.toLowerCase().includes("failed")
-                                   ? "bg-red-100 text-red-800"
-                                   : row.Status.toLowerCase().includes("passed")
-                                   ? "bg-green-100 text-green-800"
-                                   : row.Status.toLowerCase().includes("qa")
-                                   ? "bg-purple-100 text-purple-800"
-                                   : row.Status.toLowerCase().includes(
-                                       "development"
-                                     )
-                                   ? "bg-yellow-100 text-yellow-800"
-                                   : "bg-blue-100 text-blue-800"
-                               }`}
+                               ${row.Status.toLowerCase().includes("failed")
+                                  ? "bg-red-100 text-red-800"
+                                  : row.Status.toLowerCase().includes("passed")
+                                    ? "bg-green-100 text-green-800"
+                                    : row.Status.toLowerCase().includes("qa")
+                                      ? "bg-purple-100 text-purple-800"
+                                      : row.Status.toLowerCase().includes(
+                                        "development"
+                                      )
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-blue-100 text-blue-800"
+                                }`}
                             >
                               {row.Status.split("_")
                                 .map(
@@ -2395,11 +2357,10 @@ export default function Projects() {
                                       setAssignModalOpen(true);
                                     }}
                                     disabled={assigned}
-                                    className={`w-full px-2 py-1 rounded text-sm text-white ${
-                                      assigned
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-blue-500 hover:bg-blue-600"
-                                    }`}
+                                    className={`w-full px-2 py-1 rounded text-sm text-white ${assigned
+                                      ? "bg-gray-400 cursor-not-allowed"
+                                      : "bg-blue-500 hover:bg-blue-600"
+                                      }`}
                                   >
                                     {assigned ? "Assigned" : "Assign to QA"}
                                   </button>
@@ -2422,9 +2383,8 @@ export default function Projects() {
                                         formData.append("fileLink", fileLink);
 
                                       const res = await fetch(
-                                        `http://${
-                                          import.meta.env
-                                            .VITE_BACKEND_NETWORK_ID
+                                        `http://${import.meta.env
+                                          .VITE_BACKEND_NETWORK_ID
                                         }/api/projectss/${projectId}/assign-to-qa`,
                                         {
                                           method: "POST",
@@ -2440,7 +2400,7 @@ export default function Projects() {
                                       } else {
                                         alert(
                                           result.message ||
-                                            "Failed to assign file"
+                                          "Failed to assign file"
                                         );
                                       }
                                     }}
@@ -2570,13 +2530,12 @@ export default function Projects() {
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <p className="text-sm text-gray-500">Priority</p>
                 <p
-                  className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                    selectedProject.Priority === "High"
-                      ? "bg-red-100 text-red-700"
-                      : selectedProject.Priority === "Medium"
+                  className={`inline-block px-2 py-1 rounded text-sm font-medium ${selectedProject.Priority === "High"
+                    ? "bg-red-100 text-red-700"
+                    : selectedProject.Priority === "Medium"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-green-100 text-green-700"
-                  }`}
+                    }`}
                 >
                   {selectedProject.Priority || "-"}
                 </p>
@@ -2607,7 +2566,7 @@ export default function Projects() {
                   </thead>
                   <tbody>
                     {selectedProject.Feeds &&
-                    selectedProject.Feeds.length > 0 ? (
+                      selectedProject.Feeds.length > 0 ? (
                       selectedProject.Feeds.map((feed, idx) => (
                         <tr
                           key={feed._id || idx}
@@ -2620,7 +2579,7 @@ export default function Projects() {
                           </td>
                           <td
                             className="px-4 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
-                            // onClick={() => navigate(`/projects/feed/${feed._id}`)}
+                          // onClick={() => navigate(`/projects/feed/${feed._id}`)}
                           >
                             {feed.FeedName}
                           </td>
@@ -2641,6 +2600,7 @@ export default function Projects() {
                     )}
                   </tbody>
                 </table>
+
               </div>
             </div>
           )}
@@ -2785,37 +2745,37 @@ export default function Projects() {
             {/* Developers — only TL or PC */}
             {(user.roleName === "Team Lead" ||
               user.roleName === "Project Coordinator") && (
-              <>
-                <div className="flex-1">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Feed
-                  </label>
-                  <Select
-                    options={
-                      selectedProject?.Feeds?.map((f) => ({
-                        value: f._id,
-                        label: f.FeedName || f._id,
-                      })) || []
-                    }
-                    value={selectedFeed}
-                    onChange={setSelectedFeed}
-                    placeholder="Select Feed"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Developers
-                  </label>
-                  <Select
-                    options={devOptionsRS}
-                    value={selectedDevelopers} // must be [{value, label}, ...]
-                    onChange={setSelectedDevelopers}
-                    isMulti
-                    placeholder="Select Developers"
-                  />
-                </div>
-              </>
-            )}
+                <>
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Feed
+                    </label>
+                    <Select
+                      options={
+                        selectedProject?.Feeds?.map((f) => ({
+                          value: f._id,
+                          label: f.FeedName || f._id,
+                        })) || []
+                      }
+                      value={selectedFeed}
+                      onChange={setSelectedFeed}
+                      placeholder="Select Feed"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Developers
+                    </label>
+                    <Select
+                      options={devOptionsRS}
+                      value={selectedDevelopers} // must be [{value, label}, ...]
+                      onChange={setSelectedDevelopers}
+                      isMulti
+                      placeholder="Select Developers"
+                    />
+                  </div>
+                </>
+              )}
           </div>
 
           {/* 🧭 Action Buttons */}

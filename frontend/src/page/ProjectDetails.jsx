@@ -17,6 +17,7 @@ import Pagination from "../components/Pagination"
 import Breadcrumb from "../components/Breadcrumb";
 import dayjs from "dayjs";
 
+
 export default function ProjectDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -61,9 +62,16 @@ export default function ProjectDetails() {
 
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
-
-
-   const canCreateFeed = user?.permissions?.some(
+  const [selectedFeed, setSelectedFeed] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [selectedDevelopers, setSelectedDevelopers] = useState([]);
+  const [developerOptions, setDeveloperOptions] = useState([]);
+  const devOptionsRS = developerOptions.map((dev) => ({
+    value: dev._id,
+    label: dev.name,
+  }));
+  const canCreateFeed = user?.permissions?.some(
     (perm) => perm.module === "Feed" && perm.actions.includes("create")
   );
 
@@ -157,7 +165,8 @@ export default function ProjectDetails() {
 
 
   ].filter(Boolean);
-  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "Assign"];
+  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members",
+    ...(user.roleName === "Team Lead" || user.roleName === "Project Coordinator" ? ["Action"] : [])];
 
   // Fetch project + available users
   useEffect(() => {
@@ -173,7 +182,7 @@ export default function ProjectDetails() {
           { credentials: "include" }
         );
         const data = await res.json();
-  
+
         setProject(data.project);
         setForm({
           TLId: data.TLId?._id || "",
@@ -204,35 +213,92 @@ export default function ProjectDetails() {
   }, [id, search, refresh]);
 
   useEffect(() => {
-  const fetchFeeds = async () => {
-    if (!id || activeTab !== "Feeds") return; // Ensure project ID is available
+    const fetchFeeds = async () => {
+      if (!id || activeTab !== "Feeds") return; // Ensure project ID is available
 
-    setLoadingFeeds(true);
-    // setFeedError(null);
+      setLoadingFeeds(true);
+      // setFeedError(null);
 
-    try {
-      const res = await fetch(
-        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
-        { credentials: "include" }
-      );
+      try {
+        const res = await fetch(
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
+          { credentials: "include" }
+        );
 
-      if (!res.ok) throw new Error("Failed to fetch feeds");
+        if (!res.ok) throw new Error("Failed to fetch feeds");
 
-      const result = await res.json();
-      console.log(result);
-      setFeeds(result.data || []); // Assuming response structure: { data: [...] }
+        const result = await res.json();
+        console.log(result);
+        setFeeds(result.data || []); // Assuming response structure: { data: [...] }
 
-    } catch (error) {
-      console.error("Error fetching feeds:", error);
-      // setFeedError(error.message);
-    } finally {
-      setLoadingFeeds(false);
-    }
-  };
+      } catch (error) {
+        console.error("Error fetching feeds:", error);
+        // setFeedError(error.message);
+      } finally {
+        setLoadingFeeds(false);
+      }
+    };
 
-  fetchFeeds();
-}, [id, refresh, activeTab]);
+    fetchFeeds();
+  }, [id, refresh, activeTab]);
 
+
+
+  //   const handleAssign = async () => {
+  //     if (!selectedProject) return;
+  //     setErrors({}); // clear previous errors
+  //     try {
+  //  await fetch(
+  //           `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${
+  //             selectedFeed.value
+  //           }/update-team`,
+  //           {
+  //             method: "PUT",
+  //             headers: { "Content-Type": "application/json" },
+  //             credentials: "include",
+  //             body: JSON.stringify({
+  //               DeveloperIds: selectedDevelopers.map((d) => d.value),
+  //             }),
+  //           }
+  //         );
+  //       }
+
+  //       const data = await res.json();
+  //       // console.log("Updated Data:", data);
+
+  //       if (data.errors) {
+  //         setErrors(data.errors);
+  //         // toast.error("Please fill all required fields");
+  //         return;
+  //       }
+
+  //       if (!res.ok || (!data.project && !data.feed)) {
+  //         console.error("Failed to update:", data);
+  //         toast.error(data.message || "Failed to update assignment");
+  //         return;
+  //       }
+
+  //       // Update modal and main table for project
+  //       if (data.project) {
+  //         setSelectedProject(data.project);
+  //         setData((prev = []) =>
+  //           prev.map((p) => (p._id === data.project._id ? data.project : p))
+  //         );
+  //         toast.success("Project team updated successfully");
+  //       }
+
+  //       // Optionally update feed state if you have a feed table/list
+  //       if (data.feed) {
+  //         toast.success("Developers assigned successfully");
+  //         // updateFeedState(data.feed); // implement if needed
+  //       }
+
+  //       setIsAssignOpen(false);
+  //     } catch (err) {
+  //       console.error("Error updating assignment:", err);
+  //       toast.error("Failed to update assignment");
+  //     }
+  //   };
 
   // Inside your component, after fetching `project` data
   const totalFeeds = project?.Feeds?.length || 0;
@@ -273,6 +339,100 @@ export default function ProjectDetails() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAssignOpen) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/tl-dev`,
+          { credentials: "include" }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch user lists");
+
+        const data = await res.json();
+
+
+        setDeveloperOptions(data.devUsers || []);
+
+      } catch (err) {
+        console.error("Failed to load TL/Dev list:", err);
+        setDeveloperOptions([]);
+      }
+    })();
+  }, [isAssignOpen, refresh]);
+
+  // ---- Handle open modal ----
+  const handleOpenAssignModal = (project, feed) => {
+    setSelectedProject(project);
+    setSelectedFeed({ value: feed._id, label: feed.FeedName });
+    setIsAssignOpen(true);
+  };
+  const handleAssign = async () => {
+    if (!selectedProject || !selectedFeed) return;
+
+    try {
+      const res = await fetch(
+        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${selectedFeed.value}/update-team`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            DeveloperIds: selectedDevelopers.map((d) => d.value),
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.feed) {
+        console.error("Failed to update:", data);
+        toast.error(data.message || "Failed to update assignment");
+        return;
+      }
+
+      // ✅ Update main table safely
+      setData((prevProjects) =>
+        prevProjects.map((p) =>
+          p._id === selectedProject._id
+            ? {
+              ...p,
+              Feeds: p.Feeds.map((f) =>
+                f._id === data.feed._id ? data.feed : f
+              ),
+            }
+            : p
+        )
+      );
+
+      // ✅ Update modal project safely
+      if (selectedProject?.Feeds) {
+        setSelectedProject((prev) => ({
+          ...prev,
+          Feeds: prev.Feeds.map((f) =>
+            f._id === data.feed._id ? data.feed : f
+          ),
+        }));
+      }
+
+      // ✅ Reset selections
+      setSelectedDevelopers([]);
+      setSelectedFeed(null);
+
+      // ✅ Show toast
+      toast.success("Developers assigned successfully");
+
+      // ✅ Close modal after all state updates
+      setIsAssignOpen(false);
+
+    } catch (err) {
+      console.error("Error updating assignment:", err);
+      toast.error("Failed to update assignment");
     }
   };
 
@@ -530,16 +690,16 @@ export default function ProjectDetails() {
               </div>
             )}
 
-{feedModalOpen && project && (  // <-- wait until project is loaded
-  <FeedModel
-    isOpen={feedModalOpen}
-    onClose={() => setFeedModalOpen(false)}
-    // existingProjectId={project.ProjectId}  // now it exists
-      existingProjectId={project._id}
-    onSuccess={() => setRefresh((prev) => !prev)}
-  />
-)}
-              
+            {feedModalOpen && project && (  // <-- wait until project is loaded
+              <FeedModel
+                isOpen={feedModalOpen}
+                onClose={() => setFeedModalOpen(false)}
+                // existingProjectId={project.ProjectId}  // now it exists
+                existingProjectId={project._id}
+                onSuccess={() => setRefresh((prev) => !prev)}
+              />
+            )}
+
 
             {/* FEEDS TAB */}
             {activeTab === "Feeds" && (
@@ -578,13 +738,13 @@ export default function ProjectDetails() {
 
                       </div>
                       {canCreateFeed && (
-              <button
-                className="bg-purple-600 hover:bg-purple-700 cursor-pointer text-white text-sm font-semibold px-4 py-2 rounded transition"
-                onClick={() => setFeedModalOpen(true)}
-              >
-                + Add Feed
-              </button>
-            )}
+                        <button
+                          className="bg-purple-600 hover:bg-purple-700 cursor-pointer text-white text-sm font-semibold px-4 py-2 rounded transition"
+                          onClick={() => setFeedModalOpen(true)}
+                        >
+                          + Add Feed
+                        </button>
+                      )}
 
                       {/* Add Feed Button */}
                       {/* <button
@@ -788,9 +948,35 @@ export default function ProjectDetails() {
                                     </div>
                                   )}
                                 </td>
+                                {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
 
-                                <td className="px-4 py-2 whitespace-nowrap">
-                                  <button className = "bg-blue-600 text-white p-2 rounded-md">Assign To Developer</button></td>
+                                  //                     <td className="px-4 py-2 whitespace-nowrap">
+                                  //                       <button
+                                  //   onClick={() => handleOpenAssignModal(project, feed)}
+                                  //   className="border border-blue-600 text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition text-sm font-medium"
+                                  // >
+                                  //   Assign
+                                  // </button>
+                                  //                     </td>
+                                  <td className="px-4 py-2 whitespace-nowrap">
+                                    {feed?.DeveloperIds?.length > 0 ? (
+                                      <span className="text-gray-800 font-medium">
+                                        {feed.DeveloperIds.map((dev) => dev.name).join(", ")}
+                                      </span>
+                                    ) : (
+                                      (user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
+                                        <button
+                                          onClick={() => handleOpenAssignModal(project, feed)}
+                                          className="border border-blue-600 text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition text-sm font-medium"
+                                        >
+                                          Assign
+                                        </button>
+                                      )
+                                    )}
+                                  </td>
+                                )}
+
+
                               </tr>
                             );
                           })
@@ -857,6 +1043,8 @@ export default function ProjectDetails() {
                   </div>
                 </div>
               </div>
+
+
             )}
           </div>
 
@@ -1030,7 +1218,7 @@ export default function ProjectDetails() {
                 <p className="flex justify-between">
                   <span className="text-gray-500">History</span>
                   <span className="font-semibold text-left text-gray-700 cursor-pointer hover:text-purple-700">
-                    <FaHistory  size={20} className="" onClick={openModal} title="See History" />
+                    <FaHistory size={20} className="" onClick={openModal} title="See History" />
                   </span>
                 </p>
 
@@ -1050,71 +1238,71 @@ export default function ProjectDetails() {
                   </button>
 
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-  {modalHistory.length > 0 ? (
-    [...new Map(
-      modalHistory.map(item => {
-        const key = item.feedId || item.projectId || item.updatedAt;
-        return [key + item.actionType, item];
-      })
-    ).values()].map((item, index) => {
-      const feed = item.FeedName?.trim();
-      const project = item.ProjectName?.trim();
+                    {modalHistory.length > 0 ? (
+                      [...new Map(
+                        modalHistory.map(item => {
+                          const key = item.feedId || item.projectId || item.updatedAt;
+                          return [key + item.actionType, item];
+                        })
+                      ).values()].map((item, index) => {
+                        const feed = item.FeedName?.trim();
+                        const project = item.ProjectName?.trim();
 
-      return (
-        <div key={index} className="flex gap-3">
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-            {item.updatedBy?.name
-              ?.split(" ")
-              ?.map((n) => n[0])
-              ?.join("")
-              ?.toUpperCase() || "?"}
-          </div>
+                        return (
+                          <div key={index} className="flex gap-3">
+                            {/* Avatar */}
+                            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                              {item.updatedBy?.name
+                                ?.split(" ")
+                                ?.map((n) => n[0])
+                                ?.join("")
+                                ?.toUpperCase() || "?"}
+                            </div>
 
-          {/* Activity details */}
-          <div className="flex-1">
-            <p className="text-gray-800">
-              <span className="font-semibold">{item.updatedBy?.name}</span>{" "}
-              {item.actionType === "Feed Created" ? (
-                <>
-                  created feed{" "}
-                  {feed && <span className="font-semibold text-blue-600">“{feed}”</span>}
-                  {project && (
-                    <>
-                      {" "}for project{" "}
-                      <span className="font-semibold text-purple-600">“{project}”</span>
-                    </>
-                  )}
-                </>
-              ) : item.description ? (
-                item.description
-              ) : (
-                <>
-                  updated {item.entityType}{" "}
-                  <span className="font-semibold">{item.field}</span> from{" "}
-                  <span className="bg-gray-200 px-2 py-1 rounded text-sm">
-                    {item.oldValue || "—"}
-                  </span>{" "}
-                  to{" "}
-                  <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
-                    {item.newValue || "—"}
-                  </span>
-                </>
-              )}
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              {formatISTDate(item.updatedAt)}
-            </p>
-          </div>
-        </div>
-      );
-    })
-  ) : (
-    <p className="text-gray-400 text-center">No history found.</p>
-  )}
-</div>
+                            {/* Activity details */}
+                            <div className="flex-1">
+                              <p className="text-gray-800">
+                                <span className="font-semibold">{item.updatedBy?.name}</span>{" "}
+                                {item.actionType === "Feed Created" ? (
+                                  <>
+                                    created feed{" "}
+                                    {feed && <span className="font-semibold text-blue-600">“{feed}”</span>}
+                                    {project && (
+                                      <>
+                                        {" "}for project{" "}
+                                        <span className="font-semibold text-purple-600">“{project}”</span>
+                                      </>
+                                    )}
+                                  </>
+                                ) : item.description ? (
+                                  item.description
+                                ) : (
+                                  <>
+                                    updated {item.entityType}{" "}
+                                    <span className="font-semibold">{item.field}</span> from{" "}
+                                    <span className="bg-gray-200 px-2 py-1 rounded text-sm">
+                                      {item.oldValue || "—"}
+                                    </span>{" "}
+                                    to{" "}
+                                    <span className="bg-purple-600 text-white px-2 py-1 rounded text-sm">
+                                      {item.newValue || "—"}
+                                    </span>
+                                  </>
+                                )}
+                              </p>
+                              <p className="text-gray-400 text-sm mt-1">
+                                {formatISTDate(item.updatedAt)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-400 text-center">No history found.</p>
+                    )}
+                  </div>
 
-                </Modal>  
+                </Modal>
               </div>
             </div>
             <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
@@ -1135,6 +1323,127 @@ export default function ProjectDetails() {
 
         </div>
       </div>
+
+      <Modal
+        isOpen={isAssignOpen}
+        onRequestClose={() => setIsAssignOpen(false)}
+        className="w-full max-w-3xl bg-white rounded-2xl mx-auto my-20 p-8 outline-none shadow-2xl relative animate-fadeIn"
+        overlayClassName="fixed inset-0 bg-black/20 flex items-start justify-center z-50 overflow-auto"
+      >
+        {/* ✨ Header */}
+        <div className="flex justify-between items-center pb-3 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            Assign Feed
+          </h2>
+          <button
+            className="text-gray-400 hover:text-gray-600 transition"
+            onClick={() => setIsAssignOpen(false)}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* 📄 Project & Feed Information */}
+        {selectedProject && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+        <p className="text-sm text-gray-500">Project Code</p>
+        <p className="text-lg font-semibold text-gray-800">
+          {selectedProject.ProjectCode || "-"}
+        </p>
+      </div> */}
+
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <p className="text-sm text-gray-500">Project Name</p>
+              <p className="text-lg font-semibold text-gray-800">
+                {selectedProject.ProjectCode || "-"} {selectedProject.ProjectName || "-"}
+              </p>
+            </div>
+
+            {selectedFeed && (
+              <>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-sm text-gray-500">Feed ID</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {selectedProject.Feeds.find(
+                      (f) => f._id === selectedFeed.value
+                    )?.FeedId || "-"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-sm text-gray-500">Feed Name</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {selectedProject.Feeds.find(
+                      (f) => f._id === selectedFeed.value
+                    )?.FeedName || "-"}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-sm text-gray-500">Platform</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {selectedProject.Feeds.find(
+                      (f) => f._id === selectedFeed.value
+                    )?.Platform || "-"}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Assignment Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Feed
+            </label>
+            <Select
+              options={
+                selectedProject?.Feeds?.map((f) => ({
+                  value: f._id,
+                  label: f.FeedName || f._id,
+                })) || []
+              }
+              value={selectedFeed}
+              onChange={setSelectedFeed}
+              placeholder="Select Feed"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Developers
+            </label>
+            <Select
+              options={devOptionsRS}
+              value={selectedDevelopers}
+              onChange={setSelectedDevelopers}
+              isMulti
+              placeholder="Select Developers"
+            />
+          </div>
+        </div>
+
+        {/* 🧭 Action Buttons */}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            type="button"
+            className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
+            onClick={() => setIsAssignOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleAssign}
+            className="cursor-pointer px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-md transition"
+          >
+            Assign
+          </button>
+        </div>
+      </Modal>
+
     </>
   );
 }

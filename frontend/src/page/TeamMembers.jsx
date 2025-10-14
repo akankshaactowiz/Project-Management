@@ -172,7 +172,12 @@ const TeamMembers = () => {
             </button>
           </div>
           <div>
-
+            <button
+              // onClick={() => setShowAssignModal(true)}
+              className="h-10 px-4 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none"
+            >
+              + Add Member
+            </button>
           </div>
         </div>
       </div>

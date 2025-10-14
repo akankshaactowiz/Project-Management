@@ -13,14 +13,16 @@ export default function ProfilePage() {
     role: "",
     department: "",
     password: "••••••••",
-    phone: "",
-    dateOfBirth: "",
-    address: "",
-    city: "",
-    postcode: "",
+    designation: "",
+    reportingBy: "",
+    // phone: "",
+    // dateOfBirth: "",
+    // address: "",
+    // city: "",
+    // postcode: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
   const [savedProfileData, setSavedProfileData] = useState(profileData);
 
   // Sync profileData & savedProfileData once user is fetched
@@ -31,24 +33,16 @@ export default function ProfilePage() {
         email: user.email || "",
         role: user.roleName || "",
         department: user.department || "",
-        password: "••••••••", // always mask password
-        phone: "",
-        dateOfBirth: "",
-        address: "",
-        city: "",
-        postcode: "",
+        designation: user.designation || "",
+        reportingBy: user.reportingBy || "",
       });
       setSavedProfileData({
         fullName: user.name || "",
         email: user.email || "",
         role: user.roleName || "",
         department: user.department || "",
-        password: "••••••••", // always mask password
-        phone: "",
-        dateOfBirth: "",
-        address: "",
-        city: "",
-        postcode: "",
+        designation: user.designation || "",
+        reportingBy: user.reportingBy || "",
       });
     }
   }, [user]);
@@ -89,20 +83,11 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">
+                <span className="font-semibold text-gray-700 mr-1">
                   Email:
                 </span>
                 <span className="text-gray-600">
                   {savedProfileData.email}
-                </span>
-              </div>
-
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">
-                  Password:
-                </span>
-                <span className="text-gray-600">
-                  {showPassword ? savedProfileData.password : "••••••••"}
                 </span>
               </div>
 
@@ -122,7 +107,7 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              <div className="flex justify-between ">
+              <div className="flex justify-between border-r border-gray-300">
                 <span className="font-semibold text-gray-700">
                   Designation:
                 </span>
@@ -131,41 +116,14 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              <div className="flex justify-between pr-4 border-r border-gray-300">
+              <div className="flex justify-between ">
                 <span className="font-semibold text-gray-700">
-                  Phone:
+                  Reporting By:
                 </span>
                 <span className="text-gray-600">
-                  {savedProfileData.phone || "-"}
+                  {savedProfileData.designation}
                 </span>
-              </div>
-
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700 ">
-                  Date of Birth:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.dateOfBirth || "-"}
-                </span>
-              </div>
-
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">
-                  Address:{" "}
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.address || "-"}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="font-semibold text-gray-700">
-                  City, State:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.city || "-"}
-                </span>
-              </div>
+              </div>               
             </div>
           </div>
         </div>
@@ -174,7 +132,7 @@ export default function ProfilePage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-6">
         {/* Profile Details Form */}
-        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-8 m-4">
+        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 m-4  ">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">
             Profile Details
           </h3>
@@ -216,51 +174,6 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Password - Readonly */}
-            {/* <div>
-              <label
-                htmlFor="password"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={profileData?.password || ""}
-                  readOnly
-                  className={`w-full px-4 py-2 rounded-lg border border-gray-300 pr-10 cursor-not-allowed ${showPassword ? "bg-white" : "bg-gray-100"
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div> */}
-
-            {/* Phone Number */}
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                placeholder="+1 234 567 8900"
-                value={profileData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
             {/* Designation */}
             <div>
               <label
@@ -279,56 +192,77 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Date of Birth */}
+            {/* Submit Button */}
+            <div className="md:col-span-2 flex justify-end">
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Change Password Form */}
+        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 m-4">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+            Change Password
+          </h3>
+
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Password */}
             <div>
               <label
-                htmlFor="dateOfBirth"
+                htmlFor="password"
                 className="block text-gray-700 font-medium mb-1"
               >
-                Date of Birth
+                Current Password
               </label>
               <input
-                type="text"
-                id="dateOfBirth"
-                placeholder="MM/DD/YYYY"
-                value={profileData.dateOfBirth}
-                onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                type="password"
+                id="password"
+                placeholder="••••••••"
+                value={profileData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+           
+            {/* New Password */}
+            <div>
+              <label
+                htmlFor="newPassword"
+                className="block text-gray-700 font-medium mb-1"
+              >
+                New Password
+              </label>
+              <input
+                type="password"
+                id="newPassword"
+                placeholder="••••••••"
+                value={profileData.newPassword}
+                onChange={(e) => handleInputChange("newPassword", e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            {/* Address */}
-            <div className="">
+            {/* Confirm Password */}
+            <div>
               <label
-                htmlFor="address"
+                htmlFor="confirmPassword"
                 className="block text-gray-700 font-medium mb-1"
               >
-                Address
+                Confirm Password
               </label>
               <input
-                type="text"
-                id="address"
-                placeholder="Street address"
-                value={profileData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* City, State */}
-            <div className="">
-              <label
-                htmlFor="city"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                City, State
-              </label>
-              <input
-                type="text"
-                id="city"
-                placeholder="City, State"
-                value={profileData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
+                type="password"
+                id="confirmPassword"
+                placeholder="••••••••"
+                value={profileData.confirmPassword}
+                onChange={(e) =>
+                  handleInputChange("confirmPassword", e.target.value)
+                }
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -339,49 +273,12 @@ export default function ProfilePage() {
                 type="submit"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
               >
-                Save Changes
+                Save
               </button>
             </div>
-
           </form>
         </div>
       </div>
-
-
-      {/* Activity Section */}
-      {/* <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-8 m-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Activity</h2>
-                  <button className="text-red-500 hover:text-red-600 text-sm font-medium">
-                    View all
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {activities.map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div
-                        className={`w-10 h-10 rounded-full ${activity.avatar} flex items-center justify-center`}
-                      >
-                        <Clock className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-initial">
-                        <p className="text-sm">
-                          <span className="font-semibold text-gray-900">
-                            {activity.action}
-                          </span>
-                          <span className="text-gray-600"> on </span>
-                          <span className="font-semibold text-gray-900">
-                            {activity.date}
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div> */}
     </div>
-
-
   );
 }

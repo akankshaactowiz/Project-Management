@@ -36,6 +36,7 @@ const FeedDetails = ({ allUsers }) => {
           QAId: data.QAId || null,
           BAUPersonId: data.BAUPersonId || null,
           Frequency: data.Frequency || "-",
+          Schedule: data.Schedule || "-",
           DeliveryStatus: data.DeliveryType || "-",
           StartTime: data.StartTime,
           DeliveryTime: data.DeliveryTime,
@@ -53,7 +54,7 @@ const FeedDetails = ({ allUsers }) => {
           rulesApply: project.RulesApply || "-",
           dbStatus: project.DBStatus || "-",
           projectStatus: project.Status || "-",
-          assignedBy: project.CreatedBy || "-",
+          createdBy: data.createdBy || "-",
           createdDate: project.CreatedDate || "-",
           developerIds: data.DeveloperIds || [],
           assignedTo: data.assignedTo || [],
@@ -175,6 +176,47 @@ const FeedDetails = ({ allUsers }) => {
   };
 
 
+const formatSchedule = (feed) => {
+  const { Frequency, Schedule } = feed;
+  if (!Frequency) return "No schedule";
+
+  if (!Schedule || Schedule === "-") return Frequency;
+
+  switch (Frequency) {
+    case "Daily":
+      return "Daily";
+    case "Weekly":
+      return `Weekly (${Schedule.day || "No day"})`;
+    case "Monthly":
+      const day = Schedule.date;
+      const getOrdinal = (n) => {
+        if (!n) return "";
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+      };
+      return `Monthly (${day ? getOrdinal(day) : "No date"} of every month)`;
+    case "Once-off":
+      return Schedule.datetime
+        ? `Once-off (${new Date(Schedule.datetime).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })})`
+        : "Once-off (No date)";
+    case "Custom":
+      return Schedule.custom && Schedule.custom.length > 0
+        ? `Custom (${Schedule.custom.map(c => `${c.day} ${c.time}`).join(", ")})`
+        : "Custom (No custom schedule)";
+    default:
+      return Frequency;
+  }
+};
+
+
+
 
 
   return (
@@ -221,9 +263,13 @@ const FeedDetails = ({ allUsers }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 {[
-                  { label: "Feed ID", value: feed?.feedId },
                   { label: "Project", value: `${feed?.projectCode} ${feed?.projectName}` },
-                  { label: "Frequency", value: feed?.Frequency, badge: true },
+                  { label: "Feed ID", value: feed?.feedId },
+                  { label: "Feed Name", value: feed?.feedName },
+                  {label: "Created By", value: feed?.createdBy?.[0]?.name},
+                  // { label: "Frequency", value: feed?.Frequency, badge: true },
+                  { label: "Frequency", value: feed?.Frequency ? formatSchedule(feed) : "-", badge: true },
+
                   { label: "Platform", value: feed?.platform },
                   { label: "Status", value: feed?.status, badgeColor: "blue" },
                   { label: "BAU", value: feed?.BAUStatus },
