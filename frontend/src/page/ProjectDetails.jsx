@@ -33,7 +33,8 @@ export default function ProjectDetails() {
   const [showPopover, setShowPopover] = useState(false);
   const [openPopoverFeedId, setOpenPopoverFeedId] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [feeds, setFeeds] = useState([]);
+  const [loadingFeeds, setLoadingFeeds] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [feedModalOpen, setFeedModalOpen] = useState(false);
   const openModal = () => setIsOpen(true);
@@ -156,7 +157,7 @@ export default function ProjectDetails() {
 
 
   ].filter(Boolean);
-  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "DB Status"];
+  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "Assign"];
 
   // Fetch project + available users
   useEffect(() => {
@@ -201,6 +202,36 @@ export default function ProjectDetails() {
     };
     loadData();
   }, [id, search, refresh]);
+
+  useEffect(() => {
+  const fetchFeeds = async () => {
+    if (!id || activeTab !== "Feeds") return; // Ensure project ID is available
+
+    setLoadingFeeds(true);
+    // setFeedError(null);
+
+    try {
+      const res = await fetch(
+        `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${id}`,
+        { credentials: "include" }
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch feeds");
+
+      const result = await res.json();
+      console.log(result);
+      setFeeds(result.data || []); // Assuming response structure: { data: [...] }
+
+    } catch (error) {
+      console.error("Error fetching feeds:", error);
+      // setFeedError(error.message);
+    } finally {
+      setLoadingFeeds(false);
+    }
+  };
+
+  fetchFeeds();
+}, [id, refresh, activeTab]);
 
 
   // Inside your component, after fetching `project` data
@@ -758,7 +789,8 @@ export default function ProjectDetails() {
                                   )}
                                 </td>
 
-                                <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
+                                <td className="px-4 py-2 whitespace-nowrap">
+                                  <button className = "bg-blue-600 text-white p-2 rounded-md">Assign To Developer</button></td>
                               </tr>
                             );
                           })

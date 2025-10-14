@@ -53,6 +53,7 @@ function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   // const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
   const [pageSize, setPageSize] = useState(10); // default 10
   const [search, setSearch] = useState("");
 
@@ -160,6 +161,7 @@ function Home() {
         });
         setFeeds(data.data || []);
         setTotalPages(Math.ceil(data.total / entries));
+        setTotalDocs(data.total || 0);
       } catch (err) {
         console.error("Error fetching feed data:", err);
       } finally {
@@ -573,7 +575,7 @@ function Home() {
             <div className="flex items-center justify-between mb-6">
               {/* Heading */}
               <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
-                Total Feeds
+                Today's Feed Deliveries
               </h2>
 
               {/* Search Box */}
@@ -766,8 +768,9 @@ function Home() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
+                totalDocs={totalDocs}
                 onPageChange={setCurrentPage}
-              />
+              />  
             </div>
           </div>
         </div>

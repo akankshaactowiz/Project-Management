@@ -457,6 +457,170 @@ await Project.updateOne(
 //     res.status(500).json({ message: error.message });
 //   }
 // };
+// export const getFeeds = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       pageSize = 10,
+//       status,
+//       search,
+//       qaid,
+//     } = req.query;
+
+//     // const userId = req.user._id;
+//     const userId = new mongoose.Types.ObjectId(req.user._id);
+//     const role = req.user.roleId?.name;
+//     // const role = new mongoose.Types.ObjectId(req.user.roleId?.name);
+//     const department = req.user.departmentId?.department;
+
+//     const parsedPage = parseInt(page, 10) || 1;
+//     const parsedPageSize = parseInt(pageSize, 10) || 20;
+
+    
+    
+    
+    
+//     // Build aggregation pipeline
+//     // Build role-based filter for feeds
+//     let roleFilter = {};
+//     if (role !== "Superadmin") {
+//       if (department === "Sales") {
+//         if( role === "Sales Manager") {
+//           roleFilter = { "projectId.CreatedBy": userId };
+//         }
+//         if (role === "Business Development Executive") {
+//           roleFilter = { "projectId.BDEId": userId };
+//         }
+//         // Sales Manager / Head: can see all Sales projects (optional: add if needed)
+//       } else {
+//         // Other departments: include feeds where user is involved in project
+//         roleFilter = {
+//           $or: [
+//             { "projectId.PMId": userId },
+//             { "projectId.PCId": userId },
+//             { "projectId.TLId": userId },
+//             { DeveloperIds: userId },
+//             { "projectId.QAId": userId },
+//             { "projectId.BAUId": userId },
+//             { "projectId.BDEId": userId },
+//             { "projectId.CreatedBy": userId },
+//           ],
+//         };
+//       }
+//     }
+//     const pipeline = [
+
+      
+//       // Lookup project
+//       {
+//         $lookup: {
+//           from: "Projects_data",
+//           localField: "projectId",
+//           foreignField: "_id",
+//           as: "projectId",
+//         },
+//       },
+//       { $unwind: { path: "$projectId", preserveNullAndEmptyArrays: true } },
+
+      
+
+//       // Apply role-based filter
+//       ...(role !== "Superadmin" ? [{ $match: roleFilter }] : []),
+
+//       // Apply status filter
+//       ...(status && status !== "All" ? [{ $match: { Status: status } }] : []),
+
+//       // Apply QA filter
+//       ...(qaid ? [{ $match: { QAId: qaid } }] : []),
+
+//       // Apply search filter
+//       ...(search
+//         ? [
+//           {
+//             $match: {
+//               $or: [
+//                 { FeedName: { $regex: search, $options: "i" } },
+//                 { FeedId: { $regex: search, $options: "i" } },
+//                 { Frequency: { $regex: search, $options: "i" } },
+//                 { "projectId.ProjectName": { $regex: search, $options: "i" } },
+//                 { "projectId.ProjectCode": { $regex: search, $options: "i" } },
+//               ],
+//             },
+//           },
+//         ]
+//         : []),
+
+//       {
+//         $lookup: {
+//           from: "User-data",
+//           let: { pmId: "$projectId.PMId" },
+//           pipeline: [
+//             { $match: { $expr: { $eq: ["$_id", "$$pmId"] } } },
+//             { $project: { _id: 1, name: 1 } } // only id and name
+//           ],
+//           as: "projectId.PMId",
+//         },
+//       },
+//       { $unwind: { path: "$projectId.PMId", preserveNullAndEmptyArrays: true } },
+
+      
+//       // Populate DeveloperIds (only _id and name)
+//       {
+//         $lookup: {
+//           from: "User-data",
+//           let: { devIds: "$DeveloperIds" },
+//           pipeline: [
+//             { $match: { $expr: { $in: ["$_id", "$$devIds"] } } },
+//             { $project: { _id: 1, name: 1 } } // only id and name
+//           ],
+//           as: "DeveloperIds",
+//         },
+//       },
+
+//       // Populate createdBy (only _id and name)
+//       {
+//         $lookup: {
+//           from: "User-data",
+//           let: { createdById: "$createdBy" },
+//           pipeline: [
+//             { $match: { $expr: { $eq: ["$_id", "$$createdById"] } } },
+//             { $project: { _id: 1, name: 1 } } // only id and name
+//           ],
+//           as: "createdBy",
+//         },
+//       },
+//       { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
+
+//       // Sort and paginate
+//       { $sort: { CreatedDate: -1 } },
+//       { $skip: (parsedPage - 1) * parsedPageSize },
+//       { $limit: parsedPageSize },
+//     ];
+
+//     // Execute aggregation
+//     const feeds = await Feed.aggregate(pipeline);
+
+//     // Total count without pagination
+//     const totalPipeline = [...pipeline];
+//     totalPipeline.pop(); // remove $limit
+//     totalPipeline.pop(); // remove $skip
+//     totalPipeline.push({ $count: "total" });
+//     const totalResult = await Feed.aggregate(totalPipeline);
+//     const total = totalResult[0]?.total || 0;
+
+//     res.status(200).json({
+//       data: feeds,
+//       total,
+//       page: parsedPage,
+//       pageSize: parsedPageSize,
+//     });
+//   } catch (error) {
+//     console.error("Error in getFeeds:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
 export const getFeeds = async (req, res) => {
   try {
     const {
@@ -467,33 +631,31 @@ export const getFeeds = async (req, res) => {
       qaid,
     } = req.query;
 
-    // const userId = req.user._id;
     const userId = new mongoose.Types.ObjectId(req.user._id);
     const role = req.user.roleId?.name;
-    // const role = new mongoose.Types.ObjectId(req.user.roleId?.name);
     const department = req.user.departmentId?.department;
 
     const parsedPage = parseInt(page, 10) || 1;
     const parsedPageSize = parseInt(pageSize, 10) || 20;
 
-    
-    
-    
-    
-    // Build aggregation pipeline
-    // Build role-based filter for feeds
+    // Get today's date info
+    const today = new Date();
+    const dayName = today.toLocaleDateString("en-US", { weekday: "long" }); // e.g., "Monday"
+    const dateNum = today.getDate(); // e.g., 14
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Role-based filter
     let roleFilter = {};
     if (role !== "Superadmin") {
       if (department === "Sales") {
-        if( role === "Sales Manager") {
+        if (role === "Sales Manager") {
           roleFilter = { "projectId.CreatedBy": userId };
         }
         if (role === "Business Development Executive") {
           roleFilter = { "projectId.BDEId": userId };
         }
-        // Sales Manager / Head: can see all Sales projects (optional: add if needed)
       } else {
-        // Other departments: include feeds where user is involved in project
         roleFilter = {
           $or: [
             { "projectId.PMId": userId },
@@ -508,9 +670,8 @@ export const getFeeds = async (req, res) => {
         };
       }
     }
-    const pipeline = [
 
-      
+    const pipeline = [
       // Lookup project
       {
         $lookup: {
@@ -522,76 +683,97 @@ export const getFeeds = async (req, res) => {
       },
       { $unwind: { path: "$projectId", preserveNullAndEmptyArrays: true } },
 
-      
-
-      // Apply role-based filter
+      // Role-based filter
       ...(role !== "Superadmin" ? [{ $match: roleFilter }] : []),
 
-      // Apply status filter
+      // Status filter
       ...(status && status !== "All" ? [{ $match: { Status: status } }] : []),
 
-      // Apply QA filter
+      // QA filter
       ...(qaid ? [{ $match: { QAId: qaid } }] : []),
 
-      // Apply search filter
+      // Search filter
       ...(search
         ? [
-          {
-            $match: {
-              $or: [
-                { FeedName: { $regex: search, $options: "i" } },
-                { FeedId: { $regex: search, $options: "i" } },
-                { Frequency: { $regex: search, $options: "i" } },
-                { "projectId.ProjectName": { $regex: search, $options: "i" } },
-                { "projectId.ProjectCode": { $regex: search, $options: "i" } },
-              ],
+            {
+              $match: {
+                $or: [
+                  { FeedName: { $regex: search, $options: "i" } },
+                  { FeedId: { $regex: search, $options: "i" } },
+                  { Frequency: { $regex: search, $options: "i" } },
+                  { "projectId.ProjectName": { $regex: search, $options: "i" } },
+                  { "projectId.ProjectCode": { $regex: search, $options: "i" } },
+                ],
+              },
             },
-          },
-        ]
+          ]
         : []),
 
+      // Lookup PM
       {
         $lookup: {
           from: "User-data",
           let: { pmId: "$projectId.PMId" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$pmId"] } } },
-            { $project: { _id: 1, name: 1 } } // only id and name
+            { $project: { _id: 1, name: 1 } },
           ],
           as: "projectId.PMId",
         },
       },
       { $unwind: { path: "$projectId.PMId", preserveNullAndEmptyArrays: true } },
 
-      
-      // Populate DeveloperIds (only _id and name)
+      // Populate DeveloperIds
       {
         $lookup: {
           from: "User-data",
           let: { devIds: "$DeveloperIds" },
           pipeline: [
             { $match: { $expr: { $in: ["$_id", "$$devIds"] } } },
-            { $project: { _id: 1, name: 1 } } // only id and name
+            { $project: { _id: 1, name: 1 } },
           ],
           as: "DeveloperIds",
         },
       },
 
-      // Populate createdBy (only _id and name)
+      // Populate createdBy
       {
         $lookup: {
           from: "User-data",
           let: { createdById: "$createdBy" },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$createdById"] } } },
-            { $project: { _id: 1, name: 1 } } // only id and name
+            { $project: { _id: 1, name: 1 } },
           ],
           as: "createdBy",
         },
       },
       { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
 
-      // Sort and paginate
+      // Filter feeds scheduled for today
+      {
+        $match: {
+          $or: [
+            { Frequency: "Daily" },
+            { $and: [{ Frequency: "Weekly" }, { "Schedule.day": dayName }] },
+            { $and: [{ Frequency: "Monthly" }, { "Schedule.date": dateNum }] },
+            {
+              $and: [
+                { Frequency: "Once-off" },
+                { "Schedule.datetime": { $gte: startOfDay, $lte: endOfDay } },
+              ],
+            },
+            {
+              $and: [
+                { Frequency: "Custom" },
+                { "Schedule.custom": { $elemMatch: { day: dayName } } },
+              ],
+            },
+          ],
+        },
+      },
+
+      // Sort & paginate
       { $sort: { CreatedDate: -1 } },
       { $skip: (parsedPage - 1) * parsedPageSize },
       { $limit: parsedPageSize },
@@ -616,6 +798,53 @@ export const getFeeds = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getFeeds:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getFeedsByProjectId = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { page = 1, pageSize = 10 } = req.query; // Pagination query params
+
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    // Pagination calculation
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    // Fetch feeds with pagination
+    const feeds = await Feed.find({ projectId })
+      .populate({
+        path: "projectId",
+        select: "ProjectName PMId TLId PCId QAId BAUPersonId",
+        populate: [
+          { path: "PMId", select: "name _id" },
+          { path: "TLId", select: "name _id" },
+          { path: "PCId", select: "name _id" },
+          { path: "QAId", select: "name _id" },
+          { path: "BAUPersonId", select: "name _id" },
+        ],
+      })
+      .populate("DeveloperIds", "name")
+      .populate("createdBy", "name")
+      .sort({ CreatedDate: -1 })
+      .skip(skip)
+      .limit(parseInt(pageSize));
+
+    // Optional: total count for frontend pagination
+    const totalFeeds = await Feed.countDocuments({ projectId });
+
+    res.status(200).json({
+      data: feeds,
+      total: totalFeeds,
+      page: parseInt(page),
+      pageSize: parseInt(pageSize),
+    });
+  } catch (error) {
+    console.error("Error fetching feeds by project ID:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -969,42 +1198,3 @@ export const updateFeedTeam = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-// GET feed logs with pagination
-// export const getFeedLogs = async (req, res) => {
-//   try {
-//     const { page = 1, limit = 25, search, sort } = req.query;
-//     const pageNumber = parseInt(page, 10);
-//     const pageSize = parseInt(limit, 10);
-//     const skip = (pageNumber - 1) * pageSize;
-
-//     const query = { feedId: req.params.id };
-//     if (search) {
-//       query.$or = [
-//         { message: { $regex: search, $options: "i" } },
-//         { status: { $regex: search, $options: "i" } },
-//       ];
-//     }
-
-//     const total = await FeedLog.countDocuments(query);
-//     const logs = await FeedLog.find(query)
-//       .sort(sort ? JSON.parse(sort) : { createdAt: -1 })
-//       .skip(skip)
-//       .limit(pageSize);
-
-//     res.status(200).json({
-//       data: logs,
-//       totalItems: total,
-//       page: pageNumber,
-//       totalPages: Math.ceil(total / pageSize),
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to fetch logs" });
-//   }
-// };
