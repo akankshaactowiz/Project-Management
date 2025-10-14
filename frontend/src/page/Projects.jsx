@@ -1057,7 +1057,7 @@ export default function Projects() {
                           {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                           <td className="px-3 py-2">
                             {project.DeliveryType ? (
-                              <div className="flex justify-center">
+                              <div className="flex justify-left">
                                 <span
                                   className={`px-3 py-1 text-xs font-semibold rounded-sm ${
                                     project.DeliveryType === "BAU"
