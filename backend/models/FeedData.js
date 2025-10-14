@@ -213,5 +213,4 @@ const feedSchema = new mongoose.Schema(
 //   }
 // });
 
-
 export default mongoose.model("Feed", feedSchema, "Feed-data");
