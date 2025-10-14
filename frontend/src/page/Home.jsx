@@ -575,7 +575,7 @@ function Home() {
             <div className="flex items-center justify-between mb-6">
               {/* Heading */}
               <h2 className="text-lg font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">
-                Today's Feed Delivery
+                Today's Feed Deliveries
               </h2>
 
               {/* Search Box */}

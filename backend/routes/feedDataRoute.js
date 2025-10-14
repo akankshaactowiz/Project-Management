@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.post("/", createFeed);
 router.get("/", getFeeds);      
+// router.get("/:projectId", getFeedsByProjectId); 
 router.get("/:id", getFeedById);
-router.get("/:projectId", getFeedsByProjectId); // to get feeds by projectId
 router.put("/:id/update-team", protect,  updateFeedTeam);
 router.put("/:id", protect, authorize("Feed", "update"), updateFeedById);
 

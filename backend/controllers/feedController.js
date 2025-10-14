@@ -804,22 +804,51 @@ export const getFeeds = async (req, res) => {
 
 
 export const getFeedsByProjectId = async (req, res) => {
-  console.log("📥 Incoming request for feeds:", req.params.projectId);
   try {
     const { projectId } = req.params;
+    const { page = 1, pageSize = 10 } = req.query; // Pagination query params
+
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       return res.status(400).json({ message: "Invalid project ID" });
     }
+
+    // Pagination calculation
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    // Fetch feeds with pagination
     const feeds = await Feed.find({ projectId })
-      .populate("projectId", "ProjectName")
+      .populate({
+        path: "projectId",
+        select: "ProjectName PMId TLId PCId QAId BAUPersonId",
+        populate: [
+          { path: "PMId", select: "name _id" },
+          { path: "TLId", select: "name _id" },
+          { path: "PCId", select: "name _id" },
+          { path: "QAId", select: "name _id" },
+          { path: "BAUPersonId", select: "name _id" },
+        ],
+      })
+      .populate("DeveloperIds", "name")
       .populate("createdBy", "name")
-      .sort({ CreatedDate: -1 });
-    res.status(200).json({ data: feeds });
+      .sort({ CreatedDate: -1 })
+      .skip(skip)
+      .limit(parseInt(pageSize));
+
+    // Optional: total count for frontend pagination
+    const totalFeeds = await Feed.countDocuments({ projectId });
+
+    res.status(200).json({
+      data: feeds,
+      total: totalFeeds,
+      page: parseInt(page),
+      pageSize: parseInt(pageSize),
+    });
   } catch (error) {
     console.error("Error fetching feeds by project ID:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // export const getFeedById = async (req, res) => {
 //   try {

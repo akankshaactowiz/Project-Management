@@ -157,7 +157,7 @@ export default function ProjectDetails() {
 
 
   ].filter(Boolean);
-  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "DB Status"];
+  const columns = ["No.", "Feed ID", "Feed Name", "Frequency", "Platform", "Status", "BAU", "POC", "Team Members", "Assign"];
 
   // Fetch project + available users
   useEffect(() => {
@@ -789,7 +789,8 @@ export default function ProjectDetails() {
                                   )}
                                 </td>
 
-                                <td className="px-4 py-2">{feed.DBStatus || "-"}</td>
+                                <td className="px-4 py-2 whitespace-nowrap">
+                                  <button className = "bg-blue-600 text-white p-2 rounded-md">Assign To Developer</button></td>
                               </tr>
                             );
                           })

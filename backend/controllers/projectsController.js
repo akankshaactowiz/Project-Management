@@ -1365,6 +1365,9 @@ if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
 
     // ✅ Save updatedBy and project if there were changes
     if (changes.length > 0) {
+      if (project.TLId && project.PCId && project.QAId && project.BAUPersonId) {
+      project.Status = "Under Development";
+     }
       // project._updatedBy = updatedBy;
       await project.save();
     }

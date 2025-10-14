@@ -4,6 +4,8 @@ import Modal from "react-modal";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
 import { MdEditDocument } from "react-icons/md";
+import { PiExport } from "react-icons/pi";
+
 
 Modal.setAppElement("#root");
 import { Dialog, Transition } from "@headlessui/react";
@@ -961,7 +963,7 @@ export default function Projects() {
                 defaultValue=""
               >
                 <option value="" disabled hidden>
-                  Export
+                 Export
                 </option>
                 <option value="excel">Excel</option>
                 <option value="csv">CSV</option>
@@ -1415,103 +1417,82 @@ export default function Projects() {
                               </td> */}
 
                         <td className="px-4 py-2">
-                          <div className="flex items-center space-x-2">
-                            {canAssignProject && (
-                              <button
-                                className={`px-3 py-1 rounded text-sm text-white ${
-                                  isAssigned(project)
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700"
-                                }`}
-                                disabled={isAssigned(project)}
-                                onClick={() => {
-                                  if (isAssigned(project)) return;
+  <div className="flex items-center space-x-2">
+    {canAssignProject && !isAssigned(project) && (
+      <button
+        className="px-3 py-1 rounded text-sm text-white bg-blue-600 hover:bg-blue-700"
+        onClick={() => {
+          setSelectedProject(project);
 
-                                  setSelectedProject(project);
+          if (user.roleName === "Manager") {
+            setSelectedTL(project.TLId?._id || "");
+            setSelectedPC(project.PCId?._id || "");
+            setSelectedQA(project.QAId?._id || "");
+            setSelectedBauPerson(project.BAUPersonId?._id || "");
+          }
 
-                                  if (user.roleName === "Manager") {
-                                    setSelectedTL(project.TLId?._id || "");
-                                    setSelectedPC(project.PCId?._id || "");
-                                    setSelectedQA(project.QAId?._id || "");
-                                    setSelectedBauPerson(
-                                      project.BAUPersonId?._id || ""
-                                    );
-                                  }
+          if (
+            (user.roleName === "Team Lead" ||
+              user.roleName === "Project Coordinator") &&
+            project.Feeds?.length > 0
+          ) {
+            const firstUnassignedFeed = project.Feeds.find(
+              (f) => !f.DeveloperIds || f.DeveloperIds.length === 0
+            );
+            setSelectedFeed(firstUnassignedFeed || project.Feeds[0]);
+          }
 
-                                  if (
-                                    (user.roleName === "Team Lead" ||
-                                      user.roleName ===
-                                        "Project Coordinator") &&
-                                    project.Feeds?.length > 0
-                                  ) {
-                                    const firstUnassignedFeed =
-                                      project.Feeds.find(
-                                        (f) =>
-                                          !f.DeveloperIds ||
-                                          f.DeveloperIds.length === 0
-                                      );
-                                    setSelectedFeed(
-                                      firstUnassignedFeed || project.Feeds[0]
-                                    );
-                                  }
+          setIsAssignOpen(true);
+        }}
+      >
+        Assign
+      </button>
+    )}
 
-                                  setIsAssignOpen(true);
-                                }}
-                              >
-                                {isAssigned(project) ? "Assigned" : "Assign"}
-                              </button>
-                            )}
+    {/* Edit button stays visible if any role is assigned */}
+    <button
+      className={`px-3 py-1 rounded text-sm flex items-center justify-center ${
+        project.TLId || project.PCId || project.QAId
+          ? "text-blue-600 cursor-pointer"
+          : "cursor-not-allowed"
+      }`}
+      disabled={
+        !(
+          project.TLId ||
+          project.PCId ||
+          project.QAId ||
+          project.BAUPersonId
+        )
+      }
+      onClick={() => {
+        if (
+          !(
+            project.TLId ||
+            project.PCId ||
+            project.QAId ||
+            project.BAUPersonId
+          )
+        )
+          return;
 
-                            <button
-                              className={`px-3 py-1 rounded text-sm text-white flex items-center justify-center ${
-                                project.TLId || project.PCId || project.QAId
-                                  ? "bg-green-600 hover:bg-green-700"
-                                  : "bg-gray-400 cursor-not-allowed"
-                              }`}
-                              disabled={
-                                !(
-                                  project.TLId ||
-                                  project.PCId ||
-                                  project.QAId ||
-                                  project.BAUPersonId
-                                )
-                              }
-                              onClick={() => {
-                                if (
-                                  !(
-                                    project.TLId ||
-                                    project.PCId ||
-                                    project.QAId ||
-                                    project.BAUPersonId
-                                  )
-                                )
-                                  return;
+        setSelectedProject(project);
 
-                                setSelectedProject(project);
+        // Prefill current assignments before opening modal
+        setSelectedTL(project.TLId?._id || project.TLId || "");
+        setSelectedPC(project.PCId?._id || project.PCId || "");
+        setSelectedQA(project.QAId?._id || project.QAId || "");
+        setSelectedBauPerson(
+          project.BAUPersonId?._id || project.BAUPersonId || ""
+        );
 
-                                // Prefill current assignments before opening modal
-                                setSelectedTL(
-                                  project.TLId?._id || project.TLId || ""
-                                );
-                                setSelectedPC(
-                                  project.PCId?._id || project.PCId || ""
-                                );
-                                setSelectedQA(
-                                  project.QAId?._id || project.QAId || ""
-                                );
-                                setSelectedBauPerson(
-                                  project.BAUPersonId?._id ||
-                                    project.BAUPersonId ||
-                                    ""
-                                );
+        setIsAssignOpen(true);
+      }}
+    >
+      <FaEdit size={16} />
+    </button>
+  </div>
+</td>
 
-                                setIsAssignOpen(true);
-                              }}
-                            >
-                              <MdEditDocument size={16} />
-                            </button>
-                          </div>
-                        </td>
                       </tr>
                     ))
                   ) : (
