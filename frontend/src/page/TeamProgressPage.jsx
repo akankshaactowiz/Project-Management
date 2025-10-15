@@ -35,6 +35,7 @@ export default function TeamProgressPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
   const [search, setSearch] = useState("");
   const [entries, setEntries] = useState(10);
   const [filterDate, setFilterDate] = useState("");
@@ -96,6 +97,7 @@ export default function TeamProgressPage() {
       setUser(data.user);
       setProjects(data.projects);
       setTotalPages(data.pagination.totalPages);
+      setTotalDocs(data.pagination.totalDocs);
     } catch (err) {
       setError(err.message);
       console.error(err);
@@ -537,20 +539,20 @@ export default function TeamProgressPage() {
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
                 <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                  <tr>
-                    <th className="px-6 py-3  font-semibold">No</th>
-                    <th className="px-6 py-3 text-left  font-semibold whitespace-nowrap">Project</th>
-                    <th className="px-6 py-3  font-semibold">Feeds</th>
-                    <th className="px-6 py-3  font-semibold">Industry</th>
-                    <th className="px-6 py-3 text-left font-semibold whitespace-nowrap">Project Manager</th>
-                    <th className="px-6 py-3 text-left font-semibold">BDE</th>
-                    <th className="px-6 py-3  font-semibold whitespace-nowrap">Delivery Type</th>
+                  <tr className="text-left">
+                    <th className="px-3 py-3  font-semibold">No</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Project</th>
+                    <th className="px-3 py-3  font-semibold">Feeds</th>
+                    <th className="px-3 py-3  font-semibold">Industry</th>
+                    <th className="px-3 py-3 font-semibold whitespace-nowrap">Project Manager</th>
+                    <th className="px-3 py-3 font-semibold">BDE</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Delivery Type</th>
 
-                    <th className="px-6 py-3  font-semibold">Status</th>
-                    <th className="px-6 py-3  font-semibold whitespace-nowrap">Attachments</th>
-                    <th className="px-6 py-3  font-semibold whitespace-nowrap">Project Type</th>
-                    <th className="px-6 py-3  font-semibold whitespace-nowrap">Created By</th>
-                    <th className="px-6 py-3  font-semibold whitespace-nowrap">Created Date</th>
+                    <th className="px-3 py-3  font-semibold">Status</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Attachments</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Project Type</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Created By</th>
+                    <th className="px-3 py-3  font-semibold whitespace-nowrap">Created Date</th>
 
                     {/* <th className="px-6 py-3  font-semibold">TL</th> */}
                   </tr>
@@ -558,7 +560,7 @@ export default function TeamProgressPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="12" className="text-center py-6">
+                      <td colSpan="12" className=" py-6">
                         <div className="flex items-center justify-center gap-2">
                           <svg
                             className="animate-spin h-5 w-5 text-blue-500"
@@ -589,17 +591,17 @@ export default function TeamProgressPage() {
                       <tr key={project._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                         <td className="px-3 py-2 text-center">{(currentPage - 1) * pageSize + idx + 1}</td>
                         <td
-                          className="px-3 py-2 whitespace-nowrap text-left text-blue-600 hover:underline cursor-pointer"
+                          className="px-3 py-2 whitespace-nowrap  text-blue-600 hover:underline cursor-pointer"
                           onClick={() => navigate(`/projects/${project._id}/details`)}
                         >
                           {project.ProjectCode ?? "-"} {project.ProjectName ?? "-"}
                         </td>
-                        <td className="px-3 py-2 text-center whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
-                        <td className="px-3 py-2 text-left whitespace-nowrap">{project.IndustryType ?? "-"}</td>
-                        <td className="px-3 py-2 text-left whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
-                        <td className="px-3 py-2 text-center whitespace-nowrap">{project.BDEId?.name ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{project.Feeds?.length ?? 0}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{project.IndustryType ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{project.PMId?.name ?? "-"}</td>
+                        <td className="px-3 py-2  whitespace-nowrap">{project.BDEId?.name ?? "-"}</td>
                         <td className="px-3 py-2">
-                          <div className="flex justify-center">
+                          <div className="flex justify-left">
                             <span
                               className={`px-3 py-1 text-xs font-semibold rounded-sm cursor-pointer ${project.DeliveryType === "BAU"
                                 ? "bg-green-700 text-white"
@@ -639,7 +641,7 @@ export default function TeamProgressPage() {
                             {project.Status ?? "-"}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2">
                           <button
                             onClick={() => navigate(`/projects/${project._id}/attachments`)}
                             className="text-blue-600 hover:underline cursor-pointer"
@@ -647,9 +649,9 @@ export default function TeamProgressPage() {
                             View Files
                           </button>
                         </td>
-                        <td className="px-3 py-2 text-left whitespace-nowrap">{project.ProjectType ?? "-"}</td>
-                        <td className="px-3 py-2 text-left whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 whitespace-nowrap">{project.ProjectType ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{project.CreatedBy?.name ?? "-"}</td>
+                        <td className="px-3 py-2 ">
                           {project.CreatedDate ? dayjs(project.CreatedDate).format("YYYY/MM/DD") : "-"}
                         </td>
                       </tr>
@@ -679,7 +681,7 @@ export default function TeamProgressPage() {
                 >
                   {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
-                <span className="text-gray-700">entries</span>
+                <span className="text-gray-700">Entries</span>
               </div>
               <Pagination
                 currentPage={currentPage}
