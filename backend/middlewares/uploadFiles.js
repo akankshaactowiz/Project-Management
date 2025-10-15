@@ -17,3 +17,17 @@ const storage = multer.diskStorage({
 });
 
 export const upload = multer({ storage });
+
+// Profile image storage
+const profileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = "uploads/profile";
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+export const uploadProfile = multer({ storage: profileStorage });

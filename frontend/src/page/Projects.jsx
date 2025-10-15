@@ -3,9 +3,7 @@ import { useLocation } from "react-router-dom";
 import Modal from "react-modal";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
-import { MdEditDocument } from "react-icons/md";
-import { PiExport } from "react-icons/pi";
-import { FaFileExport } from "react-icons/fa";
+
 
 
 Modal.setAppElement("#root");
@@ -15,21 +13,17 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import { FaSearch } from "react-icons/fa";
+import { FaFileExcel, FaFileCsv, FaFileCode, FaChevronDown, FaFileExport } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { FaFilePdf, FaFileCsv } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
-import { RiFileExcel2Fill } from "react-icons/ri";
-import { LuFileJson } from "react-icons/lu";
+
 import Pagination from "../components/Pagination";
 import Img from "../assets/no-data-found.svg";
 import { exportData } from "../utils/exportUtils";
 import { useAuth } from "../hooks/useAuth";
 import Model from "../components/CreateProject";
-import AssignQAModal from "../components/AssignToQa";
-import FeedModel from "../components/CreateFeed";
 import UpdateProjectModal from "../components/UpdateProjectModel";
-import { useModal } from "../context/modalContext";
+
 
 // import { set } from "mongoose";
 
@@ -103,6 +97,7 @@ export default function Projects() {
     value: dev._id,
     label: dev.name,
   }));
+
 
 
 
@@ -242,7 +237,6 @@ export default function Projects() {
     }
   }, [statusFilter]);
 
-  // ####Use Context hook for open modal
   //   useEffect(() => {
   //   if (openProjectId) {
   //     const project = data.find(p => p._id === openProjectId);
@@ -474,19 +468,6 @@ export default function Projects() {
     }
   };
 
-  // useEffect(() => {
-  //   if (data.length && tableRef.current) {
-  //     $(tableRef.current).DataTable();
-  //   }
-  // }, [data]);
-
-  // const handleAssignProject = async () => {
-  //   // Call API to assign TL and PC to selectedProject
-  //   await assignProjectAPI(selectedProject._id, selectedTL, selectedPC);
-  //   setIsAssignModalOpen(false);
-  //   // Optionally refresh table or show success message
-  // };
-
   const role = user?.roleName;
   const baseColumns = ["No"];
 
@@ -602,27 +583,17 @@ export default function Projects() {
     ],
     QA: ["QA Report Count", "QA Rules"],
     Developer: [
-      "Project Name",
-      "Feed Name",
-      // "Feed ID",
-      "Frequency",
-      "Platform",
+      "Project",
+      "Feeds",
+      "Industry",
+      "Project Manager",
+      "BDE",
+      "Delivery Type",
+      // "Frequency",
       "Status",
-      "BAU",
-      "POC",
-      "PM",
-      "PC",
-      "TL",
-      "Developer",
-      "QA",
-      "BAU Person",
       "Attachments",
-      "Framework type",
-      "QA Report Count",
-      "Manage By",
-      "QA Rules",
-      "DB Status",
-      "DB Type",
+      "Project Type",
+      "Created By",
       "Created Date",
     ],
   };
@@ -699,6 +670,9 @@ export default function Projects() {
         return true;
       case "Project Coordinator":
         return true;
+
+      case "Developer":
+        return true;
       default:
         return false;
     }
@@ -725,67 +699,6 @@ export default function Projects() {
           </h2>
         </div>
 
-        {/* <div className="m-2">
-          <h1 className="text-2xl font-semibold text-gray-800">
-          Projects
-        </h1>
-        </div> */}
-        {/* Tabs */}
-        {/* <div className=" px-2 py-2 rounded-md mb-4 flex flex-wrap gap-1 select-none"> */}
-        {/* {user.department !== "Sales" &&
-            tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1 rounded font-medium ${activeTab === tab
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-300 text-gray-700"
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
-          {user.department === "Sales" &&
-            salesTabs.map((salesTab) => (
-              <button
-                key={salesTab}
-                onClick={() => setActiveSalesTab(salesTab)}
-                className={`px-3 py-1 rounded font-medium ${activeSalesTab === salesTab
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-300 text-gray-700"
-                  }`}
-              >
-                {salesTab}
-              </button>
-            ))} */}
-
-        {/* {canCreateProject && (
-            <button
-              className="ml-auto bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
-              onClick={() => setIsModalOpen(true)}
-            >
-              + Create Project
-            </button>
-          )}
-
-          {canCreateFeed && (
-            <button
-              className="ml-auto bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition"
-              onClick={() => setFeedModalOpen(true)}
-            >
-              + Create Feed
-            </button>
-          )} */}
-        {/* </div> */}
-
-        {/* {feedModalOpen && (
-          <FeedModel
-            isOpen={feedModalOpen}
-            onClose={() => setFeedModalOpen(false)}
-            onSuccess={() => setRefresh((prev) => !prev)}
-          />
-        )} */}
-
         {/* Modal */}
         {isModalOpen && (
           <Model
@@ -794,41 +707,6 @@ export default function Projects() {
             onSuccess={() => setRefresh((prev) => !prev)}
           />
         )}
-
-        {/* Status Tabs */}
-        {/* {user?.department !== "Sales" && (
-          <div className="border-b border-gray-200 mb-4 overflow-x-auto whitespace-nowrap">
-            {statusTabs.map((status) => (
-              <button
-                key={status.key} // ✅ unique key
-                onClick={() => setActiveStatus(status.key)}
-                className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${activeStatus === status.key
-                  ? "border-b-2 border-purple-800 text-purple-800"
-                  : "text-gray-500"
-                  }`}
-              >
-                {status.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {user?.department === "Sales" && (
-          <div className="border-b border-gray-200 mb-4 overflow-x-auto whitespace-nowrap">
-            {salesStatusTabs.map((salesStatusTab) => (
-              <button
-                key={salesStatusTab} // ✅ use string as key
-                onClick={() => setSalesActiveStatusTabs(salesStatusTab)}
-                className={`inline-block px-4 py-2 text-md font-medium transition-colors duration-200 ${salesActiveStatusTabs === salesStatusTab
-                  ? "border-b-2 border-purple-800 text-purple-800"
-                  : "text-gray-500"
-                  }`}
-              >
-                {salesStatusTab}
-              </button>
-            ))}
-          </div>
-        )} */}
 
         {/* Controls */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
@@ -951,7 +829,7 @@ export default function Projects() {
           {/* Right side: Export + Create Buttons */}
           <div className="flex flex-wrap md:flex-nowrap items-center mt-6 gap-3">
             {/* Export */}
-            <div className="flex flex-col">
+            {/* <div className="flex flex-col">
               <select
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none text-gray-400"
                 onChange={(e) => {
@@ -970,6 +848,39 @@ export default function Projects() {
                 <option value="csv">CSV</option>
                 <option value="json">JSON</option>
               </select>
+            </div> */}
+            <div className="flex flex-col relative inline-block text-left">
+              <button
+                onClick={() => setOpen((prev) => !prev)}
+                className="w-40 flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 text-md font-medium text-gray-700 focus:outline-none cursor-pointer"
+              >
+                <FaFileExport size={20} className=" text-gray-700" />
+                Export
+                <FaChevronDown className="ml-2 text-gray-500" />
+              </button>
+
+              {open && (
+                <div className="absolute mt-1 w-40 bg-white shadow-lg rounded-md z-10">
+                  <button
+                    className="w-full flex items-center px-3 py-2 text-md text-gray-700 hover:bg-gray-100"
+                    onClick={() => { exportData("excel", data, "projects"); setOpen(false); }}
+                  >
+                    <FaFileExcel size={18} className="mr-2 text-green-700" /> Excel
+                  </button>
+                  <button
+                    className="w-full flex items-center px-3 py-2 text-md text-gray-700 hover:bg-gray-100"
+                    onClick={() => { exportData("csv", data, "projects"); setOpen(false); }}
+                  >
+                    <FaFileCsv size={18} className="mr-2 text-blue-500" /> CSV
+                  </button>
+                  <button
+                    className="w-full flex items-center px-3 py-2 text-md text-gray-700 hover:bg-gray-100"
+                    onClick={() => { exportData("json", data, "projects"); setOpen(false); }}
+                  >
+                    <FaFileCode size={18} className="mr-2 text-yellow-500" /> JSON
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Create Buttons */}
@@ -1214,12 +1125,12 @@ export default function Projects() {
                       </option>
                     ))}
                   </select>
-                  <span className="text-gray-700">entries</span>
+                  <span className="text-gray-700">1 to {currentPage * entries} of {totalDocs} Entries</span>
                 </div>
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  totalDocs={totalDocs}
+                  // totalDocs={totalDocs}
                   entries={entries}
                   onPageChange={setCurrentPage}
                 />
@@ -1230,312 +1141,10 @@ export default function Projects() {
 
         {/* ==========SALES Department Table End========== */}
 
-        {(user?.roleName === "Manager" ||
-          user?.roleName === "Team Lead" ||
-          user?.roleName === "Project Coordinator") && (
-            <div className="flex flex-col">
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
-                  <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                    <tr>
-                      {columns.map((col) => (
-                        <th
-                          key={col}
-                          className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td
-                          colSpan={columns.length}
-                          className="text-center p-4 text-gray-500"
-                        >
-                          <div className="flex justify-center items-center">
-                            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-600"></div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : filteredData.length > 0 ? (
-                      filteredData.map((project, idx) => (
-                        <tr
-                          key={project._id}
-                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                        >
-                          <td className="px-3 py-2">
-                            {(currentPage - 1) * pageSize + idx + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
-                            onClick={() =>
-                              navigate(`/projects/${project._id}/details`)
-                            }
-                          >
-                            {project.ProjectCode ?? "-"}{" "}
-                            {project.ProjectName ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.Feeds?.length ?? 0}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.IndustryType ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.PMId?.name ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.BDEId?.name ?? "-"}
-                          </td>
-                          {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
-                          <td className="px-3 py-2">
-                            {project.DeliveryType ? (
-                              <div className="flex justify-left">
-                                <span
-                                  className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
-                                    ? "bg-green-700 text-white"
-                                    : project.DeliveryType === "POC"
-                                      ? "bg-orange-400 text-white"
-                                      : project.DeliveryType === "R&D"
-                                        ? "bg-pink-300 text-white"
-                                        : project.DeliveryType === "Adhoc"
-                                          ? "bg-yellow-400 text-white"
-                                          : project.DeliveryType === "Once-off"
-                                            ? "bg-pink-100 text-pink-800"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                >
-                                  {project.DeliveryType}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-
-                          {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.Status ? (
-                              <span
-                                className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : project.Status === "Under Development"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : project.Status === "On-Hold"
-                                      ? "bg-gray-200 text-gray-800"
-                                      : project.Status === "Production"
-                                        ? "bg-green-100 text-green-800"
-                                        : project.Status === "BAU-Started"
-                                          ? "bg-indigo-100 text-indigo-800"
-                                          : project.Status === "Closed"
-                                            ? "bg-red-100 text-red-800"
-                                            : "bg-gray-100 text-gray-800"
-                                  }`}
-                              >
-                                {project.Status}
-                              </span>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-
-                          <td className="px-3 py-2">
-                            <button
-                              onClick={() =>
-                                navigate(`/projects/${project._id}/attachments`)
-                              }
-                              className="text-blue-600 hover:underline cursor-pointer"
-                            >
-                              View Files
-                            </button>
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.ProjectType ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {project.CreatedBy?.name ?? "-"}
-                          </td>
-                          <td className="px-3 py-2">
-                            {project.CreatedDate
-                              ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
-                              : "-"}
-                          </td>
-                          {/* <td className="px-4 py-2 text-right">
-                                {canAssignProject && (
-                                  <button
-                                    className={`px-3 py-1 rounded text-sm text-white ${
-                                      // Disable button if all assignments relevant to the role are already done
-                                      ((user.roleName === "Manager" &&
-                                        selectedProject?.TLId &&
-                                        selectedProject?.PCId &&
-                                        selectedProject?.QAId) ||
-                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                          project.feed?.DeveloperIds &&
-                                          project.feed?.DeveloperIds.length > 0))
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-blue-600 hover:bg-blue-700"
-                                      }`}
-                                    disabled={
-                                      (user.roleName === "Manager" &&
-                                        selectedProject?.TLId &&
-                                        selectedProject?.PCId &&
-                                        selectedProject?.QAId) ||
-                                      ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                        feed.DeveloperIds &&
-                                        feed.DeveloperIds.length > 0)
-                                    }
-                                    onClick={() => {
-                                      // Open modal only if assignment not done
-                                      const canAssign =
-                                        (user.roleName === "Manager" &&
-                                          (!selectedProject.TLId || !selectedProject.PCId || !selectedProject.QAId)) ||
-                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                          (!feed.DeveloperIds || feed.DeveloperIds.length === 0));
-
-                                      if (canAssign) {
-                                        setSelectedProject(project);
-                                        setSelectedFeed(feed);
-                                        setIsAssignOpen(true);
-                                      }
-                                    }}
-                                  >
-                                    {user.roleName === "Manager"
-                                      ? selectedProject?.TLId && selectedProject?.PCId && selectedProject?.QAId
-                                        ? "Assigned"
-                                        : "Assign"
-                                      : feed.DeveloperIds && feed.DeveloperIds.length > 0
-                                        ? "Assigned"
-                                        : "Assign"}
-                                  </button>
-                                )}
-                              </td> */}
-                          {user.roleName === "Manager" && (
-
-                            <td className="px-4 py-2">
-                              <div className="flex items-center space-x-2">
-                                {canAssignProject && !isAssigned(project) && (
-                                  <button
-                                    className="px-3 py-1 rounded text-sm text-white bg-blue-600 hover:bg-blue-700"
-                                    onClick={() => {
-                                      setSelectedProject(project);
-
-                                      if (user.roleName === "Manager") {
-                                        setSelectedTL(project.TLId?._id || "");
-                                        setSelectedPC(project.PCId?._id || "");
-                                        setSelectedQA(project.QAId?._id || "");
-                                        setSelectedBauPerson(project.BAUPersonId?._id || "");
-                                      }
-
-
-                                      setIsAssignOpen(true);
-                                    }}
-                                  >
-                                    Assign
-                                  </button>
-                                )}
-
-                                {/* ✅ Show "Edit" only if some members are already assigned */}
-                                {(project.TLId || project.PCId || project.QAId || project.BAUPersonId) && (
-                                  <button
-                                    className="px-3 py-1 rounded text-sm flex items-center justify-center text-blue-600 hover:text-blue-800 transition"
-                                    onClick={() => {
-                                      setSelectedProject(project);
-
-                                      // Prefill current assignments before opening modal
-                                      setSelectedTL(project.TLId?._id || project.TLId || "");
-                                      setSelectedPC(project.PCId?._id || project.PCId || "");
-                                      setSelectedQA(project.QAId?._id || project.QAId || "");
-                                      setSelectedBauPerson(
-                                        project.BAUPersonId?._id || project.BAUPersonId || ""
-                                      );
-
-                                      setIsAssignOpen(true);
-                                    }}
-                                  >
-                                    <FaEdit size={16} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          )}
-
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={columns.length}
-                          className="text-center p-8 text-gray-500"
-                        >
-                          <div className="flex flex-col items-center justify-center gap-3">
-                            <img
-                              src={Img}
-                              alt="No data"
-                              className="w-32 h-32 object-contain opacity-80"
-                            />
-                            <p className="font-semibold text-lg text-gray-600">
-                              No Data Found
-                            </p>
-                            <p className="text-sm text-gray-400">
-                              Try adding new projects to see them here.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-
-                <UpdateProjectModal
-                  isOpen={isUpdateModalOpen}
-                  onClose={() => setIsUpdateModalOpen(false)}
-                  project={selectedProject}
-                  onUpdate={handleUpdateProject}
-                />
-              </div>
-
-              <div className="flex justify-between m-4">
-                <div className="flex items-center space-x-2 mt-4">
-                  <label htmlFor="entries" className="text-gray-700">
-                    Show
-                  </label>
-                  <select
-                    id="entries"
-                    value={entries}
-                    onChange={(e) => {
-                      setEntries(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="border rounded px-2 py-1"
-                  >
-                    {[10, 25, 50, 100].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-gray-700">entries</span>
-                </div>
-
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalDocs={totalDocs}
-                  entries={entries}
-                  // totalDocs={totalDocs}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </div>
-          )}
-
-        {user?.roleName === "Developer" && (
+        {user.department !== "Sales" && (
           <div className="flex flex-col">
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200 ">
+              <table className="min-w-full divide-y divide-gray-200 border border-gray-100">
                 <thead className="bg-gray-100 text-gray-700 sticky top-0">
                   <tr>
                     {columns.map((col) => (
@@ -1553,710 +1162,6 @@ export default function Projects() {
                     <tr>
                       <td
                         colSpan={columns.length}
-                        className="text-center p-8 text-gray-500"
-                      >
-                        <div className="flex justify-center items-center">
-                          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-blue-600"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : data.length > 0 ? (
-                    data.map((project, idx) =>
-                      project.Feeds && project.Feeds.length > 0 ? (
-                        project.Feeds.map((feed, feedIdx) => (
-                          <tr
-                            key={`${project._id}-${feed._id}`}
-                            className={
-                              rowCounter % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }
-                          >
-                            {/* No */}
-                            {/* <td className="px-3 py-2">{feedCounter++}</td> */}
-                            <td>{rowCounter++}</td>
-
-                            {/* Project Code + Name */}
-                            <td
-                              className="px-3 py-2 whitespace-nowrap"
-                            // onClick={() => navigate(`/projects/${project._id}/details`)}
-                            >
-                              {project.ProjectCode || project.ProjectName
-                                ? `${project.ProjectCode ?? "-"} ${project.ProjectName ?? "-"
-                                }`
-                                : "-"}
-                            </td>
-
-                            {/* Feed Name */}
-                            <td
-                              className="px-3 py-2 text-blue-600 cursor-pointer hover:underline whitespace-nowrap"
-                              onClick={() =>
-                                (window.location.href = `/projects/feed/${feed._id}`)
-                              }
-                            >
-                              {feed.FeedName ?? "-"}
-                              {/* {`${feedIdx + 1 ?? "-"} | ${project.ProjectType ?? "-"
-                              } | ${feed.DomainName ?? "-"} | ${feed.ApplicationType ?? "-"
-                              } | ${feed.CountryName ?? "-"} | ${project.ProjectName ?? "-"
-                              }`} */}
-                            </td>
-
-                            {/* Feed ID */}
-                            {/* <td className="px-3 py-2">{feed.FeedId ?? "-"}</td> */}
-
-                            {/* Frequency */}
-                            {/* <td className="px-3 py-2">
-                                {project.Frequency ?? "-"}
-                              </td> */}
-                            <td className="px-4 py-2 align-top">
-                              <div className="flex flex-col gap-1">
-                                {/* Frequency Badge */}
-                                <span
-                                  className={`inline-block px-3 py-1 text-xs font-semibold rounded-full w-fit
-        ${feed.Frequency === "Daily"
-                                      ? "bg-green-100 text-green-700"
-                                      : feed.Frequency === "Weekly"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : feed.Frequency === "Monthly"
-                                          ? "bg-purple-100 text-purple-700"
-                                          : feed.Frequency === "Once-off"
-                                            ? "bg-orange-100 text-orange-700"
-                                            : "bg-gray-100 text-gray-600"
-                                    }`}
-                                >
-                                  {feed.Frequency ?? "-"}
-                                </span>
-
-                                {/* Schedule Badge */}
-                                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 w-fit">
-                                  {(() => {
-                                    const { Frequency, Schedule } = feed;
-                                    if (!Schedule) return "No schedule";
-
-                                    switch (Frequency) {
-                                      case "Daily":
-                                        return `Daily`;
-                                      case "Weekly":
-                                        return `${Schedule.day || "—"} `;
-                                      case "Monthly":
-                                        return `${Schedule.date || "--"
-                                          } ${new Date().toLocaleString(
-                                            "default",
-                                            { month: "short" }
-                                          )} `;
-                                      case "Once-off":
-                                        return Schedule.datetime
-                                          ? new Date(
-                                            Schedule.datetime
-                                          ).toLocaleString("en-GB", {
-                                            day: "2-digit",
-                                            month: "short",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })
-                                          : "No date";
-                                      case "Custom":
-                                        return Schedule.custom &&
-                                          Schedule.custom.length > 0
-                                          ? Schedule.custom
-                                            .map((c) => `${c.day} ${c.time}`)
-                                            .join(", ")
-                                          : "No custom schedule";
-                                      default:
-                                        return "No schedule";
-                                    }
-                                  })()}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Platform */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {/* {feed.DomainName &&
-                                  feed.ApplicationType &&
-                                  feed.CountryName
-                                  ? `${feed.DomainName} | ${feed.ApplicationType} | ${feed.CountryName}`
-                                  : "-"} */}
-                              {feed.Platform ?? "-"}
-                            </td>
-
-                            {/* Status */}
-                            {/* <td className="px-3 py-2 whitespace-nowrap">{feed.Status ?? "-"}</td> */}
-                            <td className="px-4 py-2 whitespace-nowrap">
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${feed.Status === "New"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "bg-green-100 text-green-600"
-                                  }`}
-                              >
-                                {feed.Status}
-                              </span>
-                            </td>
-                            {/* BAU */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {feed.BAUStatus ?? "-"}
-                            </td>
-
-                            {/* POC */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {feed.POC ?? "-"}
-                            </td>
-
-                            {/* PM */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {project.PMId?.name ?? "-"}
-                            </td>
-
-                            {/* PC */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {project.PCId?.name ?? "Not Assigned Yet"}
-                            </td>
-
-                            {/* TL */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {project.TLId?.name ?? "Not Assigned Yet"}
-                            </td>
-
-                            {/* Developer */}
-                            {/* <td className="px-3 py-2">
-                            {feed.DeveloperIds?.length
-                              ? feed.DeveloperIds.map((dev) =>
-                                dev?.name ? dev.name : dev._id ?? dev
-                              ).join(", ")
-                              : "-"}
-                          </td> */}
-                            <td className="px-4 py-2">
-                              {feed.DeveloperIds?.length ? (
-                                (() => {
-                                  const developers = feed.DeveloperIds.map(
-                                    (dev) =>
-                                      typeof dev === "object"
-                                        ? dev
-                                        : { name: dev, _id: dev }
-                                  );
-
-                                  const visible = developers.slice(0, 3); // show first 3
-                                  const extraCount =
-                                    developers.length - visible.length;
-
-                                  return (
-                                    <div className="flex items-center -space-x-2">
-                                      {visible.map((m, i) => (
-                                        <div
-                                          key={i}
-                                          className="relative group"
-                                          title={`${m.name || "Unknown"}${m.roleName ? " - " + m.roleName : ""
-                                            }`}
-                                        >
-                                          <img
-                                            src={
-                                              m.avatar ||
-                                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                m.name || "U"
-                                              )}&background=random`
-                                            }
-                                            alt={m.name}
-                                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition"
-                                          />
-                                        </div>
-                                      ))}
-
-                                      {extraCount > 0 && (
-                                        <button
-                                          onClick={() =>
-                                            handleShowAll(developers)
-                                          }
-                                          className="w-8 h-8 rounded-full bg-purple-600 text-white text-xs font-medium flex items-center justify-center border-2 border-white shadow-sm hover:bg-purple-700 transition"
-                                        >
-                                          +{extraCount}
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })()
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-
-                            {/* QA */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {project.QAId?.name ?? "-"}
-                            </td>
-
-                            {/* BAU Person */}
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {project.BAUPersonId?.name ?? "-"}
-                            </td>
-                            {/* Attachments */}
-                            <td className="px-3 py-2">
-                              <button
-                                onClick={() =>
-                                  navigate(
-                                    `/projects/${project._id}/attachments`
-                                  )
-                                }
-                                className="text-blue-600 hover:underline cursor-pointer"
-                              >
-                                View Files
-                              </button>
-                            </td>
-
-                            {/* Framework Type */}
-                            <td className="px-3 py-2">
-                              {feed.FrameworkType ?? "-"}
-                            </td>
-
-                            {/* QA Report Count */}
-                            <td className="px-3 py-2">
-                              {project.QAReportCount ?? "-"}
-                            </td>
-
-                            {/* Manage By */}
-                            <td className="px-3 py-2">
-                              {feed.ManageBy ?? "-"}
-                            </td>
-
-                            {/* QA Rules */}
-                            <td className="px-3 py-2">
-                              {project.QARules ?? "-"}
-                            </td>
-
-                            {/* DB Status */}
-                            <td className="px-3 py-2">
-                              {project.DBStatus ?? "-"}
-                            </td>
-
-                            {/* DB Type */}
-                            <td className="px-3 py-2">
-                              {project.DBType ?? "-"}
-                            </td>
-
-                            {/* Created Date */}
-                            <td className="px-3 py-2">
-                              {project.CreatedDate
-                                ? new Date(
-                                  project.CreatedDate
-                                ).toLocaleDateString()
-                                : "-"}
-                            </td>
-
-                            {/* Project Created By */}
-
-                            {/* {user.roleName === "Manager" && (
-
-                                <td className="px-3 py-2">
-                                  {project.CreatedBy?.name ?? "-"}
-                                </td>
-                              )} */}
-
-                            {/* <td className="px-4 py-2 text-right">
-
-                                {canAssignProject && (
-                                  <button
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                                    // onClick={() => openAssignModal(project)} // open modal with project info
-
-                                    onClick={() => {
-                                      setSelectedProject(project); // set current project
-                                      setSelectedFeed(feed);
-                                      setIsAssignOpen(true); // open modal
-                                    }}
-
-                                  >
-                                    Assign
-                                  </button>
-                                )}
-                              </td> */}
-                            {/* <td className="px-4 py-2 text-right">
-                                {canAssignProject && (
-                                  <button
-                                    className={`px-3 py-1 rounded text-sm text-white ${
-                                      // Disable button if all assignments relevant to the role are already done
-                                      ((user.roleName === "Manager" &&
-                                        selectedProject?.TLId &&
-                                        selectedProject?.PCId &&
-                                        selectedProject?.QAId) ||
-                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                          feed.DeveloperIds &&
-                                          feed.DeveloperIds.length > 0))
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-blue-600 hover:bg-blue-700"
-                                      }`}
-                                    disabled={
-                                      (user.roleName === "Manager" &&
-                                        selectedProject?.TLId &&
-                                        selectedProject?.PCId &&
-                                        selectedProject?.QAId) ||
-                                      ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                        feed.DeveloperIds &&
-                                        feed.DeveloperIds.length > 0)
-                                    }
-                                    onClick={() => {
-                                      // Open modal only if assignment not done
-                                      const canAssign =
-                                        (user.roleName === "Manager" &&
-                                          (!selectedProject.TLId || !selectedProject.PCId || !selectedProject.QAId)) ||
-                                        ((user.roleName === "Team Lead" || user.roleName === "Project Coordinator") &&
-                                          (!feed.DeveloperIds || feed.DeveloperIds.length === 0));
-
-                                      if (canAssign) {
-                                        setSelectedProject(project);
-                                        setSelectedFeed(feed);
-                                        setIsAssignOpen(true);
-                                      }
-                                    }}
-                                  >
-                                    {user.roleName === "Manager"
-                                      ? selectedProject?.TLId && selectedProject?.PCId && selectedProject?.QAId
-                                        ? "Assigned"
-                                        : "Assign"
-                                      : feed.DeveloperIds && feed.DeveloperIds.length > 0
-                                        ? "Assigned"
-                                        : "Assign"}
-                                  </button>
-                                )}
-                              </td> */}
-
-                            {/* Actions */}
-                            {/* <td className="px-3 py-2">
-                            <button>
-                              <span className="text-blue-600 cursor-pointer hover:underline">Assign Feed to QA</span>
-                            </button>
-                          </td> */}
-                          </tr>
-                        ))
-                      ) : (
-                        // No feeds: show one row with project data
-                        <tr key={project._id} className="bg-gray-50">
-                          <td className="px-3 py-2">{idx + 1}</td> {/* No */}
-                          <td className="px-3 py-2">
-                            {project.ProjectCode || project.ProjectName
-                              ? `[${project.ProjectCode ?? "-"}] ${project.ProjectName ?? "-"
-                              }`
-                              : "-"}
-                          </td>{" "}
-                          {/* Project Name */}
-                          <td className="px-3 py-2">-</td> {/* Feed Name */}
-                          {/* <td className="px-3 py-2">-</td>  */}
-                          <td className="px-3 py-2">
-                            {project.Frequency ?? "-"}
-                          </td>{" "}
-                          {/* Frequency */}
-                          <td className="px-3 py-2">-</td> {/* Platform */}
-                          <td className="px-3 py-2">-</td> {/* Status */}
-                          <td className="px-3 py-2">-</td> {/* BAU */}
-                          <td className="px-3 py-2">-</td> {/* POC */}
-                          <td className="px-3 py-2">
-                            {project.PMId?.name ?? "-"}
-                          </td>{" "}
-                          {/* PM */}
-                          <td className="px-3 py-2">-</td> {/* PC */}
-                          <td className="px-3 py-2">-</td> {/* TL */}
-                          <td className="px-3 py-2">-</td> {/* Developer */}
-                          <td className="px-3 py-2">-</td> {/* QA */}
-                          <td className="px-3 py-2">-</td> {/* BAU Person */}
-                          {/* <td className="px-3 py-2">{project.SOWFile?.length ? `${project.SOWFile.length} Files` : "-"}</td>  */}
-                          <td className="px-3 py-2">
-                            {project.SOWFile && project.SOWFile.length > 0 ? (
-                              <div className="inline-block relative">
-                                <button
-                                  onClick={() =>
-                                    setOpenDropdown((prev) =>
-                                      prev?.rowIdx === idx &&
-                                        prev?.col === "SOWFile"
-                                        ? null
-                                        : { rowIdx: idx, col: "SOWFile" }
-                                    )
-                                  }
-                                  className="text-blue-600 underline px-2 py-1 rounded hover:bg-gray-100"
-                                >
-                                  {project.SOWFile.length === 1
-                                    ? "View File"
-                                    : `${project.SOWFile.length} Versions`}
-                                </button>
-                                {openDropdown?.rowIdx === idx &&
-                                  openDropdown?.col === "SOWFile" && (
-                                    <div className="absolute left-0 mt-1 min-w-[180px] max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
-                                      <ul className="p-0 m-0 list-none">
-                                        {project.SOWFile.map(
-                                          (file, fileIdx) => (
-                                            <li
-                                              key={fileIdx}
-                                              className="mb-1 last:mb-0"
-                                            >
-                                              <a
-                                                href={file}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                download
-                                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate"
-                                                title={file}
-                                              >
-                                                Version {fileIdx + 1}
-                                              </a>
-                                            </li>
-                                          )
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          {/* <td className="px-3 py-2">{project.SampleFiles?.length ? `${project.SampleFiles.length} Files` : "-"}</td>  */}
-                          <td className="px-3 py-2 relative">
-                            {project.SampleFiles &&
-                              project.SampleFiles.length > 0 ? (
-                              <div className="inline-block relative">
-                                <button
-                                  onClick={() =>
-                                    setOpenDropdown((prev) =>
-                                      prev?.rowIdx === idx &&
-                                        prev?.col === "SampleFiles"
-                                        ? null
-                                        : { rowIdx: idx, col: "SampleFiles" }
-                                    )
-                                  }
-                                  className="text-blue-600 underline px-2 py-1 rounded hover:bg-gray-100"
-                                >
-                                  View Files
-                                </button>
-                                {openDropdown?.rowIdx === idx &&
-                                  openDropdown?.col === "SampleFiles" && (
-                                    <div className="absolute left-0 mt-1 min-w-[180px] max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50">
-                                      <ul className="p-0 m-0 list-none">
-                                        {project.SampleFiles.map(
-                                          (file, fileIdx) => (
-                                            <li
-                                              key={fileIdx}
-                                              className="mb-1 last:mb-0"
-                                            >
-                                              <a
-                                                href={file}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                download
-                                                className="block text-blue-600 hover:text-blue-800 hover:underline truncate"
-                                                title={file}
-                                              >
-                                                View File
-                                              </a>
-                                            </li>
-                                          )
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">-</td>{" "}
-                          {/* Framework type */}
-                          <td className="px-3 py-2">
-                            {project.QAReportCount ?? "-"}
-                          </td>{" "}
-                          {/* QA Report Count */}
-                          <td className="px-3 py-2">
-                            {project.feed?.ManageBy ?? "-"}
-                          </td>{" "}
-                          {/* Manage By */}
-                          <td className="px-3 py-2">
-                            {project.QARules ?? "-"}
-                          </td>{" "}
-                          {/* QA Rules */}
-                          <td className="px-3 py-2">
-                            {project.DBStatus ?? "-"}
-                          </td>{" "}
-                          {/* DB Status */}
-                          <td className="px-3 py-2">
-                            {project.DBType ?? "-"}
-                          </td>{" "}
-                          {/* DB Type */}
-                          <td className="px-3 py-2">
-                            {project.CreatedDate
-                              ? new Date(
-                                project.CreatedDate
-                              ).toLocaleDateString()
-                              : "-"}
-                          </td>{" "}
-                          {/* Created Date */}
-                          <td className="px-3 py-2">
-                            {project.CreatedBy?.name ?? "-"}
-                          </td>{" "}
-                          {/* Project Created By */}
-                          {/* <td className="px-3 py-2">
-                            <button>
-                              <span className="text-blue-600 cursor-pointer hover:underline">Assign Feed to QA</span>
-                            </button>
-                          </td> */}
-                        </tr>
-                      )
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="text-center p-8 text-gray-500"
-                      >
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <img
-                            src={Img}
-                            alt="No data"
-                            className="w-32 h-32 object-contain opacity-80"
-                          />
-                          <p className="font-semibold text-lg text-gray-600">
-                            No Data Found
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Try adding new feeds to see them here.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex justify-between">
-              <div className="flex items-center space-x-2 mt-4">
-                <label htmlFor="entries" className="text-gray-700">
-                  Show
-                </label>
-                <select
-                  id="entries"
-                  value={entries}
-                  onChange={(e) => {
-                    setEntries(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="border rounded px-2 py-1"
-                >
-                  {[10, 25, 50, 100].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-gray-700">entries</span>
-              </div>
-              {/* 🔹 Showing info */}
-              {totalDocs !== undefined && (
-                <div className="text-sm text-gray-600">
-                  Showing{" "}
-                  <span className="font-medium text-gray-800">
-                    {(currentPage - 1) * entries + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium text-gray-800">
-                    {Math.min(currentPage * entries, totalDocs)}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium text-gray-800">{totalDocs}</span>{" "}
-                  entries
-                </div>
-              )}
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          </div>
-        )}
-
-        {user?.department !== "Sales" &&
-          user?.roleName !== "Manager" &&
-          user?.roleName !== "Team Lead" &&
-          user?.roleName !== "Project Coordinator" &&
-          user?.roleName !== "Developer" && (
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                {/* <thead className="bg-gray-100 text-gray-700 sticky top-0">
-              <tr>
-                {columns.map((col) => (
-                  <th
-                    key={col}
-                    className="px-3 py-2 text-left font-semibold whitespace-nowrap"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead> */}
-                <thead className="bg-gray-100 text-gray-700 sticky top-0">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      No
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Project Code
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Project Name
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Frequency
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Platform
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Status
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      BAU
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      POC
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      PM
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      TL
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Developer
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      QA
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      BAU Person
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Framework type
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      QA Report Count
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Manage By
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      QA Rules
-                    </th>
-                    {/* <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">DB Status</th>
-            <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">DB Type</th> */}
-                    <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                      Created Date
-                    </th>
-                    {user.roleName === "Developer" && (
-                      <th className="px-3 py-2 text-left font-semibold whitespace-nowrap">
-                        Actions
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
                         className="text-center p-4 text-gray-500"
                       >
                         <div className="flex justify-center items-center">
@@ -2264,198 +1169,160 @@ export default function Projects() {
                         </div>
                       </td>
                     </tr>
-                  ) : data.length > 0 ? (
-                    data.map((row, idx) => (
+                  ) : filteredData.length > 0 ? (
+                    filteredData.map((project, idx) => (
                       <tr
-                        key={row._id || idx}
+                        key={project._id}
                         className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      // className="cursor-pointer hover:bg-gray-50 hover:text-blue-600"
-                      // onClick={() => navigate(`/projects/${row._id}`)}
                       >
                         <td className="px-3 py-2">
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
-                        <td className="px-3 py-2">{row.ProjectCode ?? "-"}</td>
                         <td
-                          className="px-3 py-2 cursor-pointer text-blue-600 hover:text-blue-800"
-                          onClick={() => {
-                            if (user.roleName !== "Developer") {
-                              navigate(`/projects/feed`);
-                            }
-                          }}
+                          className="px-3 py-2 whitespace-nowrap text-blue-700 cursor-pointer hover:underline"
+                          onClick={() =>
+                            navigate(`/projects/${project._id}/details`)
+                          }
                         >
-                          {row.ProjectName ?? "-"}
+                          {project.ProjectCode ?? "-"}{" "}
+                          {project.ProjectName ?? "-"}
                         </td>
-                        <td className="px-3 py-2">{row.Frequency ?? "-"}</td>
-                        <td className="px-3 py-2">{row.Platform ?? "-"}</td>
-                        {/* <td className="px-3 py-2">{row.Status ?? "-"}</td> */}
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.Feeds?.length ?? 0}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.IndustryType ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.PMId?.name ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.BDEId?.name ?? "-"}
+                        </td>
+                        {/* <td className="px-3 py-2">{project.DeliveryType ?? "-"}</td> */}
                         <td className="px-3 py-2">
-                          {row.Status ? (
+                          {project.DeliveryType ? (
+                            <div className="flex justify-left">
+                              <span
+                                className={`px-3 py-1 text-xs font-semibold rounded-sm ${project.DeliveryType === "BAU"
+                                  ? "bg-green-700 text-white"
+                                  : project.DeliveryType === "POC"
+                                    ? "bg-orange-400 text-white"
+                                    : project.DeliveryType === "R&D"
+                                      ? "bg-pink-300 text-white"
+                                      : project.DeliveryType === "Adhoc"
+                                        ? "bg-yellow-400 text-white"
+                                        : project.DeliveryType === "Once-off"
+                                          ? "bg-pink-100 text-pink-800"
+                                          : "bg-gray-100 text-gray-600"
+                                  }`}
+                              >
+                                {project.DeliveryType}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+
+                        {/* <td className="px-3 py-2">{project.Frequency ?? "-"}</td> */}
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.Status ? (
                             <span
-                              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap
-                               ${row.Status.toLowerCase().includes("failed")
-                                  ? "bg-red-100 text-red-800"
-                                  : row.Status.toLowerCase().includes("passed")
-                                    ? "bg-green-100 text-green-800"
-                                    : row.Status.toLowerCase().includes("qa")
-                                      ? "bg-purple-100 text-purple-800"
-                                      : row.Status.toLowerCase().includes(
-                                        "development"
-                                      )
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-blue-100 text-blue-800"
+                              className={`px-3 py-1 rounded-full text-sm font-semibold ${project.Status === "New"
+                                ? "bg-blue-100 text-blue-800"
+                                : project.Status === "Under Development"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : project.Status === "On-Hold"
+                                    ? "bg-gray-200 text-gray-800"
+                                    : project.Status === "Production"
+                                      ? "bg-green-100 text-green-800"
+                                      : project.Status === "BAU-Started"
+                                        ? "bg-indigo-100 text-indigo-800"
+                                        : project.Status === "Closed"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
                                 }`}
                             >
-                              {row.Status.split("_")
-                                .map(
-                                  (word) =>
-                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                )
-                                .join(" ")}
+                              {project.Status}
                             </span>
                           ) : (
                             "-"
                           )}
                         </td>
 
-                        <td className="px-3 py-2">{row.BAU ?? "-"}</td>
-                        <td className="px-3 py-2">{row.POC ?? "-"}</td>
-                        <td className="px-3 py-2">{row.PMId?.name ?? "-"}</td>
-                        <td className="px-3 py-2">{row.TLId?.name ?? "-"}</td>
                         <td className="px-3 py-2">
-                          {(row.DeveloperIds.map((dev) => dev.name) || []).join(
-                            ", "
-                          )}
+                          <button
+                            onClick={() =>
+                              navigate(`/projects/${project._id}/attachments`)
+                            }
+                            className="text-blue-600 hover:underline cursor-pointer"
+                          >
+                            View Files
+                          </button>
                         </td>
-                        <td className="px-3 py-2">{row.QAId?.name ?? "-"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.ProjectType ?? "-"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {project.CreatedBy?.name ?? "-"}
+                        </td>
                         <td className="px-3 py-2">
-                          {row.BAUPersonId?.name ?? "-"}
+                          {project.CreatedDate
+                            ? dayjs(project.CreatedDate).format("YYYY/MM/DD")
+                            : "-"}
                         </td>
-                        <td className="px-3 py-2">
-                          {row.FrameworkType ?? "-"}
-                        </td>
-                        <td className="px-3 py-2">{row.reworkCount ?? "-"}</td>
-                        <td className="px-3 py-2">{row.ManageBy ?? "-"}</td>
-                        <td className="px-3 py-2">{row.QARules ?? "-"}</td>
-                        <td className="px-3 py-2">
-                          {new Date(row.CreatedDate).toLocaleDateString() ??
-                            "-"}
-                        </td>
-                        {user.roleName === "Developer" && (
-                          <td className="px-3 py-2 space-y-1">
-                            {(() => {
-                              const assigned =
-                                row.qaStatus === "assigned_to_qa" ||
-                                row.qaStatus === "qa_open" ||
-                                row.qaStatus === "qa_passed";
 
-                              return (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedProjectId(row._id);
-                                      setAssignModalOpen(true);
-                                    }}
-                                    disabled={assigned}
-                                    className={`w-full px-2 py-1 rounded text-sm text-white ${assigned
-                                      ? "bg-gray-400 cursor-not-allowed"
-                                      : "bg-blue-500 hover:bg-blue-600"
-                                      }`}
-                                  >
-                                    {assigned ? "Assigned" : "Assign to QA"}
-                                  </button>
-                                  {/* {row.qaStatus === "qa_failed" && !assigned && (
-                              )} */}
+                        {user.roleName === "Manager" && (
 
-                                  <AssignQAModal
-                                    isAssigned={assigned}
-                                    isOpen={assignModalOpen}
-                                    projectId={selectedProjectId}
-                                    onClose={() => setAssignModalOpen(false)}
-                                    onAssign={async (
-                                      projectId,
-                                      { fileName, fileLink }
-                                    ) => {
-                                      const formData = new FormData();
-                                      if (fileName)
-                                        formData.append("fileName", fileName);
-                                      if (fileLink)
-                                        formData.append("fileLink", fileLink);
+                          <td className="px-4 py-2">
+                            <div className="flex items-center space-x-2">
+                              {canAssignProject && !isAssigned(project) && (
+                                <button
+                                  className="px-3 py-1 rounded text-sm text-white bg-blue-600 hover:bg-blue-700"
+                                  onClick={() => {
+                                    setSelectedProject(project);
 
-                                      const res = await fetch(
-                                        `http://${import.meta.env
-                                          .VITE_BACKEND_NETWORK_ID
-                                        }/api/projectss/${projectId}/assign-to-qa`,
-                                        {
-                                          method: "POST",
-                                          body: formData,
-                                          credentials: "include",
-                                        }
-                                      );
-                                      const result = await res.json();
-                                      if (res.ok) {
-                                        alert("File assigned to QA");
-                                        setAssignModalOpen(false);
-                                        fetchProjects();
-                                      } else {
-                                        alert(
-                                          result.message ||
-                                          "Failed to assign file"
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </>
-                              );
-                            })()}
+                                    if (user.roleName === "Manager") {
+                                      setSelectedTL(project.TLId?._id || "");
+                                      setSelectedPC(project.PCId?._id || "");
+                                      setSelectedQA(project.QAId?._id || "");
+                                      setSelectedBauPerson(project.BAUPersonId?._id || "");
+                                    }
+
+
+                                    setIsAssignOpen(true);
+                                  }}
+                                >
+                                  Assign
+                                </button>
+                              )}
+
+                              {/* ✅ Show "Edit" only if some members are already assigned */}
+                              {(project.TLId || project.PCId || project.QAId || project.BAUPersonId) && (
+                                <button
+                                  className="px-3 py-1 rounded text-sm flex items-center justify-center text-blue-600 hover:text-blue-800 transition"
+                                  onClick={() => {
+                                    setSelectedProject(project);
+
+                                    // Prefill current assignments before opening modal
+                                    setSelectedTL(project.TLId?._id || project.TLId || "");
+                                    setSelectedPC(project.PCId?._id || project.PCId || "");
+                                    setSelectedQA(project.QAId?._id || project.QAId || "");
+                                    setSelectedBauPerson(
+                                      project.BAUPersonId?._id || project.BAUPersonId || ""
+                                    );
+
+                                    setIsAssignOpen(true);
+                                  }}
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                              )}
+                            </div>
                           </td>
-                          // <td className="px-3 py-2 space-y-1">
-                          //   {(() => {
-                          //     const assigned = data.find(p => p._id === row._id)?.developerStatus === "assigned_to_qa" || data.find(p => p._id === row._id)?.qaStatus === "assigned_to_qa";
-
-                          //     return (
-                          //       <>
-                          //         <button
-                          //           onClick={() => {
-                          //             setSelectedProjectId(row._id);
-                          //             setAssignModalOpen(true);
-                          //           }}
-                          //           disabled={assigned} // disable if already assigned
-                          //           className={`w-full px-2 py-1 rounded text-sm text-white ${assigned ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                          //             }`}
-                          //         >
-                          //           {assigned ? "Assigned" : "Assign to QA"}
-                          //         </button>
-
-                          //         <AssignQAModal
-                          //           isAssigned={assigned}
-                          //           isOpen={assignModalOpen}
-                          //           projectId={selectedProjectId}
-                          //           onClose={() => setAssignModalOpen(false)}
-                          //           onAssign={async (projectId, { fileName, fileLink }) => {
-                          //             const formData = new FormData();
-                          //             if (fileName) formData.append("fileName", fileName);
-                          //             if (fileLink) formData.append("fileLink", fileLink);
-
-                          //             const res = await fetch(
-                          //               `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/projectss/${projectId}/assign-to-qa`,
-                          //               { method: "POST", body: formData, credentials: "include" }
-                          //             );
-                          //             const result = await res.json();
-                          //             if (res.ok) {
-                          //               alert("File assigned to QA");
-                          //               setAssignModalOpen(false);
-                          //               // fetchQAData();
-                          //             } else {
-                          //               alert(result.message || "Failed to assign file");
-                          //             }
-                          //           }}
-                          //         />
-                          //       </>
-                          //     );
-                          //   })()}
-                          // </td>
                         )}
+
                       </tr>
                     ))
                   ) : (
@@ -2482,16 +1349,50 @@ export default function Projects() {
                   )}
                 </tbody>
               </table>
+
+              <UpdateProjectModal
+                isOpen={isUpdateModalOpen}
+                onClose={() => setIsUpdateModalOpen(false)}
+                project={selectedProject}
+                onUpdate={handleUpdateProject}
+              />
             </div>
-          )}
 
-        {/* Pagination */}
-        {/* <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        /> */}
+            <div className="flex justify-between m-4">
+              <div className="flex items-center space-x-2 mt-4">
+                <label htmlFor="entries" className="text-gray-700">
+                  Show
+                </label>
+                <select
+                  id="entries"
+                  value={entries}
+                  onChange={(e) => {
+                    setEntries(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded px-2 py-1"
+                >
+                  {[10, 25, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-gray-700">1 to {currentPage * entries} of {totalDocs} Entries</span>
+                {/* <span className="text-gray-700">Entries</span> */}
+              </div>
 
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                // totalDocs={totalDocs}
+                entries={entries}
+                // totalDocs={totalDocs}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </div>
+        )}
         <Modal
           isOpen={isAssignOpen}
           onRequestClose={() => setIsAssignOpen(false)}
@@ -2607,124 +1508,122 @@ export default function Projects() {
 
           {/* Assignment Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* TL / PC / QA — only Manager */}
-            {user?.roleName === "Manager" && (
-              <>
-                {/* TL Select */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Team Lead <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={
-                      tlOptions
-                        .map((tl) => ({ value: tl._id, label: tl.name }))
-                        .find((opt) => opt.value === selectedTL) || null
-                    }
-                    onChange={(selected) => {
-                      setSelectedTL(selected?.value || ""); // keep your existing logic
-                      setErrors((prev) => ({ ...prev, TLId: null })); // clear error dynamically
-                    }}
-                    options={tlOptions.map((tl) => ({
-                      value: tl._id,
-                      label: tl.name,
-                    }))}
-                    placeholder="Select Team Lead"
-                    isSearchable
-                    className="text-sm"
-                  />
-                  {errors.TLId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.TLId}</p>
-                  )}
-                </div>
 
-                {/* PC Select */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Project Coordinator<span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={
-                      pcOptions
-                        .map((pc) => ({ value: pc._id, label: pc.name }))
-                        .find((opt) => opt.value === selectedPC) || null
-                    }
-                    onChange={(selected) => {
-                      setSelectedPC(selected?.value || "");
-                      setErrors((prev) => ({ ...prev, PCId: null }));
-                    }}
-                    options={pcOptions.map((pc) => ({
-                      value: pc._id,
-                      label: pc.name,
-                    }))}
-                    placeholder="Select Project Coordinator"
-                    isSearchable
-                    className="text-sm"
-                  />
-                  {errors.PCId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.PCId}</p>
-                  )}
-                </div>
+            {/* TL Select */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Team Lead <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={
+                  tlOptions
+                    .map((tl) => ({ value: tl._id, label: tl.name }))
+                    .find((opt) => opt.value === selectedTL) || null
+                }
+                onChange={(selected) => {
+                  setSelectedTL(selected?.value || ""); // keep your existing logic
+                  setErrors((prev) => ({ ...prev, TLId: null })); // clear error dynamically
+                }}
+                options={tlOptions.map((tl) => ({
+                  value: tl._id,
+                  label: tl.name,
+                }))}
+                placeholder="Select Team Lead"
+                isSearchable
+                className="text-sm"
+              />
+              {errors.TLId && (
+                <p className="text-red-500 text-xs mt-1">{errors.TLId}</p>
+              )}
+            </div>
 
-                {/* QA Select */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    QA Lead<span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={
-                      qaOptions
-                        .map((qa) => ({ value: qa._id, label: qa.name }))
-                        .find((opt) => opt.value === selectedQA) || null
-                    }
-                    onChange={(selected) => {
-                      setSelectedQA(selected?.value || "");
-                      setErrors((prev) => ({ ...prev, QAId: null }));
-                    }}
-                    options={qaOptions.map((qa) => ({
-                      value: qa._id,
-                      label: qa.name,
-                    }))}
-                    placeholder="Select QA Lead"
-                    isSearchable
-                    className="text-sm"
-                  />
-                  {errors.QAId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.QAId}</p>
-                  )}
-                </div>
+            {/* PC Select */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Project Coordinator<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={
+                  pcOptions
+                    .map((pc) => ({ value: pc._id, label: pc.name }))
+                    .find((opt) => opt.value === selectedPC) || null
+                }
+                onChange={(selected) => {
+                  setSelectedPC(selected?.value || "");
+                  setErrors((prev) => ({ ...prev, PCId: null }));
+                }}
+                options={pcOptions.map((pc) => ({
+                  value: pc._id,
+                  label: pc.name,
+                }))}
+                placeholder="Select Project Coordinator"
+                isSearchable
+                className="text-sm"
+              />
+              {errors.PCId && (
+                <p className="text-red-500 text-xs mt-1">{errors.PCId}</p>
+              )}
+            </div>
 
-                {/* QA Select */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    BAU Person<span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={
-                      bauPersonOptions
-                        .map((bau) => ({ value: bau._id, label: bau.name }))
-                        .find((opt) => opt.value === selectedBauPerson) || null
-                    }
-                    onChange={(selected) => {
-                      setSelectedBauPerson(selected?.value || "");
-                      setErrors((prev) => ({ ...prev, BAUPersonId: null }));
-                    }}
-                    options={bauPersonOptions.map((bau) => ({
-                      value: bau._id,
-                      label: bau.name,
-                    }))}
-                    placeholder="Select BAU Person"
-                    isSearchable
-                    className="text-sm"
-                  />
-                  {errors.BAUPersonId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.BAUPersonId}
-                    </p>
-                  )}
-                </div>
+            {/* QA Select */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                QA Lead<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={
+                  qaOptions
+                    .map((qa) => ({ value: qa._id, label: qa.name }))
+                    .find((opt) => opt.value === selectedQA) || null
+                }
+                onChange={(selected) => {
+                  setSelectedQA(selected?.value || "");
+                  setErrors((prev) => ({ ...prev, QAId: null }));
+                }}
+                options={qaOptions.map((qa) => ({
+                  value: qa._id,
+                  label: qa.name,
+                }))}
+                placeholder="Select QA Lead"
+                isSearchable
+                className="text-sm"
+              />
+              {errors.QAId && (
+                <p className="text-red-500 text-xs mt-1">{errors.QAId}</p>
+              )}
+            </div>
 
-                {/* <div>
+            {/* QA Select */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                BAU Person<span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={
+                  bauPersonOptions
+                    .map((bau) => ({ value: bau._id, label: bau.name }))
+                    .find((opt) => opt.value === selectedBauPerson) || null
+                }
+                onChange={(selected) => {
+                  setSelectedBauPerson(selected?.value || "");
+                  setErrors((prev) => ({ ...prev, BAUPersonId: null }));
+                }}
+                options={bauPersonOptions.map((bau) => ({
+                  value: bau._id,
+                  label: bau.name,
+                }))}
+                placeholder="Select BAU Person"
+                isSearchable
+                className="text-sm"
+              />
+              {errors.BAUPersonId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.BAUPersonId}
+                </p>
+              )}
+            </div>
+
+            {/* <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     BAU Person
                   </label>
@@ -2739,43 +1638,7 @@ export default function Projects() {
                     ))}
                   </select>
                 </div> */}
-              </>
-            )}
 
-            {/* Developers — only TL or PC */}
-            {(user.roleName === "Team Lead" ||
-              user.roleName === "Project Coordinator") && (
-                <>
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Feed
-                    </label>
-                    <Select
-                      options={
-                        selectedProject?.Feeds?.map((f) => ({
-                          value: f._id,
-                          label: f.FeedName || f._id,
-                        })) || []
-                      }
-                      value={selectedFeed}
-                      onChange={setSelectedFeed}
-                      placeholder="Select Feed"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Developers
-                    </label>
-                    <Select
-                      options={devOptionsRS}
-                      value={selectedDevelopers} // must be [{value, label}, ...]
-                      onChange={setSelectedDevelopers}
-                      isMulti
-                      placeholder="Select Developers"
-                    />
-                  </div>
-                </>
-              )}
           </div>
 
           {/* 🧭 Action Buttons */}

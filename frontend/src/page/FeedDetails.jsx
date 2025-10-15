@@ -50,6 +50,7 @@ const FeedDetails = ({ allUsers }) => {
           frameworkType: data.FrameworkType || "-",
           manageBy: data.ManageBy || "-",
           qaRules: project.QARules ?? "-",
+          qaProcess: data.QAProcess || "-",
           rulesStatus: project.RulesStatus || "-",
           rulesApply: project.RulesApply || "-",
           dbStatus: project.DBStatus || "-",
@@ -58,6 +59,9 @@ const FeedDetails = ({ allUsers }) => {
           createdDate: project.CreatedDate || "-",
           developerIds: data.DeveloperIds || [],
           assignedTo: data.assignedTo || [],
+          inputListing: data.InputListing || "-",
+          outputListing: data.OutputListing || "-",
+          threads: data.Threads || "-",
         });
       } catch (err) {
         console.error("Error fetching feed:", err);
@@ -277,8 +281,12 @@ const formatSchedule = (feed) => {
                   { label: "DB Status", value: feed?.dbStatus },
                   { label: "Framework Type", value: feed?.frameworkType },
                   { label: "Manage By", value: feed?.manageBy },
+                  { label: "QA Process", value: feed?.qaProcess },
                   { label: "QA Rules", value: feed?.qaRules },
                   { label: "Rules Status", value: feed?.rulesStatus },
+                  {label: "Number of Threads", value: feed?.threads},
+                  {label: "Approx Input Listings", value: feed?.inputListing},
+                  {label: "Approx Output Listings", value: feed?.outputListing},
                   { label: "Rules Apply", value: feed?.rulesApply },
                   { label: "Delivery Type", value: feed?.deliveryType },
                   { label: "Project Status", value: feed?.projectStatus },

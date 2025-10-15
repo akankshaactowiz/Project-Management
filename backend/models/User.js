@@ -10,6 +10,10 @@ const UserSchema = new mongoose.Schema({
   departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department", },
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, // new field
   leadId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  profileImage: { type: String, default: null },
+  status: { type: String, default: "Active" },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 

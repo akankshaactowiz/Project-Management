@@ -8,7 +8,7 @@ import { generateFeedId } from "../utils/generateFeedId.js";
 import mongoose from "mongoose";
 import getDateRangeFilter from "../utils/ScheduleFilter.js";
 import Activity from "../models/ProjectHistory.js";
-import {logHistory} from "../middlewares/logHistory.js";
+import { logHistory } from "../middlewares/logHistory.js";
 
 
 
@@ -137,7 +137,7 @@ export const createProject = async (req, res) => {
       SOWFile,
       SampleFiles,
       PMId,
-      BDEId:BDEId || createdBy,
+      BDEId: BDEId || createdBy,
       DepartmentId: Department,
       Frequency,
       ProjectType,
@@ -195,12 +195,13 @@ export const createProject = async (req, res) => {
       feedId: initialFeed._id,
     });
 
-await Project.updateOne(
-  { _id: project._id },
-  { $push: { Feeds: initialFeed._id},
-   $set: { _updatedBy: createdBy }
- }
-);
+    await Project.updateOne(
+      { _id: project._id },
+      {
+        $push: { Feeds: initialFeed._id },
+        $set: { _updatedBy: createdBy }
+      }
+    );
     res.status(201).json({
       success: true,
       data: { project, feed: initialFeed },
@@ -285,7 +286,7 @@ await Project.updateOne(
 //     if (!project) {
 //       return res.status(404).json({ success: false, message: "Project not found" });
 //     }
-    
+
 
 //     const oldProject = project.toObject(); // save for diffing
 
@@ -486,8 +487,6 @@ export const updateProject = async (req, res) => {
 };
 
 export const getProjects = async (req, res) => {
-
-
   const objectId = (id) => new mongoose.Types.ObjectId(id);
   try {
     const {
@@ -525,36 +524,6 @@ export const getProjects = async (req, res) => {
       end.setHours(23, 59, 59, 999);
       matchStage.CreatedDate = { $gte: start, $lte: end };
     }
-
-    //     // 🔹 Status filter
-    //     if (status && status !== "All") {
-    //       matchStage.Status = { $regex: `^${status}$`, $options: "i" };
-    //     }
-
-    //     // 🔹 Created date filter
-    //     if (CreatedDate) {
-    //   const start = new Date(CreatedDate);
-    //   start.setHours(0, 0, 0, 0);
-    //   const end = new Date(CreatedDate);
-    //   end.setHours(23, 59, 59, 999);
-    //   matchStage.CreatedDate = { $gte: start, $lte: end };
-    // }
-
-
-    // 🔹 QA filter
-    // if (qaid) matchStage.QAId = qaid;
-
-    // 🔹 Sales Tab filters
-    // const salesTabs = ["All", "BAU", "POC", "R&D", "Adhoc", "Once-off"];
-    // if (tab !== "All" && salesTabs.includes(tab)) {
-    //   matchStage.DeliveryType = tab;
-    // }
-
-    // const salesStatusTab = ["All", "New", "Under Development", "Closed", "On-Hold", "Production", "BAU-Started"];
-    // if (department === "Sales" && statusTab && statusTab !== "All" && salesStatusTab.includes(statusTab)) {
-    //   matchStage.Status = statusTab;
-    // }
-
     // 🔹 Role-based filters
     if (!(role === "Superadmin")) {
       if (department === "Sales") {
@@ -565,12 +534,51 @@ export const getProjects = async (req, res) => {
         if (role === "Team Lead") matchStage.TLId = objectId(userId);
         if (role === "Project Coordinator") matchStage.PCId = objectId(userId);
         if (role === "QA") matchStage.QAId = objectId(userId);
+        if (role === "Developer") {
+         
+        }
       }
+
     }
 
     // 🔹 Build aggregation pipeline
     const pipeline = [
       { $match: matchStage },
+
+       // 🔹 Lookup Feeds
+  {
+    $lookup: {
+      from: "Feed-data",
+      let: { feedIds: "$Feeds" },
+      pipeline: [
+        { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
+        {
+          $lookup: {
+            from: "User-data",
+            localField: "DeveloperIds",
+            foreignField: "_id",
+            as: "DeveloperIds",
+          },
+        },
+      ],
+      as: "Feeds",
+    },
+  },
+
+  // 🔹 Filter projects for Developer role after Feeds populated
+  ...(role === "Developer"
+    ? [
+        {
+          $match: {
+            $or: [
+              { DeveloperIds: objectId(userId) }, // project level
+              { "Feeds.DeveloperIds._id": objectId(userId) }, // feed level
+            ],
+          },
+        },
+      ]
+    : []),
+
 
       // 🔹 Lookup for PMId
       {
@@ -707,25 +715,25 @@ export const getProjects = async (req, res) => {
       //   },
       // },
 
-      {
-        $lookup: {
-          from: "Feed-data",
-          let: { feedIds: "$Feeds" },
-          pipeline: [
-            { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
-            // Lookup Developers inside each feed
-            {
-              $lookup: {
-                from: "User-data",
-                localField: "DeveloperIds",
-                foreignField: "_id",
-                as: "DeveloperIds"
-              }
-            }
-          ],
-          as: "Feeds"
-        }
-      },
+      // {
+      //   $lookup: {
+      //     from: "Feed-data",
+      //     let: { feedIds: "$Feeds" },
+      //     pipeline: [
+      //       { $match: { $expr: { $in: ["$_id", "$$feedIds"] } } },
+      //       // Lookup Developers inside each feed
+      //       {
+      //         $lookup: {
+      //           from: "User-data",
+      //           localField: "DeveloperIds",
+      //           foreignField: "_id",
+      //           as: "DeveloperIds"
+      //         }
+      //       }
+      //     ],
+      //     as: "Feeds"
+      //   }
+      // },
     ];
 
     // 🔹 Execute aggregation
@@ -945,15 +953,7 @@ export const getProjectCounts = async (req, res) => {
   try {
     const userId = req.user._id; // ObjectId
     const role = req.user.roleId?.name; // e.g. "Sales Head"
-    const department = req.user.departmentId?.department; // e.g. "Sales"
-
-
-    // console.log("req.user:", req.user);
-
-    // Convert userId to ObjectId
-    // const uid = mongoose.Types.ObjectId.isValid(userId)
-    //   ? new mongoose.Types.ObjectId(userId)
-    //   : userId; // fallback to string if not valid ObjectId
+    const department = req.user.departmentId?.department;
 
     let filter = {};
 
@@ -974,6 +974,12 @@ export const getProjectCounts = async (req, res) => {
         filter = { PMId: uid };
       } else if (role === "Team Lead") {
         filter = { TLId: uid };
+      }
+      else if (role === "Project Coordinator") {
+        filter = { PCId: uid };
+      }
+      else if (role === "Developer") {
+       filter = { "Feeds.DeveloperIds": uid };
       } else {
         // everyone else: PC, Developer, QA, BAU
         filter = {
@@ -981,7 +987,7 @@ export const getProjectCounts = async (req, res) => {
             { PMId: uid },
             { PCId: uid },
             { TLId: uid },
-            { DeveloperIds: uid },
+            // { DeveloperIds: uid },
             { QAId: uid },
             { BAUId: uid },
             { BDEId: uid },
@@ -992,7 +998,11 @@ export const getProjectCounts = async (req, res) => {
 
     // 🔹 DEBUG: Log filter
     console.log("Filter applied:", filter);
+const debug = await Project.find({
+  Feeds: { $elemMatch: { DeveloperIds: uid } },
+}).select("_id ProjectName Feeds.DeveloperIds");
 
+console.log("Matched developer projects:", debug.length);
 
     // Aggregation to calculate counts
     const counts = await Project.aggregate([
@@ -1065,24 +1075,36 @@ export const getProjectById = async (req, res) => {
       // qaStatus,
       qaid,
     } = req.query;
-
+    
     const filter = {};
+    const userId = req.user._id.toString();
+    const role = req.user.roleId?.name;
     // if (qaStatus) filter.QAStatus = qaStatus;
     // Status filter
     if (status && status !== "All") filter.Status = { $regex: `^${status}$`, $options: "i" };
 
     // Search filter
-    if (search) {
-      filter.Feeds = {
-        $elemMatch: {
+    // if (search) {
+    //   filter.Feeds = {
+    //     $elemMatch: {
+    //       $or: [
+    //         { FeedName: { $regex: search, $options: "i" } },
+    //         { FeedId: { $regex: search, $options: "i" } },
+    //         { Frequency: { $regex: search, $options: "i" } },
+    //       ],
+    //     },
+    //   };
+    // }
+    // Search filter for Feeds
+    const feedSearchMatch = search
+      ? {
           $or: [
             { FeedName: { $regex: search, $options: "i" } },
             { FeedId: { $regex: search, $options: "i" } },
             { Frequency: { $regex: search, $options: "i" } },
           ],
-        },
-      };
-    }
+        }
+      : {};
 
     const project = await Project.findById(id)
       .populate("PMId TLId PCId QAId BAUPersonId CreatedBy BDEId updateHistory.updatedBy", "name roleId")
@@ -1101,24 +1123,23 @@ export const getProjectById = async (req, res) => {
       .populate("SampleFiles.uploadedBy", "name")
       .populate({
         path: "Feeds",
-        match: search
-          ? {
-            $or: [
-              { FeedName: { $regex: search, $options: "i" } },
-              { FeedId: { $regex: search, $options: "i" } },
-              { Frequency: { $regex: search, $options: "i" } },
-            ],
-          }
-          : {},
-
+        // match: search
+        //   ? {
+        //     $or: [
+        //       { FeedName: { $regex: search, $options: "i" } },
+        //       { FeedId: { $regex: search, $options: "i" } },
+        //       { Frequency: { $regex: search, $options: "i" } },
+        //     ],
+        //   }
+        //   : {},
+        match: role === "Developer"
+          ? { DeveloperIds: userId, ...feedSearchMatch } // Only feeds assigned to developer
+          : feedSearchMatch, // All feeds for other roles
         populate: [
-          // { path: "TLId", select: "name email roleId" },
-          { path: "DeveloperIds", select: "name email roleId" },
-          // { path: "QAId", select: "name email roleId" },
-          // { path: "BAUPersonId", select: "name email roleId" },
-          { path: "createdBy", select: "name email" },
-
+          { path: "DeveloperIds", select: "name" },
+          { path: "createdBy", select: "name" },
         ],
+
       })
 
 
@@ -1202,7 +1223,7 @@ export const getProjectById = async (req, res) => {
 //     // }
 
 //     // ✅ Save who updated
-    
+
 
 //     // ✅ Push all changes into project history
 //     // if (updateHistory.length > 0) {
@@ -1266,11 +1287,11 @@ export const getProjectById = async (req, res) => {
 export const updateProjectTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { TLId, PCId, QAId, BAUPersonId } = req.body; 
+    const { TLId, PCId, QAId, BAUPersonId } = req.body;
     // console.log("TLId:", TLId, "PCId:", PCId, "QAId:", QAId, "BAUPersonId:", BAUPersonId);
     const userRole = req.user.roleId?.name;
     const updatedBy = req.user?._id || null;
-     const errors = {};
+    const errors = {};
     // ✅ Step 1: Fetch project with names
     const project = await Project.findById(id)
       .populate("TLId", "name")
@@ -1292,7 +1313,7 @@ export const updateProjectTeam = async (req, res) => {
         errors,
       });
     }
-    
+
     const projectName = project.ProjectName || "Unknown Project";
 
     // ✅ Step 2: Check which fields changed
@@ -1306,24 +1327,24 @@ export const updateProjectTeam = async (req, res) => {
     const changes = [];
 
     if (TLId && TLId !== project.TLId?.toString()) {
-  const tlUser = await User.findById(TLId);
-  changes.push(`Team Lead: ${tlUser.name}`);
-}
+      const tlUser = await User.findById(TLId);
+      changes.push(`Team Lead: ${tlUser.name}`);
+    }
 
-if (PCId && PCId !== project.PCId?.toString()) {
-  const pcUser = await User.findById(PCId);
-  changes.push(`Project Coordinator: ${pcUser.name}`);
-}
+    if (PCId && PCId !== project.PCId?.toString()) {
+      const pcUser = await User.findById(PCId);
+      changes.push(`Project Coordinator: ${pcUser.name}`);
+    }
 
-if (QAId && QAId !== project.QAId?.toString()) {
-  const qaUser = await User.findById(QAId);
-  changes.push(`QA: ${qaUser.name}`);
-}
+    if (QAId && QAId !== project.QAId?.toString()) {
+      const qaUser = await User.findById(QAId);
+      changes.push(`QA: ${qaUser.name}`);
+    }
 
-if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
-  const bauUser = await User.findById(BAUPersonId);
-  changes.push(`BAU: ${bauUser.name}`);
-}
+    if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
+      const bauUser = await User.findById(BAUPersonId);
+      changes.push(`BAU: ${bauUser.name}`);
+    }
 
     for (const field of fieldsToCheck) {
       const newValue = req.body[field.key];
@@ -1366,8 +1387,8 @@ if (BAUPersonId && BAUPersonId !== project.BAUPersonId?.toString()) {
     // ✅ Save updatedBy and project if there were changes
     if (changes.length > 0) {
       if (project.TLId && project.PCId && project.QAId && project.BAUPersonId) {
-      project.Status = "Under Development";
-     }
+        project.Status = "Under Development";
+      }
       // project._updatedBy = updatedBy;
       await project.save();
     }
@@ -1646,7 +1667,6 @@ export const AssignToQa = async (req, res) => {
 };
 
 
-// project transition
 // export const transitionProject = async (req, res) => {
 //   try {
 //     const projectId = req.params.id;

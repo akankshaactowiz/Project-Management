@@ -1,282 +1,227 @@
 import { useState, useEffect } from "react";
-import { Clock, Eye, EyeOff } from "lucide-react";
+import { FaEdit } from "react-icons/fa"
 
 import { useAuth } from "../hooks/useAuth.js";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  // console.log("User object:", user); // Debugging
-  // Initialize local state with empty/default values
   const [profileData, setProfileData] = useState({
-    fullName: "",
-    email: "",
-    role: "",
-    department: "",
-    password: "••••••••",
-    designation: "",
-    reportingBy: "",
-    // phone: "",
-    // dateOfBirth: "",
-    // address: "",
-    // city: "",
-    // postcode: "",
+    password: "",
+    newPassword: "",
+    confirmPassword: "",
   });
-
-  // const [showPassword, setShowPassword] = useState(false);
-  const [savedProfileData, setSavedProfileData] = useState(profileData);
-
-  // Sync profileData & savedProfileData once user is fetched
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        fullName: user.name || "",
-        email: user.email || "",
-        role: user.roleName || "",
-        department: user.department || "",
-        designation: user.designation || "",
-        reportingBy: user.reportingBy || "",
-      });
-      setSavedProfileData({
-        fullName: user.name || "",
-        email: user.email || "",
-        role: user.roleName || "",
-        department: user.department || "",
-        designation: user.designation || "",
-        reportingBy: user.reportingBy || "",
-      });
-    }
-  }, [user]);
-
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Handle text input changes
   const handleInputChange = (field, value) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveChanges = (e) => {
-    e.preventDefault();
-    setSavedProfileData(profileData);
-    alert("Profile updated successfully!");
+  // Handle profile image selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setSelectedFile(file);
+    if (file) setPreviewImage(URL.createObjectURL(file));
   };
+
+  // Handle profile update
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    if (profileData.newPassword && profileData.newPassword !== profileData.confirmPassword) {
+      setMessage("New password and confirm password do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      if (profileData.newPassword) formData.append("newPassword", profileData.newPassword);
+
+      if (selectedFile) formData.append("profileImage", selectedFile);
+
+      const response = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/update-profile`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Profile updated successfully.");
+      } else {
+        setMessage(data.message || "Update failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message);
+      // setMessage("An error occurred while updating profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const baseUrl = `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}`;
+  const profileUrl = user.profileImage
+    ? `${baseUrl}/uploads/profile/${user.profileImage}`
+    : "/default-avatar.png";
 
   return (
 
-    <div className="mx-auto">
+    <div className="mx-auto max-w-6xl">
       {/* Top Header Section */}
-      <div className="bg-white rounded-lg p-6 mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xl font-semibold">
-                {savedProfileData.fullName
+      <div className="bg-white rounded-2xl p-6 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div className="relative w-24 h-24">
+          {/* Profile Circle */}
+          <div className="relative w-24 h-24">
+            {previewImage ? (
+              // If user selected a new image (before upload)
+              <img
+                src={previewImage}
+                alt="Profile Preview"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : profileUrl ? (
+              // If user has an existing saved profile image
+              <img
+                src={profileUrl}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              // If no image at all, show initials
+              <div className="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                {user.name
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
                   .toUpperCase()}
-              </span>
-            </div>
-            <div className="grid grid-cols-4 gap-y-3 gap-x-12 bg-white ">
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">ID:</span>
-                <span className="text-gray-600">12479834</span>
               </div>
+            )}
 
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700 mr-1">
-                  Email:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.email}
-                </span>
-              </div>
+            {/* Edit Icon */}
+            <label className="absolute bottom-0 right-0 bg-white border border-gray-300 text-gray-700 rounded-full p-2 hover:bg-gray-100 cursor-pointer">
+              <FaEdit />
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+            </label>
+          </div>
 
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">Role:</span>
-                <span className="text-gray-600">
-                  {savedProfileData.role || "-"}
-                </span>
-              </div>
+          {/* Edit Icon Overlay */}
+          <label className="absolute bottom-0 right-0 bg-white border border-gray-300 text-gray-700 rounded-full p-2 hover:bg-gray-100 cursor-pointer">
+            <FaEdit />
+            <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </label>
+        </div>
 
-              <div className="flex justify-between pr-4 border-r border-gray-300">
-                <span className="font-semibold text-gray-700">
-                  Department:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.department || "-"}
-                </span>
-              </div>
+        {/* User Details */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">ID</span>
+            <span className="font-semibold text-gray-800">12479834</span>
+          </div>
 
-              <div className="flex justify-between border-r border-gray-300">
-                <span className="font-semibold text-gray-700">
-                  Designation:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.designation}
-                </span>
-              </div>
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">Email</span>
+            <span className="font-semibold text-gray-800">{user.email}</span>
+          </div>
 
-              <div className="flex justify-between ">
-                <span className="font-semibold text-gray-700">
-                  Reporting By:
-                </span>
-                <span className="text-gray-600">
-                  {savedProfileData.designation}
-                </span>
-              </div>               
-            </div>
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">Role</span>
+            <span className="font-semibold text-gray-800">{user.roleName || "-"}</span>
+          </div>
+
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">Department</span>
+            <span className="font-semibold text-gray-800">{user.department || "-"}</span>
+          </div>
+
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">Designation</span>
+            <span className="font-semibold text-gray-800">{user.designation || "-"}</span>
+          </div>
+
+          <div className="flex flex-col bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-500 font-medium">Reporting By</span>
+            <span className="font-semibold text-gray-800">{user.reportingBy || "-"}</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 gap-6">
-        {/* Profile Details Form */}
-        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 m-4  ">
-          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-            Profile Details
-          </h3>
-
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSaveChanges}>
-            {/* Full Name - Readonly */}
-            <div>
-              <label
-                htmlFor="fullName"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                placeholder="Your full name"
-                value={profileData.fullName}
-                readOnly
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Email - Readonly */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                placeholder="your.email@example.com"
-                value={profileData.email}
-                readOnly
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Designation */}
-            <div>
-              <label
-                htmlFor="designation"
-                className="block text-gray-700 font-medium mb-1"
-              >
-                Designation
-              </label>
-              <input
-                type="text"
-                id="designation"
-                placeholder="Your designation"
-                value={profileData.designation}
-                onChange={(e) => handleInputChange("designation", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="md:col-span-2 flex justify-end">
-              <button
-                type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
-
         {/* Change Password Form */}
-        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 m-4">
+        <div className="bg-white border border-gray-100 rounded-2xl mb-6 p-6">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">
             Change Password
           </h3>
 
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Password */}
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleProfileUpdate}>
+            {/* Current Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-gray-700 font-medium mb-1"
-              >
+              <label className="block text-gray-700 font-medium mb-1">
                 Current Password
               </label>
               <input
-                type="password"
-                id="password"
-                placeholder="••••••••"
+                type="text"
+                placeholder="Enter your current password"
                 value={profileData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
-           
+
             {/* New Password */}
             <div>
-              <label
-                htmlFor="newPassword"
-                className="block text-gray-700 font-medium mb-1"
-              >
+              <label className="block text-gray-700 font-medium mb-1">
                 New Password
               </label>
               <input
-                type="password"
-                id="newPassword"
-                placeholder="••••••••"
+                type="text"
+                placeholder="Enter your new password"
                 value={profileData.newPassword}
                 onChange={(e) => handleInputChange("newPassword", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-gray-700 font-medium mb-1"
-              >
+              <label className="block text-gray-700 font-medium mb-1">
                 Confirm Password
               </label>
               <input
-                type="password"
-                id="confirmPassword"
-                placeholder="••••••••"
+                type="text"
+                placeholder="Enter your new password again"
                 value={profileData.confirmPassword}
-                onChange={(e) =>
-                  handleInputChange("confirmPassword", e.target.value)
-                }
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
 
-            {/* Submit Button */}
-            <div className="md:col-span-2 flex justify-end">
+            {/* Submit */}
+            <div className="md:col-span-2 flex justify-end mt-2">
               <button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
+                disabled={loading}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition disabled:opacity-50"
               >
-                Save
+                {loading ? "Updating..." : "Update Password"}
               </button>
             </div>
           </form>
+
+          {/* Message */}
+          {/* {message && (
+          <p className={`mt-4 text-sm ${message.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+            {message}
+          </p>
+        )} */}
         </div>
       </div>
     </div>

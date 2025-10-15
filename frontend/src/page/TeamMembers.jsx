@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ReactModal from "react-modal";
+import Select from "react-select";
+
+ReactModal.setAppElement("#root");
 import { FaEye } from "react-icons/fa";
 import Pagination from "../components/Pagination";
+import toast from "react-hot-toast";
 
 const TeamMembers = () => {
   const [search, setSearch] = useState("");
@@ -14,6 +19,13 @@ const TeamMembers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [memberProjectCounts, setMemberProjectCounts] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [refresh, setRefresh] = useState(false);
+  
 
   const navigate = useNavigate();
 
@@ -69,21 +81,7 @@ const TeamMembers = () => {
   useEffect(() => {
     fetchTeamMembers();
   }, [search, filterRole, currentPage, entries]);
-
-
-  // useEffect(() => {
-  //   members.forEach(async (member) => {
-  //     try {
-  //       const res = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/${member.id}/project-count`, {
-  //         credentials: "include"
-  //       });
-  //       const data = await res.json();
-  //       setMemberProjectCounts(prev => ({ ...prev, [member.id]: data }));
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   });
-  // }, [members]);
+ 
 
   useEffect(() => {
     if (!members.length) return;
@@ -123,7 +121,65 @@ const TeamMembers = () => {
     // fetchCounts();
   }, [search, filterRole, currentPage, entries]);
 
+  useEffect(() => {
+    if (!showAddModal) return;
 
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/team/available-users`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          const options = data.users.map((u) => ({
+            value: u._id,
+            label: `${u.name} (${u.roleId?.name || "N/A"})`,
+          }));
+          setAvailableUsers(options);
+        } else {
+          console.error("Error fetching users:", data.message);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [showAddModal ]);
+
+  const handleAddMember = async () => {
+    if (!selectedUser) return alert("Please select a user to add.");
+
+    try {
+      setLoading(true);
+      const res = await fetch(`http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/users/add-member`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIdToAdd: selectedUser.value }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(data.message || "Member added successfully");
+        setShowAddModal(false);
+        onMemberAdded(data.data);
+        onClose();
+      } else {
+        alert(data.message || "Failed to add member");
+      }
+    } catch (err) {
+      console.error("Add member error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-8 bg-white min-h-screen">
@@ -171,14 +227,48 @@ const TeamMembers = () => {
               Clear
             </button>
           </div>
+          {/* add member button */}
           <div>
             <button
-              // onClick={() => setShowAssignModal(true)}
+              onClick={() => setShowAddModal(true)}
               className="h-10 px-4 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none"
             >
               + Add Member
             </button>
           </div>
+
+        <ReactModal
+        isOpen={showAddModal}
+        onRequestClose={() => setShowAddModal(false)}
+        className="bg-white max-w-md mx-auto p-6 rounded-lg shadow-lg mt-30 outline-none w-full"
+        overlayClassName="fixed inset-0 bg-black/20 flex items-start justify-center z-50"
+      >
+        <h2 className="text-lg font-semibold mb-4">Add Team Member</h2>
+        <Select
+          options={availableUsers}
+          value={selectedUser}
+          onChange={setSelectedUser}
+          isLoading={loading}
+          placeholder="Select user..."
+          className="mb-4"
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setShowAddModal(false)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddMember}
+            type="button"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Adding..." : "Add Member"}
+          </button>
+        </div>
+      </ReactModal>
         </div>
       </div>
 

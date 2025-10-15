@@ -40,6 +40,7 @@ app.use(cookieParser());
 app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 // app.use("/uploads", express.static("uploads")); 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads/profile", express.static(path.join(process.cwd(), "uploads/profile")));
 
 
 // API Routes

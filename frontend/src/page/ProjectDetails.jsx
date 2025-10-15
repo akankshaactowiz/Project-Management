@@ -3,13 +3,14 @@ import ReactDOM from "react-dom";
 import Modal from "react-modal";
 
 import FeedModel from "../components/CreateFeed";
-import { FaHistory } from "react-icons/fa";
+import { FaHistory, FaEdit } from "react-icons/fa";
 
 // Bind modal to your app element (for accessibility)
 Modal.setAppElement("#root");
 
 
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { FiEye } from "react-icons/fi";
 import Select from "react-select";
 import { useAuth } from "../hooks/useAuth";
@@ -370,6 +371,16 @@ export default function ProjectDetails() {
   const handleOpenAssignModal = (project, feed) => {
     setSelectedProject(project);
     setSelectedFeed({ value: feed._id, label: feed.FeedName });
+    // Pre-fill selected developers if any
+  if (feed?.DeveloperIds?.length > 0) {
+    const preSelected = feed.DeveloperIds.map((dev) => ({
+      value: dev._id,
+      label: dev.name,
+    }));
+    setSelectedDevelopers(preSelected);
+  } else {
+    setSelectedDevelopers([]);
+  }
     setIsAssignOpen(true);
   };
   const handleAssign = async () => {
@@ -395,35 +406,6 @@ export default function ProjectDetails() {
         toast.error(data.message || "Failed to update assignment");
         return;
       }
-
-      // ✅ Update main table safely
-      setData((prevProjects) =>
-        prevProjects.map((p) =>
-          p._id === selectedProject._id
-            ? {
-              ...p,
-              Feeds: p.Feeds.map((f) =>
-                f._id === data.feed._id ? data.feed : f
-              ),
-            }
-            : p
-        )
-      );
-
-      // ✅ Update modal project safely
-      if (selectedProject?.Feeds) {
-        setSelectedProject((prev) => ({
-          ...prev,
-          Feeds: prev.Feeds.map((f) =>
-            f._id === data.feed._id ? data.feed : f
-          ),
-        }));
-      }
-
-      // ✅ Reset selections
-      setSelectedDevelopers([]);
-      setSelectedFeed(null);
-
       // ✅ Show toast
       toast.success("Developers assigned successfully");
 
@@ -949,30 +931,26 @@ export default function ProjectDetails() {
                                   )}
                                 </td>
                                 {(user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
-
-                                  //                     <td className="px-4 py-2 whitespace-nowrap">
-                                  //                       <button
-                                  //   onClick={() => handleOpenAssignModal(project, feed)}
-                                  //   className="border border-blue-600 text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition text-sm font-medium"
-                                  // >
-                                  //   Assign
-                                  // </button>
-                                  //                     </td>
                                   <td className="px-4 py-2 whitespace-nowrap">
-                                    {feed?.DeveloperIds?.length > 0 ? (
-                                      <span className="text-gray-800 font-medium">
-                                        {feed.DeveloperIds.map((dev) => dev.name).join(", ")}
-                                      </span>
+
+                                    {(feed.DeveloperIds?.length > 0) ? (
+                                      // Show Edit button if developers are assigned
+                                      <button
+                                        onClick={() => handleOpenAssignModal(project, feed)}
+                                        className="px-3 py-1 rounded text-sm flex items-center justify-center text-blue-600 hover:text-blue-800 transition"
+                                      >
+                                        <FaEdit size={20} />
+                                      </button>
                                     ) : (
-                                      (user.roleName === "Team Lead" || user.roleName === "Project Coordinator") && (
-                                        <button
-                                          onClick={() => handleOpenAssignModal(project, feed)}
-                                          className="border border-blue-600 text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition text-sm font-medium"
-                                        >
-                                          Assign
-                                        </button>
-                                      )
+                                      // Show Assign button if no developers assigned
+                                      <button
+                                        onClick={() => handleOpenAssignModal(project, feed)}
+                                        className="border bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition text-sm font-medium"
+                                      >
+                                        Assign
+                                      </button>
                                     )}
+
                                   </td>
                                 )}
 
@@ -1346,14 +1324,8 @@ export default function ProjectDetails() {
         {/* 📄 Project & Feed Information */}
         {selectedProject && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-        <p className="text-sm text-gray-500">Project Code</p>
-        <p className="text-lg font-semibold text-gray-800">
-          {selectedProject.ProjectCode || "-"}
-        </p>
-      </div> */}
-
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+          
+           <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
               <p className="text-sm text-gray-500">Project Name</p>
               <p className="text-lg font-semibold text-gray-800">
                 {selectedProject.ProjectCode || "-"} {selectedProject.ProjectName || "-"}
@@ -1393,24 +1365,8 @@ export default function ProjectDetails() {
         )}
 
         {/* Assignment Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Feed
-            </label>
-            <Select
-              options={
-                selectedProject?.Feeds?.map((f) => ({
-                  value: f._id,
-                  label: f.FeedName || f._id,
-                })) || []
-              }
-              value={selectedFeed}
-              onChange={setSelectedFeed}
-              placeholder="Select Feed"
-            />
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+         
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Developers

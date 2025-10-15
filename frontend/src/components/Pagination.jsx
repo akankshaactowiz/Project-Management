@@ -8,7 +8,7 @@ export default function PaginationControls({
   return (
     <div className="flex items-center justify-end py-2">
       {/* Total records info */}
-           {totalDocs !== undefined && (
+           {/* {totalDocs !== undefined && (
         <div className="text-sm text-gray-600 m-2">
           Showing{" "}
           <span className="font-medium text-gray-800">
@@ -19,9 +19,9 @@ export default function PaginationControls({
             {Math.min(currentPage * entries, totalDocs)}
           </span>{" "}
           of{" "}
-          <span className="font-medium text-gray-800">{totalDocs}</span> entries
+          <span className="font-medium text-gray-800">{totalDocs}</span> Entries
         </div>
-      )}
+      )} */}
 
 
       {/* Page navigation */}

@@ -6,6 +6,8 @@ import { authorize } from "../middlewares/rbacMiddleware.js";
 import Role from "../models/Role.js";
 import Department from "../models/Department.js";
 import WorkReport from "../models/WorkReport.js";
+import fs from "fs";
+import path from "path";
 
 
 export const getAllUsers = async (req, res) => {
@@ -56,27 +58,57 @@ export const getAllUsers = async (req, res) => {
     }
   }
 }
+    // else {
+    //   // Other roles: hierarchy + recursive subordinates
+    //   query.roleId = { $in: roleDocs.map(r => r._id) };
+
+    //   const getUserIds = async (managerId,) => {
+    //     const directReports = await User.find({ managerId  }).select("_id");
+    //     const ids = directReports.map(u => u._id);
+    //     for (let dr of directReports) {
+    //       ids.push(...(await getUserIds(dr._id)));
+    //     }
+    //     return ids;
+    //   };
+
+    //   const visibleUserIds = await getUserIds(requestingUser._id);
+    //   query._id = { $in: visibleUserIds };
+
+    //   // Exclude Superadmin
+    //   if (SuperadminRole) {
+    //     query.roleId = { ...query.roleId, $ne: SuperadminRole._id };
+    //   }
+    // }
+
     else {
-      // Other roles: hierarchy + recursive subordinates
-      query.roleId = { $in: roleDocs.map(r => r._id) };
+  // Other roles: hierarchy + recursive subordinates
+  query.roleId = { $in: roleDocs.map(r => r._id) };
 
-      const getUserIds = async (managerId) => {
-        const directReports = await User.find({ managerId }).select("_id");
-        const ids = directReports.map(u => u._id);
-        for (let dr of directReports) {
-          ids.push(...(await getUserIds(dr._id)));
-        }
-        return ids;
-      };
+  const getUserIds = async (managerOrLeadId) => {
+    // Find users where managerId OR leadId matches
+    const directReports = await User.find({
+      $or: [{ managerId: managerOrLeadId }, { leadId: managerOrLeadId }]
+    }).select("_id");
 
-      const visibleUserIds = await getUserIds(requestingUser._id);
-      query._id = { $in: visibleUserIds };
+    const ids = directReports.map(u => u._id);
 
-      // Exclude Superadmin
-      if (SuperadminRole) {
-        query.roleId = { ...query.roleId, $ne: SuperadminRole._id };
-      }
+    // Recursively get subordinates of each direct report
+    for (let dr of directReports) {
+      ids.push(...(await getUserIds(dr._id)));
     }
+
+    return ids;
+  };
+
+  const visibleUserIds = await getUserIds(requestingUser._id);
+  query._id = { $in: visibleUserIds };
+
+  // Exclude Superadmin
+  if (SuperadminRole) {
+    query.roleId = { ...query.roleId, $ne: SuperadminRole._id };
+  }
+}
+
 
     if (search) {
       const regex = new RegExp(search, "i");
@@ -142,6 +174,45 @@ export const getAllUsers = async (req, res) => {
   } catch (err) {
     console.error("Users fetch error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// GET /api/team/available-users
+export const getAvailableUsersForTeam = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user._id).populate("roleId departmentId");
+    if (!currentUser) return res.status(404).json({ message: "User not found" });
+
+    const roleName = currentUser.roleId?.name;
+    const deptId = currentUser.departmentId?._id;
+
+    const allowedRoles = roleHierarchy[roleName] || [];
+
+    if (allowedRoles.length === 0)
+      return res.json({ users: [] }); // No roles to add
+
+    // Fetch Role documents for allowed roles
+    const roleDocs = await Role.find({ name: { $in: allowedRoles } }).select("_id name");
+
+    // Build query
+    const query = {
+      roleId: { $in: roleDocs.map((r) => r._id) },
+      departmentId: deptId, // limit to same department as current user
+    };
+
+    // Optional: exclude users already assigned to someone
+    query.$or = [{ managerId: { $exists: false } }, { TLId: { $exists: false } }];
+
+    const users = await User.find(query)
+      .populate("roleId")
+      .populate("departmentId")
+      .select("-password")
+      .lean();
+
+    res.json({ users });
+  } catch (err) {
+    console.error("Available users fetch error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
@@ -583,6 +654,80 @@ export const getTLAndDevelopers = async (req, res) => {
   }
 };
 
+
+export const addMemberToTeam = async (req, res) => {
+  try {
+    const { userIdToAdd } = req.body; // user being added
+    const currentUserId = req.user._id;
+
+    // Get current user role
+    const currentUser = await User.findById(currentUserId).populate("roleId");
+    if (!currentUser) return res.status(404).json({ message: "Current user not found" });
+
+    const roleName = currentUser.roleId?.name;
+
+    // Find the user being added
+    const member = await User.findById(userIdToAdd);
+    if (!member) return res.status(404).json({ message: "User to add not found" });
+
+    // Role-based assignment logic
+    if (roleName === "Manager") {
+      member.managerId = currentUserId;
+    } else if (roleName === "Team Lead") {
+      member.TLId = currentUserId;
+    } else {
+      return res.status(403).json({ message: "Not authorized to add members" });
+    }
+
+    await member.save();
+
+    res.status(200).json({
+      success: true,
+      message: `${member.name} added to your team successfully`,
+      data: member,
+    });
+  } catch (err) {
+    console.error("Add member error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// PUT /api/users/:id/update-password
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { newPassword } = req.body;
+    if (!userId) return res.status(400).json({ message: "User ID is required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update password if provided
+    if (newPassword) {
+      user.password = newPassword; // Will be hashed via pre('save')
+    }
+
+    // Update profile image if file uploaded
+    if (req.file) {
+      // Delete old image if exists
+      if (user.profileImage) {
+        const oldPath = path.join("uploads/profile", user.profileImage);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      user.profileImage = req.file.filename;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      profileImage: user.profileImage || null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // export const getTLAndDevelopers = async (req, res) => {
 //   try {

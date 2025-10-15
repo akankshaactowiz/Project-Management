@@ -70,6 +70,11 @@ export default function Header() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
+    const baseUrl = `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}`;
+  const profile = user.profileImage
+    ? `${baseUrl}/uploads/profile/${user.profileImage}`
+    : Img;
+
   return (
     <header className="sticky top-0 left-0 right-0 flex items-center justify-between px-6 py-2 bg-white border-gray-300 z-50 sm:bg-white">
       {/* Logo */}
@@ -106,7 +111,7 @@ export default function Header() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center space-x-2 p-4 md:p-0 cursor-pointer"
             >
-              <img src={Img} alt="Profile" className="w-12 h-12 rounded-full" />
+              <img src={profile} alt="Profile" className="w-12 h-12 rounded-full" />
               <span className="text-sm font-medium">{user?.name || "No Name"}</span>
             </div>
 

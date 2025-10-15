@@ -91,6 +91,9 @@ const feedSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now }
       }
     ],
+  InputListing: {type: String, default: "N/A"},
+  OutputListing: {type: String, default: "N/A"},
+  Threads: {type: String, default: "N/A"},
 
     DeliveryStatus: { type: String, enum: ["Scheduled", "Delivered"]},
     StartTime: { type: Date },

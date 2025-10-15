@@ -31,6 +31,7 @@ router.get("/profile", protect, async (req, res) => {
       roleName: user.roleId?.name || null,
       department: user.departmentId?.department || null,
       permissions: user.roleId?.permissions || [],
+      profileImage: user.profileImage,
     });
   } catch (err) {
     console.error("Profile fetch error:", err);

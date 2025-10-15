@@ -2,7 +2,8 @@ import express from "express";
 // import { getAllUsers } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { getUsersByRoleAndDepartment } from "../controllers/authController.js";
-import { getSearchUsers, getPMAndQAUsers, getTLAndDevelopers, getBDE, getPC, getUserProjectCounts, getProjectsByUser, getAllUsers, getUserReports } from "../controllers/userController.js";
+import { getSearchUsers, getPMAndQAUsers, getTLAndDevelopers, getBDE, getPC, getUserProjectCounts, getProjectsByUser, getAllUsers, getUserReports, addMemberToTeam, getAvailableUsersForTeam, updateProfile } from "../controllers/userController.js";
+import { uploadProfile } from "../middlewares/uploadFiles.js";
 const router = express.Router();
 
 // router.get("/", protect, authorize("users", "read"), async (req, res) => {
@@ -203,6 +204,13 @@ const router = express.Router();
 
 // Watcher user routes
 router.get("/", getAllUsers);
+
+router.get("/team/available-users", getAvailableUsersForTeam)
+
+router.post("/add-member",protect, addMemberToTeam);
+
+router.post("/update-profile",protect, uploadProfile.single("profileImage"), updateProfile);
+
 
 
 router.get("/search", getSearchUsers);
