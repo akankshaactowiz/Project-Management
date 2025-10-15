@@ -7,8 +7,10 @@ ReactModal.setAppElement("#root");
 import { FaEye } from "react-icons/fa";
 import Pagination from "../components/Pagination";
 import toast from "react-hot-toast";
+import { useAuth } from "../hooks/useAuth";
 
 const TeamMembers = () => {
+  const {user} = useAuth();
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("All Roles");
   const [members, setMembers] = useState([]);
@@ -181,6 +183,10 @@ const TeamMembers = () => {
     }
   };
 
+    const canAddMember =
+    user?.permissions?.some(
+      (perm) => perm.module === "Team" && perm.actions.includes("add member")
+    ) 
   return (
     <div className="p-8 bg-white min-h-screen">
       {/* Header Section */}
@@ -228,6 +234,8 @@ const TeamMembers = () => {
             </button>
           </div>
           {/* add member button */}
+          {canAddMember && (
+            
           <div>
             <button
               onClick={() => setShowAddModal(true)}
@@ -236,6 +244,7 @@ const TeamMembers = () => {
               + Add Member
             </button>
           </div>
+          )}
 
         <ReactModal
         isOpen={showAddModal}

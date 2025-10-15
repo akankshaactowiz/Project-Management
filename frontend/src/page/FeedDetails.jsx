@@ -51,17 +51,17 @@ const FeedDetails = ({ allUsers }) => {
           manageBy: data.ManageBy || "-",
           qaRules: project.QARules ?? "-",
           qaProcess: data.QAProcess || "-",
-          rulesStatus: project.RulesStatus || "-",
-          rulesApply: project.RulesApply || "-",
+          rulesStatus: project.RulesStatus || "",
+          rulesApply: project.RulesApply || "0",
           dbStatus: project.DBStatus || "-",
           projectStatus: project.Status || "-",
           createdBy: data.createdBy || "-",
           createdDate: project.CreatedDate || "-",
           developerIds: data.DeveloperIds || [],
           assignedTo: data.assignedTo || [],
-          inputListing: data.InputListing || "-",
-          outputListing: data.OutputListing || "-",
-          threads: data.Threads || "-",
+          inputListing: data.InputListing || "0",
+          outputListing: data.OutputListing || "0",
+          threads: data.Threads || "0",
         });
       } catch (err) {
         console.error("Error fetching feed:", err);

@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Handle text input changes
   const handleInputChange = (field, value) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
@@ -87,18 +87,22 @@ export default function ProfilePage() {
                 alt="Profile Preview"
                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
               />
-            ) : profileUrl ? (
-              // If user has an existing saved profile image
+            ) : user?.profileImage ? (
+              // 🟢 Show saved image (from backend)
               <img
-                src={profileUrl}
+                src={`${baseUrl}/uploads/profile/${user.profileImage}`}
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/default-avatar.png"; // fallback if image missing
+                }}
               />
             ) : (
-              // If no image at all, show initials
+              // 🟠 Show initials (no image)
               <div className="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                {user.name
-                  .split(" ")
+                {user?.name
+                  ?.split(" ")
                   .map((n) => n[0])
                   .join("")
                   .toUpperCase()}

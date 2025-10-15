@@ -740,7 +740,8 @@ export const getProjects = async (req, res) => {
     const projects = await Project.aggregate(pipeline);
 
     // 🔹 Get total count (for pagination)
-    const total = await Project.countDocuments(matchStage);
+    // const total = await Project.countDocuments(matchStage);
+    const total = await Project.countDocuments();
 
     res.status(200).json({
       data: projects,
