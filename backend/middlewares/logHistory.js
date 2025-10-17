@@ -1,12 +1,5 @@
-// middlewares/logHistory.js
 import ActivityHistory from "../models/ProjectHistory.js";
 
-/**
- * Generic intelligent logging middleware for Project / Feed / future models
- * Supports auto-detection of "Created" or "Updated" actions,
- * generates human-readable summaries,
- * and fits your existing ActivityHistory schema.
- */
 export const logHistory = async ({
   modelName,
   oldDoc = null,
@@ -97,7 +90,6 @@ export const logHistory = async ({
     console.error(`❌ [${modelName}] History Log Error:`, err.message);
   }
 };
-
 
 
 

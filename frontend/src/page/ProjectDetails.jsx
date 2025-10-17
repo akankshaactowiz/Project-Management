@@ -60,7 +60,6 @@ export default function ProjectDetails() {
     QAPersonIds: [],
   });
 
-
   const [activeTab, setActiveTab] = useState("Summary");
   const [selectedMembers, setSelectedMembers] = useState(null);
   const [selectedFeed, setSelectedFeed] = useState(null);
@@ -75,27 +74,6 @@ export default function ProjectDetails() {
   const canCreateFeed = user?.permissions?.some(
     (perm) => perm.module === "Feed" && perm.actions.includes("create")
   );
-
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (
-  //       popoverRef.current &&
-  //       !popoverRef.current.contains(event.target) &&
-  //       buttonRef.current &&
-  //       !buttonRef.current.contains(event.target)
-  //     ) {
-  //       setOpenPopoverFeedId(false);
-  //     }
-  //   };
-
-  //   if (showFeedPopover) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   }
-
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, [openPopoverFeedId]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -140,26 +118,6 @@ export default function ProjectDetails() {
   };
 
 
-
-  // ✅ Close popover on outside click
-  // useEffect(() => {
-  //   function handleClickOutside(event) {
-  //     if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-  //       setShowPopover(false);
-  //     }
-  //   }
-  //   if (showPopover) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   } else {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   }
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, [showPopover]);
-
-
-  const handleShowAll = (members) => {
-    setSelectedMembers(members);
-  };
 
   const projectMembers = [
     project?.PMId,
@@ -243,65 +201,6 @@ export default function ProjectDetails() {
     fetchFeeds();
   }, [id, refresh, activeTab]);
 
-
-
-  //   const handleAssign = async () => {
-  //     if (!selectedProject) return;
-  //     setErrors({}); // clear previous errors
-  //     try {
-  //  await fetch(
-  //           `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/feed/${
-  //             selectedFeed.value
-  //           }/update-team`,
-  //           {
-  //             method: "PUT",
-  //             headers: { "Content-Type": "application/json" },
-  //             credentials: "include",
-  //             body: JSON.stringify({
-  //               DeveloperIds: selectedDevelopers.map((d) => d.value),
-  //             }),
-  //           }
-  //         );
-  //       }
-
-  //       const data = await res.json();
-  //       // console.log("Updated Data:", data);
-
-  //       if (data.errors) {
-  //         setErrors(data.errors);
-  //         // toast.error("Please fill all required fields");
-  //         return;
-  //       }
-
-  //       if (!res.ok || (!data.project && !data.feed)) {
-  //         console.error("Failed to update:", data);
-  //         toast.error(data.message || "Failed to update assignment");
-  //         return;
-  //       }
-
-  //       // Update modal and main table for project
-  //       if (data.project) {
-  //         setSelectedProject(data.project);
-  //         setData((prev = []) =>
-  //           prev.map((p) => (p._id === data.project._id ? data.project : p))
-  //         );
-  //         toast.success("Project team updated successfully");
-  //       }
-
-  //       // Optionally update feed state if you have a feed table/list
-  //       if (data.feed) {
-  //         toast.success("Developers assigned successfully");
-  //         // updateFeedState(data.feed); // implement if needed
-  //       }
-
-  //       setIsAssignOpen(false);
-  //     } catch (err) {
-  //       console.error("Error updating assignment:", err);
-  //       toast.error("Failed to update assignment");
-  //     }
-  //   };
-
-  // Inside your component, after fetching `project` data
   const totalFeeds = project?.Feeds?.length || 0;
   const activeFeeds = project?.Feeds?.filter(f => f.Status === "Under Development").length || 0;
   const closedFeeds = project?.Feeds?.filter(f => f.Status === "Closed").length || 0;
@@ -438,33 +337,7 @@ export default function ProjectDetails() {
   }, [isOpen]);
 
 
-  // const historySample = [
-  //   {
-  //     user: "Sunil Velueri",
-  //     avatar: "https://i.pravatar.cc/40?img=1",
-  //     action: "Created the Project ",
-  //     // from: "Awaiting client approval",
-  //     // to: "Closed",
-  //     date: "September 29, 2025 9:19 PM",
-  //   },
-  //   {
-  //     user: "Krushil Gajjar",
-  //     avatar: "https://i.pravatar.cc/40?img=1",
-  //     action: "added Project Coordinator and Team Lead",
-  //     from: "Pruthak Acharya, Harsh K Patel",
-  //     to: "Pruthak Acharya",
-  //     date: "October 3, 2025 7:36 PM",
-  //   },
-  //   // {
-  //   //   user: "Rohit Tiwari",
-  //   //   avatar: "https://i.pravatar.cc/40?img=2",
-  //   //   action: "changed the Project Status",
-  //   //   from: "Production",
-  //   //   to: "Awaiting client approval",
-  //   //   date: "December 4, 2024 4:44 PM",
-  //   // },
-  // ];
-
+  // function to show data in IST format
   const formatISTDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -484,8 +357,6 @@ export default function ProjectDetails() {
 
     return `${year}/${month}/${day} ${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
   };
-
-
 
   if (!project) return <p>Loading...</p>;
 
@@ -672,7 +543,7 @@ export default function ProjectDetails() {
               </div>
             )}
 
-            {feedModalOpen && project && (  // <-- wait until project is loaded
+            {feedModalOpen && project && (  
               <FeedModel
                 isOpen={feedModalOpen}
                 onClose={() => setFeedModalOpen(false)}

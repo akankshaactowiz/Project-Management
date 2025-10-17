@@ -7,5 +7,4 @@ const ModuleSchema = new mongoose.Schema({
   path: { type: String },
   actions: [{ type: String }],
 });
-
 export default mongoose.model("Module", ModuleSchema, "modules"); 

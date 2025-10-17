@@ -79,56 +79,6 @@ export default function RoleSettings({ currentUserRole }) {
   };
 
   // Save updated permissions
-  // const savePermissions = async () => {
-  //   if (!editingRole) return;
-
-  //   try {
-  //     // Convert ["Projects-view", "Reports-view"] → schema format
-  //     const formatted = permissionsList
-  //       .map((perm) => {
-  //         const actions = perm.actions.filter((a) =>
-  //           selectedPermissions.includes(`${perm.module}-${a}`)
-  //         );
-  //         if (actions.length === 0) return null;
-
-  //         // Add department info from current role
-  //         const deptId = editingRole?.departmentId || currentUserRole?.departmentId;
-  //         return {
-  //           module: perm.module,
-  //           actions,
-  //           departments: [deptId] // send numeric department ID
-  //         };
-  //       })
-  //       .filter(Boolean);
-
-  //     const res = await fetch(
-  //       `http://${import.meta.env.VITE_BACKEND_NETWORK_ID}/api/roles/${editingRole._id}`,
-  //       {
-  //         method: "PUT",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ permissions: formatted }),
-  //         credentials: "include",
-  //       }
-  //     );
-
-  //     if (!res.ok) throw new Error("Failed to update permissions");
-
-  //     // Update local state
-  //     setRoles((prev) =>
-  //       prev.map((r) =>
-  //         r._id === editingRole._id
-  //           ? { ...r, permissions: formatted, departmentId: editingRole.departmentId }
-  //           : r
-  //       )
-  //     );
-
-  //     setEditingRole(null);
-  //     toast.success("Permissions updated successfully!");
-  //   } catch (err) {
-  //     console.error("Failed to save permissions:", err);
-  //     toast.error("Failed to update permissions.");
-  //   }
-  // };
 const savePermissions = async () => {
   if (!editingRole) return;
 

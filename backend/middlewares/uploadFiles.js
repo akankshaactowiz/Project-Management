@@ -2,7 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Storage configuration
+// Storage configuration for project SOW & Sample files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = "uploads/projects";

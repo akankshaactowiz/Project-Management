@@ -11,8 +11,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 Modal.setAppElement("#root");
 
-import Breadcrumb from "../components/Breadcrumb";
-
 function FeedUpdate() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -123,12 +121,6 @@ function FeedUpdate() {
     });
   };
 
-  const removeCustomEntry = (index) => {
-    const newCustom = [...(schedule.custom || [])];
-    newCustom.splice(index, 1);
-    setSchedule({ ...schedule, custom: newCustom });
-  };
-
   // --- Fetch initial data ---
   useEffect(() => {
     const fetchData = async () => {
@@ -215,34 +207,6 @@ function FeedUpdate() {
   const handleDBChange = (field, value) => {
     setDatabaseSettings((prev) => ({ ...prev, [field]: value }));
   };
-
-  // --- QA Rules CRUD ---
-  // const addRule = () =>
-  //   setRules([
-  //     ...rules,
-  //     {
-  //       field: "",
-  //       type: "",
-  //       threshold: "",
-  //       createdBy: user?._id,
-  //       isEditable: true, // 🔹 make new rule editable initially
-  //     },
-  //   ]);
-
-  // const updateRule = (index, key, value) => {
-  //   const newRules = [...rules];
-  //   // 🔒 Only allow editing if row is still editable
-  //   if (newRules[index].isEditable) {
-  //     newRules[index][key] = value;
-  //     setRules(newRules);
-  //   }
-  // };
-
-  // const removeRule = (index) => {
-  //   const newRules = [...rules];
-  //   newRules.splice(index, 1);
-  //   setRules(newRules);
-  // };
   // --- Submit all updates ---
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -641,141 +605,141 @@ function FeedUpdate() {
         {/* Frequency Tab */}
         {activeTab === "Frequency" && (
           <>
-   <div className="grid grid-cols-[1fr_2fr_2fr] gap-4 p-6 items-end">
-  {/* Start Date */}
-  <div className="mb-0">
-    <label className="block text-lg font-medium text-gray-700 mb-1">
-      Start Date
-    </label>
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <DatePicker
-        value={startDate ? dayjs(startDate, "YYYY/MM/DD") : null}
-        onChange={(newValue) => {
-          setStartDate(newValue ? newValue.format("YYYY/MM/DD") : "");
-        }}
-        format="YYYY/MM/DD"
-        slotProps={{
-          textField: {
-            className:
-              "w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400",
-          },
-        }}
-      />
-    </LocalizationProvider>
-  </div>
+            <div className="grid grid-cols-[1fr_2fr_2fr] gap-4 p-6 items-end">
+              {/* Start Date */}
+              <div className="mb-0">
+                <label className="block text-lg font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    value={startDate ? dayjs(startDate, "YYYY/MM/DD") : null}
+                    onChange={(newValue) => {
+                      setStartDate(newValue ? newValue.format("YYYY/MM/DD") : "");
+                    }}
+                    format="YYYY/MM/DD"
+                    slotProps={{
+                      textField: {
+                        className:
+                          "w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400",
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
 
-  {/* Frequency */}
-  <div className="mb-0">
-    <label className="block text-lg font-medium text-gray-700 mb-1">
-      Frequency
-    </label>
-    <select
-      value={frequency || ""}
-      onChange={(e) => setFrequency(e.target.value)}
-      className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
-    >
-      <option value="">Select Frequency</option>
-      <option value="Daily">Daily</option>
-      <option value="Weekly">Weekly</option>
-      <option value="Monthly">Monthly</option>
-      <option value="Once-off">Once-off</option>
-      <option value="Custom">Custom</option>
-    </select>
-  </div>
+              {/* Frequency */}
+              <div className="mb-0">
+                <label className="block text-lg font-medium text-gray-700 mb-1">
+                  Frequency
+                </label>
+                <select
+                  value={frequency || ""}
+                  onChange={(e) => setFrequency(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Select Frequency</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Once-off">Once-off</option>
+                  <option value="Custom">Custom</option>
+                </select>
+              </div>
 
-  {/* Conditional Inputs */}
-  {(frequency === "Daily" ||
-    frequency === "Weekly" ||
-    frequency === "Monthly" ||
-    frequency === "Custom") && (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-0">
-        {(frequency === "Weekly" || frequency === "Custom") && (
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-2">
-              Day
-            </label>
-            <select
-              value={schedule.day || ""}
-              onChange={(e) =>
-                setSchedule({ ...schedule, day: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">Select Day</option>
-              {daysOfWeek.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+              {/* Conditional Inputs */}
+              {(frequency === "Daily" ||
+                frequency === "Weekly" ||
+                frequency === "Monthly" ||
+                frequency === "Custom") && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-0">
+                    {(frequency === "Weekly" || frequency === "Custom") && (
+                      <div>
+                        <label className="block text-lg font-medium text-gray-700 mb-2">
+                          Day
+                        </label>
+                        <select
+                          value={schedule.day || ""}
+                          onChange={(e) =>
+                            setSchedule({ ...schedule, day: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="">Select Day</option>
+                          {daysOfWeek.map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
-        {frequency === "Monthly" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date (1-31)
-            </label>
-            <select
-              value={schedule.date || ""}
-              onChange={(e) =>
-                setSchedule({
-                  ...schedule,
-                  date: Number(e.target.value),
-                })
-              }
-              className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">Select Date</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+                    {frequency === "Monthly" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Date (1-31)
+                        </label>
+                        <select
+                          value={schedule.date || ""}
+                          onChange={(e) =>
+                            setSchedule({
+                              ...schedule,
+                              date: Number(e.target.value),
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="">Select Date</option>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
-        {/* Time */}
-        <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
-            Time
-          </label>
-          <input
-            type="time"
-            value={schedule.time || ""}
-            onChange={(e) =>
-              setSchedule({ ...schedule, time: e.target.value })
-            }
-            className="w-full border border-gray-300 rounded-lg px-3 py-3 focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-      </div>
-    )}
+                    {/* Time */}
+                    <div>
+                      <label className="block text-lg font-medium text-gray-700 mb-2">
+                        Time
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.time || ""}
+                        onChange={(e) =>
+                          setSchedule({ ...schedule, time: e.target.value })
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-3 focus:ring-2 focus:ring-blue-400"
+                      />
+                    </div>
+                  </div>
+                )}
 
-  {frequency === "Once-off" && (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Date & Time
-      </label>
-      <input
-        type="datetime-local"
-        value={
-          schedule.datetime
-            ? new Date(schedule.datetime).toISOString().slice(0, 16)
-            : ""
-        }
-        onChange={(e) =>
-          setSchedule({
-            ...schedule,
-            datetime: new Date(e.target.value),
-          })
-        }
-        className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
-      />
-    </div>
-  )}
-</div>
+              {frequency === "Once-off" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={
+                      schedule.datetime
+                        ? new Date(schedule.datetime).toISOString().slice(0, 16)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setSchedule({
+                        ...schedule,
+                        datetime: new Date(e.target.value),
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-3 py-4 focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+              )}
+            </div>
 
 
 
@@ -791,7 +755,6 @@ function FeedUpdate() {
           </>
         )}
 
-        {/* Database Tab */}
         {/* Database Tab */}
         {activeTab === "Database" && (
           <div className="p-4">
