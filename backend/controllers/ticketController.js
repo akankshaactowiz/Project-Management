@@ -1,5 +1,5 @@
 import Ticket from "../models/TicketData.js";
-import Counter from "../models/Counter.js";
+// import Counter from "../models/Counter.js";
 
 export const generateTicket = async (req, res) => {
   try {

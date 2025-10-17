@@ -17,7 +17,6 @@ import { getProjects, createProject, transitionProject,
 import { getQAPassRate, getAvgTimeInQA, getReworkCount, getThroughput, getOverdue } from "../controllers/metricsController.js";
 const router = express.Router();
 
-// const upload = multer({ dest: "uploads/" });
 // GET all projects
 router.get("/", getProjects);
 
@@ -25,17 +24,6 @@ router.get("/counts", getProjectCounts);
 router.get("/assigned-to-qa", getAssignedToQAProjects);
 router.get("/:id", protect, getProjectById);
 
-router.put(
-  "/updates/:id",
-  upload.fields([
-    { name: "SOWFile", maxCount: 5 },
-    { name: "SampleFiles", maxCount: 10 },
-  ]),
-  updateProject
-);
-
-
-// router.post("/",protect, authorize("Project", "create"), createProject);
 router.post(
   "/",
   protect,
@@ -46,6 +34,16 @@ router.post(
   ]),
   createProject
 );
+
+router.put(
+  "/updates/:id",
+  upload.fields([
+    { name: "SOWFile", maxCount: 5 },
+    { name: "SampleFiles", maxCount: 10 },
+  ]),
+  updateProject
+);
+
 
 router.put("/:id/update-team", protect, authorize("Projects", "update"), updateProjectTeam);
 
@@ -84,13 +82,5 @@ router.get("/qa/public-report/:uniqueId", async (req,res)=>{
   if(!project) return res.status(404).json({ message: "Report not found" });
   res.json(project.qaReports[0]);
 });
-
-
-
-router.get("/metrics/qa-pass-rate", protect, getQAPassRate);
-router.get("/metrics/avg-time-in-qa", protect, getAvgTimeInQA);
-router.get("/metrics/rework-count", protect, getReworkCount);
-router.get("/metrics/throughput", protect, getThroughput);
-router.get("/metrics/overdue", protect, getOverdue);
 
 export default router;

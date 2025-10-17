@@ -19,37 +19,6 @@ const sendAuthResponse = (res, user, statusCode = 200) => {
   return res.status(statusCode).json(resp);
 };
 
-// export const getUsersByRoleAndDepartment = async (req, res) => {
-//   const { roleName, departmentId, department } = req.query;
-  
-
-//   try {
-//     const role = await Role.findOne({ name: roleName });
-//     if (!role) {
-//       return res.status(400).json({ message: "Invalid role name" });
-//     }
-
-//     const department = await Department.findById(departmentId);
-//     if (!department) {
-//       console.log("Invalid department ID:", departmentId);
-//       return res.status(400).json({ message: "Invalid department" });
-      
-//     }else if (department) {
-//   department = await Department.findOne({ name: department });
-//    }
-
-//     const users = await User.find({
-//       roleId: role._id,
-//       departmentId: department._id
-//     });
-
-//     return res.json(users);
-//   } catch (error) {
-//     console.error("Error fetching users by role and department:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 export const getUsersByRoleAndDepartment = async (req, res) => {
   const { roleName, departmentId, departmentName } = req.query;
 
@@ -154,8 +123,6 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
-
-// export const loginUser = async (req, res) => {
 //   try {
 //     const { email, password } = req.body;
 
@@ -214,6 +181,31 @@ export const loginUser = async (req, res) => {
     return sendAuthResponse(res, user);
   } catch (error) {
     res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate("roleId").populate("departmentId")// get role with permissions
+      .select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      roleName: user.roleId?.name || null,
+      department: user.departmentId?.department || null,
+      permissions: user.roleId?.permissions || [],
+      profileImage: user.profileImage,
+    });
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

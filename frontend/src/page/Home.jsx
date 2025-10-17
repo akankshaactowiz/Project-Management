@@ -19,47 +19,23 @@ import {
   FaRss,
 } from "react-icons/fa";
 
-import OverdueSummary from "../components/OverdueSummary.jsx";
-import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
-import {
-  Users,
-  Activity,
-  UserCog,
-  Settings,
-  FileText,
-  User,
-} from "lucide-react";
-// import SalesSummaryDashboard from "../components/SalesSummaryView.jsx";
-
 import Pagination from "../components/Pagination.jsx";
 
 function Home() {
   const navigate = useNavigate();
-  const { user, loading: userLoading } = useAuth();
-  const [tickets, setTickets] = useState([]);
-  const [tasks, setTasks] = useState([]);
-
-  // const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("tasks");
-
+  const { user} = useAuth();
+  
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [feeds, setFeeds] = useState([]);
   const [entries, setEntries] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  // const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
-  const [pageSize, setPageSize] = useState(10); // default 10
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
-
   const [projectCounts, setProjectCounts] = useState({});
-
-
   const columns = [
     "No.",
     "Project",
@@ -69,31 +45,6 @@ function Home() {
     "Frequency",
     "Status",
   ];
-
-  const options = {
-    responsive: true,
-    cutout: "70%", // makes it donut
-    plugins: {
-      legend: {
-        position: "bottom",
-        labels: {
-          color: "#333",
-          font: { size: 14 },
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            let value = context.raw;
-            let total = context.dataset.data.reduce((a, b) => a + b, 0);
-            let percentage = ((value / total) * 100).toFixed(1) + "%";
-            return `${context.label}: ${value} (${percentage})`;
-          },
-        },
-      },
-    },
-  };
-  // if (userLoading || loading) return <div className="p-4">Loading...</div>;
 
   const fetchCounts = async () => {
     try {
@@ -114,34 +65,6 @@ function Home() {
   useEffect(() => {
     fetchCounts();
   }, []);
-
-  // useEffect(() => {
-  //   const fetchFeeds = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const res = await fetch(
-  //         `http://${
-  //           import.meta.env.VITE_BACKEND_NETWORK_ID
-  //         }/api/feed?page=${currentPage}&pageSize=10&search=${encodeURIComponent(
-  //           search
-  //         )}`,
-  //         { credentials: "include" }
-  //       );
-
-  //       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
-  //       const data = await res.json();
-  //       setFeeds(data.data || []);
-  //       setTotalPages(Math.ceil(data.total / entries));
-  //     } catch (err) {
-  //       console.error("Error fetching feed data:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchFeeds();
-  // }, [currentPage, entries, search]);
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -250,13 +173,6 @@ function Home() {
       bg: "bg-green-50",
       deliveryType: "POC",
     },
-    // {
-    //   label: "R&D Projects",
-    //   value: projectCounts.rnd,
-    //   icon: FaLightbulb,
-    //   color: "bg-indigo-500",
-    //   bg: "bg-indigo-50",
-    // },
   ];
 
   const overviewCards = [
